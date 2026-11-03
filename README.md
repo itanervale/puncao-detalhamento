@@ -6,7 +6,7 @@ Duas soluções:
 - **barras dobradas em "cobrinha"**, em malha ortogonal;
 - **conectores tipo pino (studs)** da [Trejor](https://www.trejor.com/conector-de-combate-a-puncao), em arranjo radial.
 
-> **Situação:** em desenvolvimento, etapa E0 (base e padrão do desenho). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
+> **Situação:** em desenvolvimento. Feitas a E0 (base e padrão do desenho) e a E1 (núcleo da cobrinha); a próxima é a E2 (prancha da cobrinha em DWG-TQS). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Requisitos
 
@@ -35,6 +35,22 @@ Não há outra instalação: o app usa a biblioteca padrão do Python e a interf
 | `exemplos\` | Projetos de exemplo (`.json`) |
 | `testes\` | Testes que reproduzem os desenhos de referência |
 | `saidas\` | Resultados (não vão para o repositório) |
+
+## Projeto e núcleo (E1)
+
+O projeto é um arquivo `.json` com uma lista de pilares; cada pilar guarda só o que difere dos padrões (`nucleo\parametros.py`, `PADROES`). Veja `exemplos\P2_cobrinha.json` (o pilar do desenho de referência) e `exemplos\lote_cobrinha.json`.
+
+```bash
+python -m nucleo.detalhe exemplos/P2_cobrinha.json
+```
+
+Imprime os ferros de cada pilar (posição, quantidade, bitola, comprimento) e as verificações da NBR 6118:2026. Não precisa do TQS.
+
+```bash
+python ferramentas/esquema.py exemplos/lote_cobrinha.json
+```
+
+Grava a imagem de conferência da geometria (planta da punção, colapso e corte ao longo da cobrinha) em `saidas\e1\`.
 
 ## Ferramentas (E0)
 

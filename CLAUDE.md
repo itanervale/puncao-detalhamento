@@ -5,6 +5,13 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - **Plano e decisões:** `PLANO_Detalhamento_Puncao.md`, com etapas, respostas do usuário e perguntas abertas.
 - **Padrão gráfico:** `PADRAO_desenho.md`, com o mapa elemento → nível e as medidas dos modelos.
 
+## Estrutura
+- `nucleo\`: Python puro, sem o TQS. Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), colapso (`colapso.py`), verificações (`verificacoes.py`) e o conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
+- `dwg_tqs\`: gravação pelo TQS.
+- `ferramentas\`: leitura e comparação de DWG, imagens, esquema da geometria.
+- `testes\`: os da E1 não precisam do TQS; os da E0 são pulados sem ele ou sem os modelos.
+- **Unidades e convenções:** comprimentos em cm, bitolas em mm. `bx` é a dimensão do pilar na horizontal da prancha e `by` na vertical; as coordenadas são relativas ao canto inferior esquerdo do pilar.
+
 ## Regras
 - **Independência:** este repositório não importa nada de fora da própria pasta. Se for aproveitar código de outro app, copie e anote a origem no comentário.
 - **Camadas dos modelos intocadas:**

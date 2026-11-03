@@ -61,7 +61,8 @@ Os dois desenhos detalham o mesmo pilar nas duas soluções: P02, 50 × 150, laj
   - 17 × 17, com a 1ª linha a 11 cm das faces e 4 linhas além de cada face nas duas direções (11 + 3 × 17 = 62).
   - Dentro do pilar, a malha continua com espaços ajustados, com o acréscimo no meio: 172 = 8 × 17 + 2 × 18 e 72 = 17 + 19 + 19 + 17.
 - **N1, 17 ø10 C=450 (ferro genérico):** 17 cobrinhas paralelas ao lado de 50, a cada 17 cm (18 no meio).
-  - Cada uma tem 11 pernas e 12 trechos horizontais (10 × 17 + 2 × 19), e começa por baixo e termina por cima.
+  - Cada uma tem 11 pernas e 12 trechos horizontais (10 × 17 + 2 × 19). Na ponta de y menor começa por um trecho de cima e termina, na outra ponta, por um de baixo (conferido no corte, na E1).
+  - Na planta, os trechos de cima são tracejados e os de baixo, contínuos.
   - Os pontos do ferro estão pelos eixos: pernas de 22 entre eixos, logo 450 = 208 + 11 × 22.
   - No corte, as faces externas da cobrinha ficam a **2,0 cm** das faces da laje (altura externa 23 = 27 − 2 − 2). Ver a pergunta Q1.
 - **Barras de flexão no corte:**
@@ -287,9 +288,27 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - As cotas continuam com as cores padrão (3 e 7) guardadas em cada uma; falta o usuário conferir no editor.
 - **Aceite:** o usuário abre `saidas\e0\REPLICA_PUN_P02.DWG` e `REPLICA_PUN_P02_R01.DWG` no TQS (editor e tabela de ferros).
 
-**E1. Núcleo da cobrinha (pilar interno)**
-- Parâmetros, malha, cobrinha, montagem, colapso, gabarito e verificações.
-- **Aceite:** reproduz o P2: 17 N1 ø10 C=450, 11 N2 ø12,5 C=395, 3 N3 ø10 C=320 e 8 N4 ø10 C=220.
+**E1. Núcleo da cobrinha (pilar interno)** (feita em 03/11/2026)
+- **Parâmetros e altura útil:** `nucleo\parametros.py`, com padrões, validação e d pela seção 6.1. O projeto é um `.json` com o formato `puncao-detalhamento` 1 e uma lista de pilares.
+- **Geometria:**
+  - `nucleo\cobrinha.py`: malha, cobrinhas, pontos pelo eixo, montagem e gabarito;
+  - `nucleo\colapso.py`.
+- **Verificações e montagem:**
+  - `nucleo\verificacoes.py`: avisos da seção 6.3;
+  - `nucleo\detalhe.py`: junta tudo e numera os ferros como no modelo (N1 cobrinha, N2 montagem, N3 colapso em x, N4 colapso em y). Linha de comando: `python -m nucleo.detalhe <projeto.json>`.
+- **Testes e exemplos:**
+  - `testes\teste_e1_cobrinha.py`: 15 testes, que não dependem do TQS nem dos modelos;
+  - `exemplos\P2_cobrinha.json` e `exemplos\lote_cobrinha.json`.
+- **Conferência:** `ferramentas\esquema.py` grava a imagem da geometria em `saidas\e1\`.
+- **Resultado:** o P2 sai igual ao modelo:
+  - 17 N1 ø10 C=450, com os mesmos 24 pontos do ferro genérico do modelo;
+  - 11 N2 ø12,5 C=395, 3 N3 ø10 C=320 e 8 N4 ø10 C=220;
+  - linhas em 7×17, 18, 18 e 7×17; pernas em 4×17, 19, 19 e 4×17;
+  - d = 23, sem avisos.
+- **Regras adotadas (a confirmar):**
+  - **Espaços por cima do pilar:** n = parte inteira do vão ÷ s, e a sobra vai para o espaço do meio, ou metade para cada um dos dois do meio, mesmo que dê meio centímetro. Isso reproduz o 18 + 18 e o 19 + 19 do modelo, com menos pernas sobre o pilar. Num pilar de 40, porém, o espaço do meio chega a 28 (17, 28, 17). A alternativa é arredondar n, que daria 17, 14, 14, 17 com uma perna a mais (Q5).
+  - **Montagem:** encostada na perna, a (ø cobrinha + ø montagem)/2 = 1,125 do eixo, do lado do trecho de baixo; o modelo desenha a 1,5. O desenho da E2 usa a distância do modelo, e o núcleo guarda a física.
+  - **Colapso:** n barras por face, cada uma no meio da sua faixa ((i + ½)·L/n), como nos dois modelos; comprimento = lado + 2 × 85, arredondado para cima ao centímetro.
 
 **E2. Prancha da cobrinha em DWG-TQS**
 - Folha em primitivas e `dwg_tqs\`.
@@ -344,6 +363,10 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Q2.** A cobrinha em planta é desenhada com a bitola real.
 - **Q3.** A cabeça do pino fica com 1,0 cm (0,8 + 0,2, como no modelo) até a Trejor informar.
 - **Q4.** As cotas usam a configuração do modelo de conectores (texto no 221; linhas e símbolo no 253). Os níveis dos modelos não mudam, como já combinado.
+
+### Perguntas da E1
+
+- **Q5. Espaços por cima do pilar.** A sobra vai para o espaço do meio (parte inteira, menos pernas sobre o pilar; reproduz o modelo). Num pilar de 40, isso dá 17, 28, 17. A alternativa é arredondar o número de espaços (17, 14, 14, 17, com uma perna a mais). Qual prefere?
 
 ### Perguntas da E0 (texto original)
 

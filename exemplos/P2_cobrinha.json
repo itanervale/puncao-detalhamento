@@ -1,0 +1,25 @@
+{
+ "formato": "puncao-detalhamento",
+ "versao": 1,
+ "descricao": "Pilar do desenho de referência PUN_P02-R01 (cobrinha): 150 x 50, laje de 27, cobrimentos de 2,0 (Q1).",
+ "pilares": [
+  {
+   "titulo": "P2",
+   "repeticoes": 1,
+   "bx": 150,
+   "by": 50,
+   "h_laje": 27,
+   "c_sup": 2.0,
+   "c_inf": 2.0,
+   "solucao": "cobrinha",
+   "col_n_face_bx": 8,
+   "col_n_face_by": 3,
+   "cob_s": 17,
+   "cob_s0": 11,
+   "cob_linhas": 4,
+   "cob_bitola": 10,
+   "mont_bitola": 12.5,
+   "mont_ext": 60
+  }
+ ]
+}
