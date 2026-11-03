@@ -308,17 +308,21 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - **Montagem:** interrompida nas faces do pilar e com 30 cm além da última linha de cobrinhas (no modelo, 60).
 - **Como as regras foram aplicadas:**
   - **Linhas diante das faces** (as que passavam por cima do pilar): duas peças, cada uma da face para fora: trecho de baixo até s0, pernas e uma ponta de s além da última.
-  - **Linhas ao lado do pilar:** também cortadas no prolongamento das faces, em três peças.
-    - Duas são iguais às de cima (da face para fora).
-    - A terceira fica entre os prolongamentos, com as pernas ao lado da face e começando pelo trecho de baixo.
-    - Motivo: a montagem é reta e precisa achar a dobra de baixo do mesmo lado em todas as cobrinhas de uma fileira. Com a linha lateral inteira, isso só fecha se o número de espaços ao lado da face for ímpar; no P2 são 4. Cortada, toda peça segue a regra "começa na face pelo trecho de baixo".
+  - **Linhas ao lado do pilar:** inteiras (decisão do usuário, Q6), começando na ponta de fora pelo trecho de baixo.
+    - Entre as pernas de s0, o número de espaços ao lado da face é ímpar: o menor que deixa cada um ≤ s, com as pernas arredondadas a 0,5 cm e simétricas.
+    - No P2, são 5 espaços (14,5 / 14,5 / 14 / 14,5 / 14,5), com pernas em 3,5 / 18 / 32 / 46,5.
+    - Motivo: a montagem é reta e precisa achar a dobra de baixo do mesmo lado em todas as cobrinhas de uma fileira. Com o número ímpar, a linha inteira tem as dobras do mesmo lado que as peças da face.
+    - A 1ª versão desta regra cortava as linhas laterais em três peças.
   - **Montagem:** uma barra por fileira de pernas, encostada na perna do lado do trecho de baixo.
     - Fileiras fora da faixa do pilar: contínuas.
     - Fileiras ao lado do pilar: duas barras, da face do pilar até 30 cm além da última linha.
     - Comprimento arredondado para cima a 5 cm.
 - **Resultado no P2:**
-  - N1 34 ø10 C=167 (79 + 4 × 22), N2 8 ø10 C=116 (50 + 3 × 22), N3 8 ø12,5 C=335, N4 6 ø12,5 C=95, N5 3 ø10 C=320 e N6 8 ø10 C=220;
-  - malha do modelo (linhas em 7×17, 18, 18 e 7×17; fileiras em 4×17, 19, 19 e 4×17);
+  - N1 18 ø10 C=167 (79 + 4 × 22, da face para fora);
+  - N2 8 ø10 C=472 (208 + 12 × 22, inteiras ao lado do pilar);
+  - N3 8 ø12,5 C=335 e N4 8 ø12,5 C=95 (montagem);
+  - N5 3 ø10 C=320 e N6 8 ø10 C=220 (colapso);
+  - linhas em 7×17, 18, 18 e 7×17;
   - d = 23, sem avisos.
 - **Outras regras adotadas (a confirmar):**
   - **Espaços entre as linhas de s0:** n = parte inteira do vão ÷ s, com a sobra no espaço do meio (ou metade em cada um dos dois do meio). Isso reproduz o 18 + 18 e o 19 + 19 do modelo. Como nada passa mais por cima do pilar, a regra só define as linhas diante das faces e as pernas ao lado delas; o espaço maior (28 num pilar de 40) passa pelo aviso de 2d.
@@ -382,7 +386,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
 ### Perguntas da E1
 
 - **Q5. Espaços por cima do pilar.** Superada pela decisão do usuário de 03/11/2026: nada passa mais por cima do pilar. A regra (sobra no meio) ficou só para as linhas diante das faces e as pernas ao lado delas, e o espaço maior passa pelo aviso de 2d.
-- **Q6. Linhas ao lado do pilar em três peças.** É a forma de manter a montagem reta na dobra de baixo de todas as cobrinhas (E1). A alternativa é manter a linha lateral inteira, com um número ímpar de espaços ao lado da face (no P2, 5 de 14,4 em vez de 17, 19, 19, 17). Confirmar.
+- **Q6. Linhas ao lado do pilar.** Resposta do usuário (03/11/2026): linha inteira, com número ímpar de espaços ao lado da face (no P2, 5 de cerca de 14,4 em vez de 17, 19, 19, 17). A outra opção era cortar a linha em três peças.
 
 ### Perguntas da E0 (texto original)
 

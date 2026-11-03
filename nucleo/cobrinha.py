@@ -10,11 +10,13 @@ Coordenadas relativas ao canto inferior esquerdo do pilar, em cm; o pilar ocupa 
 correm ao longo de um eixo (u; o do lado menor do pilar, decisão P6) e ficam em linhas do outro (t).
 - Malha: linhas a s0 de cada face e mais (n - 1) a cada s para fora; entre as linhas de s0, n = parte inteira do
   vão / s espaços, com a sobra no(s) espaço(s) do meio (o modelo: 172 = 8 x 17 + 2 x 18; 72 = 17 + 19 + 19 + 17).
-- Peças de cada linha, todas começando numa face (u = 0 ou u = L) pelo trecho de baixo:
-  "extremidade": da face para fora, com as pernas de fora e uma ponta de s além da última (todas as linhas);
-  "lateral": só nas linhas ao lado do pilar (fora da faixa dele), de u = 0 a u = L, com as pernas entre as faces.
-  Cortar também as linhas ao lado do pilar mantém as dobras de baixo do mesmo lado em cada fileira, e a montagem,
-  reta, encosta nelas.
+- Peças:
+  "extremidade" (linhas diante das faces, as que cruzariam o pilar): duas por linha, cada uma da face (u = 0 ou
+  u = L) para fora, começando pelo trecho de baixo, com uma ponta de s além da última perna;
+  "continua" (linhas ao lado do pilar): uma peça inteira, que começa na ponta de fora pelo trecho de baixo. Entre
+  as pernas de s0, o número de espaços é ímpar (o menor que deixa cada um <= s, pernas arredondadas a 0,5 cm e
+  simétricas; no P2, 5 espaços de 14,5/14,5/14/14,5/14,5): assim as dobras de baixo ficam do mesmo lado que as
+  das peças da face em cada fileira, e a montagem, reta, encosta em todas (decisão do usuário em 03/11/2026, Q6).
 - Montagem: uma barra por fileira de pernas, perpendicular às cobrinhas, dentro da dobra de baixo (encostada na
   perna, do lado do trecho de baixo). Fileiras fora da faixa do pilar: contínuas; fileiras ao lado do pilar: duas
   barras, da face do pilar até mont_ext além da última linha. Comprimentos arredondados para cima.
@@ -44,6 +46,17 @@ def posicoes_malha(L, s0, s, n):
     pos = [-x for x in reversed(fora[1:])] + dentro + [L + x for x in fora[1:]]
     pos = [round(x, 4) for x in pos]
     return pos, [round(b - a, 4) for a, b in zip(pos, pos[1:])]
+
+
+def pernas_ao_lado(L, s0, s):
+    """Pernas entre as linhas de s0 (-s0 e L + s0), ao lado do pilar: número ímpar de espaços, o menor que deixa
+    cada um <= s; posições arredondadas a 0,5 cm e espelhadas (simétricas). Devolve só as pernas de dentro."""
+    vao = L + 2 * s0
+    n = max(1, math.ceil(vao / s - 1e-9))
+    if n % 2 == 0:
+        n += 1
+    meia = [round((-s0 + vao * i / n) * 2) / 2 for i in range(1, (n + 1) // 2)]
+    return meia + [round(L - u, 4) for u in reversed(meia)]
 
 
 def direcao_cobrinhas(p):
@@ -104,17 +117,20 @@ def detalhar(p):
 
     antes = sorted((u for u in pernas if u < 0), reverse=True)          # da face u = 0 para fora
     depois = sorted(u for u in pernas if u > L)                         # da face u = L para fora
-    meio = sorted(u for u in pernas if 0 < u < L)                       # entre as faces (linhas ao lado do pilar)
+    meio = pernas_ao_lado(L, p["cob_s0"], s[ax])                        # ao lado do pilar, entre as linhas de s0
     ext_a = _peca(0.0, antes, antes[-1] - ponta, H)
     ext_d = _peca(L, depois, depois[-1] + ponta, H)
-    lat = _peca(0.0, meio, L, H) if meio else None
+    todas = list(reversed(antes)) + meio + depois
+    cont = _peca(antes[-1] - ponta, todas, depois[-1] + ponta, H)      # começa na ponta de fora, por baixo
+    esp_lado = [round(b - a, 4) for a, b in zip(todas, todas[1:])]
 
     pecas = []
     for t in linhas:
-        pecas.append(dict(ext_a, linha=t, tipo="extremidade"))
-        pecas.append(dict(ext_d, linha=t, tipo="extremidade"))
-        if lat and not (0 < t < Lt):                                   # só as linhas ao lado do pilar
-            pecas.append(dict(lat, linha=t, tipo="lateral"))
+        if 0 < t < Lt:                                                 # diante das faces: cortada no pilar
+            pecas.append(dict(ext_a, linha=t, tipo="extremidade"))
+            pecas.append(dict(ext_d, linha=t, tipo="extremidade"))
+        else:                                                          # ao lado do pilar: inteira
+            pecas.append(dict(cont, linha=t, tipo="continua"))
 
     # Posições: peças iguais (mesma forma a partir da face) formam uma posição.
     grupos = {}
@@ -129,13 +145,11 @@ def detalhar(p):
     afast = (fc + fm) / 2
     t0, t1 = linhas[0] - p["mont_ext"], linhas[-1] + p["mont_ext"]
     barras = []
-    for peca, fileira in ((ext_a, antes), (ext_d, depois), (lat, meio)):
-        if not peca:
-            continue
+    for peca, fileira in ((ext_a, antes), (ext_d, depois), (cont, meio)):
         lados = _lado_de_baixo(peca)
         for u in fileira:
             pos = round(u + lados[u] * afast, 4)
-            if peca is lat:                                           # ao lado do pilar: interrompida nas faces
+            if fileira is meio:                                       # ao lado do pilar: interrompida nas faces
                 barras.append(dict(fileira=u, pos=pos, ini=t0, fim=0.0, tipo="lateral"))
                 barras.append(dict(fileira=u, pos=pos, ini=Lt, fim=t1, tipo="lateral"))
             else:
@@ -148,11 +162,12 @@ def detalhar(p):
         g["quant"] += 1
     mont_posicoes = sorted(grupos_m.values(), key=lambda g: -g["comp"])
 
-    # Maior espaçamento tangencial (entre linhas vizinhas e entre pernas vizinhas ao lado das faces).
-    tang = max(esp_linhas + esp_pernas)
+    # Maior espaçamento entre pernas vizinhas: entre as linhas e, ao longo delas, nas linhas ao lado do pilar.
+    tang = max(esp_linhas + esp_lado)
     return dict(
         direcao=ax, transversal=tr,
         pernas=pernas, esp_pernas=esp_pernas, linhas=linhas, esp_linhas=esp_linhas,
+        pernas_lado=todas, esp_lado=esp_lado,
         n_linhas=len(linhas), altura_eixo=H, ponta=ponta,
         pecas=pecas, posicoes=posicoes,
         n_pecas=len(pecas),

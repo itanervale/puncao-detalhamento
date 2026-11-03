@@ -54,7 +54,7 @@ def planta_puncao(ax, r):
         (x0, y0), (x1, y1) = _xy(c, b["ini"], b["pos"]), _xy(c, b["fim"], b["pos"])
         ax.plot([x0, x1], [y0, y1], color=COR["mont"], lw=0.9, zorder=2)
     ax.set_title(f"{p['titulo']}: planta da punção ({c['n_pecas']} peças de cobrinha; azul: da face para fora, "
-                 f"roxo: ao lado do pilar)", fontsize=9)
+                 f"roxo: inteiras ao lado do pilar)", fontsize=9)
 
 
 def planta_colapso(ax, r):
@@ -94,6 +94,10 @@ def corte(ax, r, linha, titulo):
     ax.set_title(titulo, fontsize=9)
 
 
+def _esp_txt(esp):
+    return " / ".join(f"{e:g}".replace(".", ",") for e in esp)
+
+
 def gerar(r, pasta):
     c = r["cobrinha"]
     Lt = r["p"]["bx"] if c["direcao"] == "y" else r["p"]["by"]
@@ -108,8 +112,8 @@ def gerar(r, pasta):
     pos = {p["pos"]: p for p in r["ferros"]}
     corte(a3, r, diante, f"corte na linha {c['transversal']} = {diante:g} (diante da face): duas peças que começam "
                          f"na face pelo trecho de baixo; altura {c['altura_eixo']:g} pelo eixo")
-    corte(a4, r, ao_lado, f"corte na linha {c['transversal']} = {ao_lado:g} (ao lado do pilar): três peças, cada uma "
-                          f"começando numa face (ou no prolongamento dela) pelo trecho de baixo")
+    corte(a4, r, ao_lado, f"corte na linha {c['transversal']} = {ao_lado:g} (ao lado do pilar): uma peça inteira, "
+                          f"número ímpar de espaços ao lado da face ({_esp_txt(c['esp_lado'])})")
     for a in (a1, a2, a3, a4):
         a.set_aspect("equal")
         a.grid(True, lw=0.3, alpha=0.4)

@@ -25,7 +25,7 @@ def detalhar(par):
         res["cobrinha"] = cob
         for g in cob["posicoes"]:
             desc = ("cobrinha da face para fora" if g["tipo"] == "extremidade"
-                    else "cobrinha ao lado do pilar, entre as faces")
+                    else "cobrinha inteira, ao lado do pilar")
             ferros.append(dict(tipo="cobrinha", subtipo=g["tipo"], bitola=p["cob_bitola"], quant=g["quant"],
                                comp=round(g["comp"]), pontos=g["pontos"], descricao=desc))
         for g in cob["mont_posicoes"]:
@@ -61,8 +61,8 @@ def relatorio(res):
     if "cobrinha" in res:
         c = res["cobrinha"]
         linhas.append(f"   cobrinhas em {c['direcao']}: {c['n_linhas']} linhas ({_esp(c['esp_linhas'])}), "
-                      f"fileiras de pernas ({_esp(c['esp_pernas'])}), altura pelo eixo {c['altura_eixo']:g}, "
-                      f"{c['n_pecas']} peças")
+                      f"pernas nas linhas ao lado do pilar ({_esp(c['esp_lado'])}), "
+                      f"altura pelo eixo {c['altura_eixo']:g}, {c['n_pecas']} peças")
     for f in res["ferros"]:
         linhas.append(f"   N{f['pos']}  {f['quant']:>3} ø{_bitola(f['bitola']):<5} C={f['comp']:<5} {f['descricao']}")
     for tipo, txt, ref in res["verificacoes"]:

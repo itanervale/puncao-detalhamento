@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 E1: núcleo da cobrinha (sem o TQS). Malha do desenho de referência PUN_P02-R01, com as regras do usuário de
-03/11/2026: nada por cima do pilar, toda peça começa na face (ou no prolongamento dela) pelo trecho de baixo,
-montagem interrompida nas faces e 30 cm além da última linha.
+03/11/2026: nada por cima do pilar, as peças diante das faces começam na face pelo trecho de baixo, as linhas ao
+lado do pilar são inteiras com número ímpar de espaços ao lado da face (Q6), montagem interrompida nas faces e
+30 cm além da última linha.
 
 Uso:  python -m unittest testes.teste_e1_cobrinha -v
 """
@@ -41,6 +42,16 @@ class TesteMalha(unittest.TestCase):
             pos, _ = cobrinha.posicoes_malha(L, 11, 17, 4)
             self.assertEqual([round(a + b, 4) for a, b in zip(pos, reversed(pos))], [L] * len(pos))
 
+    def test_pernas_ao_lado_numero_impar_de_espacos(self):
+        self.assertEqual(cobrinha.pernas_ao_lado(50, 11, 17), [3.5, 18.0, 32.0, 46.5])     # 5 x ~14,4
+        for L in (20, 33, 40, 47, 80, 90, 151):
+            meio = cobrinha.pernas_ao_lado(L, 11, 17)
+            todas = [-11] + meio + [L + 11]
+            esp = [b - a for a, b in zip(todas, todas[1:])]
+            self.assertEqual(len(esp) % 2, 1, L)                        # ímpar
+            self.assertTrue(all(e <= 17.5 for e in esp), (L, esp))    # <= s (+ arredondamento de 0,5)
+            self.assertEqual([round(a + b, 4) for a, b in zip(todas, reversed(todas))], [L] * len(todas))
+
 
 class TesteP2(unittest.TestCase):
     @classmethod
@@ -55,8 +66,8 @@ class TesteP2(unittest.TestCase):
 
     def test_ferros(self):
         self.assertEqual([(f["pos"], f["quant"], f["bitola"], f["comp"]) for f in self.r["ferros"]],
-                         [(1, 34, 10.0, 167), (2, 8, 10.0, 116),          # 79 + 4 x 22 e 50 + 3 x 22
-                          (3, 8, 12.5, 335), (4, 6, 12.5, 95),            # 274 + 2 x 30 e 62 + 30
+                         [(1, 18, 10.0, 167), (2, 8, 10.0, 472),          # 79 + 4 x 22 e 208 + 12 x 22
+                          (3, 8, 12.5, 335), (4, 8, 12.5, 95),            # 274 + 2 x 30 e 62 + 30
                           (5, 3, 10.0, 320), (6, 8, 10.0, 220)])
 
     def test_malha_do_modelo(self):
@@ -69,10 +80,13 @@ class TesteP2(unittest.TestCase):
         self.assertEqual(pc["pontos"], [(0, "inf"), (-11, "inf"), (-11, "sup"), (-28, "sup"), (-28, "inf"),
                                         (-45, "inf"), (-45, "sup"), (-62, "sup"), (-62, "inf"), (-79, "inf")])
 
-    def test_toda_peca_comeca_na_face_pelo_trecho_de_baixo(self):
+    def test_pecas_comecam_pelo_trecho_de_baixo(self):
         for pc in self.c["pecas"]:
-            self.assertIn(pc["pontos"][0][0], (0, 50))
             self.assertEqual(pc["pontos"][0][1], "inf")
+            if pc["tipo"] == "extremidade":                          # diante das faces: começa na face
+                self.assertIn(pc["pontos"][0][0], (0, 50))
+            else:                                                     # ao lado: inteira, da ponta de fora
+                self.assertEqual((pc["pontos"][0][0], pc["pontos"][-1][0]), (-79, 129))
 
     def test_nada_por_cima_do_pilar(self):
         for pc in self.c["pecas"]:
@@ -82,10 +96,12 @@ class TesteP2(unittest.TestCase):
             if 0 < b["pos"] < 50:
                 self.assertTrue(b["fim"] <= 0 or b["ini"] >= 150)
 
-    def test_pecas_ao_lado_do_pilar(self):
-        laterais = [p for p in self.c["pecas"] if p["tipo"] == "lateral"]
-        self.assertEqual(sorted({p["linha"] for p in laterais}), [-62, -45, -28, -11, 161, 178, 195, 212])
-        self.assertEqual(laterais[0]["pernas"], [6, 25, 44])
+    def test_linhas_ao_lado_do_pilar_inteiras(self):
+        lado = [p for p in self.c["pecas"] if p["tipo"] == "continua"]
+        self.assertEqual(sorted(p["linha"] for p in lado), [-62, -45, -28, -11, 161, 178, 195, 212])
+        self.assertEqual(lado[0]["pernas"], [-62, -45, -28, -11, 3.5, 18, 32, 46.5, 61, 78, 95, 112])
+        frente = [p for p in self.c["pecas"] if p["tipo"] == "extremidade"]
+        self.assertEqual(len(frente), 18)                              # 9 linhas diante das faces x 2
 
     def test_montagem_dentro_da_dobra_de_baixo_de_todas_as_cobrinhas(self):
         """A barra é reta: em cada fileira, todas as cobrinhas que ela cruza têm o trecho de baixo do lado dela."""
@@ -118,7 +134,7 @@ class TesteP2(unittest.TestCase):
 class TesteVariacoes(unittest.TestCase):
     def test_cobrimento_25_encurta_as_cobrinhas_e_avisa(self):
         r = detalhar(dict(P2, c_sup=2.5, c_inf=2.5))
-        self.assertEqual([f["comp"] for f in r["ferros"][:2]], [163, 113])      # pernas de 21 pelo eixo
+        self.assertEqual([f["comp"] for f in r["ferros"][:2]], [163, 460])      # pernas de 21 pelo eixo
         self.assertAlmostEqual(r["d"], 22.5)
         self.assertEqual(sum(1 for v in r["verificacoes"] if v[0] == "aviso"), 2)   # 17 > 0,75d em x e y
 
@@ -126,7 +142,8 @@ class TesteVariacoes(unittest.TestCase):
         c = detalhar(dict(P2, cob_direcao="maior"))["cobrinha"]
         self.assertEqual((c["direcao"], c["n_linhas"]), ("x", 11))
         for pc in c["pecas"]:
-            self.assertIn(pc["pontos"][0][0], (0, 150))
+            if pc["tipo"] == "extremidade":
+                self.assertIn(pc["pontos"][0][0], (0, 150))
 
     def test_montagem_padrao_de_30(self):
         p, _ = parametros.normalizar(P2)
