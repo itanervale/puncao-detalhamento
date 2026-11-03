@@ -33,12 +33,55 @@ NV_OBJETO_FERRO = 220
 
 
 def novo_desenho(escala=15.0, cota=None):
+    """DWG 9/13 com a tabela de níveis (cor e estilo de tela) dos desenhos de referência."""
     dwg = TQSDwg.Dwg()
     dwg.file.New()
     s = dwg.settings
     s.systemId, s.subSystemId, s.scale = TQSDwg.IEDTAB, 13, float(escala)
     dwg.file.LoadColors()
+    aplicar_tabela_niveis(dwg)
     configurar_cotas(dwg, **(cota or {}))
+    return dwg
+
+
+def tabela_niveis():
+    """{nível: (cor, estilo)} de tela dos desenhos de referência (nucleo/niveis.json)."""
+    niv = json.load(open(os.path.join(RAIZ, "nucleo", "niveis.json"), encoding="utf-8"))["niveis"]
+    return {int(n): (v["cor_tela"], v["estilo_tela"]) for n, v in niv.items()}
+
+
+def aplicar_tabela_niveis(dwg, tabela=None):
+    """Grava no desenho a tabela de níveis dos modelos. Os modelos guardam cores de tela próprias em 34 níveis (ex.:
+    cotas 221 na cor 11, pinos e cobrinhas 241 na cor 1); o LoadColors e o File.Open da interface trocam essa
+    tabela pela padrão do 9/13 (03/11/2026). O nível vai como texto: com número, a interface muda o nível atual."""
+    lt = TQSDwg.LevelsTable(dwg)
+    nivel_atual = dwg.draw.level
+    for n, (cor, estilo) in (tabela or tabela_niveis()).items():
+        lt.SetColor(str(n), cor)
+        lt.SetStyle(str(n), estilo)
+    dwg.draw.level = nivel_atual
+
+
+def abrir_sem_cores(dwg, arq):
+    """Abre o DWG como o File.Open da interface, mas sem o CarregarCores(), que troca as cores dos níveis gravadas
+    no arquivo pelas padrão do sistema/subsistema. Assim a tabela de níveis e a cor das entidades lidas pelo
+    iterador são as do arquivo, as que o editor do TQS mostra. A tabela de plotagem é carregada como no Open."""
+    import ctypes
+    import TQS
+    dwg.file.Close()
+    dwg.m_acessol.ACL_INIACESSO()
+    dwg.m_nomedwg = arq
+    st, ped = ctypes.c_int(0), ctypes.c_void_p(dwg.m_pedmv)
+    dwg.m_mdwg.g_extopn(ctypes.c_char_p(arq.encode(TQS.TQSUtil.CHARSET)), ctypes.byref(st), None, ctypes.byref(ped))
+    dwg.m_pedmv = ped.value
+    if st.value != 0:
+        raise OSError(f"o TQS não abriu {arq}")
+    ped = ctypes.c_void_p(dwg.m_pedmv)
+    dwg.m_mdwg.COTIFOR(ped)
+    dwg.m_mdwg.g_extpbl(ped)
+    st = ctypes.c_int(0)
+    dwg.m_mdwg.tabplt_ini(ped, ctypes.byref(st))
+    dwg.m_mdwg.tabplt_ler(ped, ctypes.create_string_buffer(TQS.TQSUtil.MAXNCSTR), ctypes.byref(st))
     return dwg
 
 
@@ -159,8 +202,13 @@ def _pdf_nome(arq):
 
 
 # --------------------------------------------------------------------------- gravação
+def _gravado_agora(arq, t0):
+    return os.path.exists(arq) and os.path.getmtime(arq) >= t0 - 1
+
+
 def salvar(dwg, pasta, nome, pdf=True, dxf=True, dxf_plotagem=True):
-    """Grava <pasta>/<nome>.DWG (com cópia do anterior em <pasta>/anteriores), PDF e DXF. Devolve os caminhos."""
+    """Grava <pasta>/<nome>.DWG (com cópia do anterior em <pasta>/anteriores), PDF e DXF. Devolve os caminhos e, se
+    o DWG estava aberto no TQS (travado), grava <nome>_HHMMSS e põe o aviso em arquivos["aviso"]."""
     pasta = os.path.abspath(pasta)
     os.makedirs(pasta, exist_ok=True)
     base = os.path.join(pasta, nome)
@@ -168,11 +216,23 @@ def salvar(dwg, pasta, nome, pdf=True, dxf=True, dxf_plotagem=True):
         ant = os.path.join(pasta, "anteriores")
         os.makedirs(ant, exist_ok=True)
         shutil.copy2(base + ".DWG", os.path.join(ant, f"{nome}_{datetime.now():%Y%m%d_%H%M%S}.DWG"))
-    arquivos = {"dwg": base + ".DWG"}
+    arquivos = {}
+    # Tabela de níveis dos modelos de novo, logo antes de gravar, para nenhuma etapa intermediária a desfazer.
+    aplicar_tabela_niveis(dwg)
     cwd = os.getcwd()
     os.chdir(pasta)                              # a plotagem em PDF procura o desenho na pasta atual
     try:
+        t0 = datetime.now().timestamp()
         dwg.file.SaveAs(base + ".DWG")
+        if not _gravado_agora(base + ".DWG", t0):
+            # O SaveAs falha sem avisar quando o DWG está aberto no TQS (travado para escrita; 03/11/2026).
+            nome0, nome = nome, f"{nome}_{datetime.now():%H%M%S}"
+            base = os.path.join(pasta, nome)
+            dwg.file.SaveAs(base + ".DWG")
+            if not _gravado_agora(base + ".DWG", t0):
+                raise OSError(f"o TQS não gravou {base}.DWG")
+            arquivos["aviso"] = f"{nome0}.DWG está aberto no TQS e não foi regravado; gravado como {nome}.DWG"
+        arquivos["dwg"] = base + ".DWG"
         if pdf:
             antes = set(glob.glob(os.path.join(pasta, "*.PDF")))
             t0 = datetime.now().timestamp()

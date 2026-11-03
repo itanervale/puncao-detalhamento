@@ -4,8 +4,9 @@ Grava nucleo/niveis.json com os atributos de cada nível (0 a 255) do desenho de
 e o DXF ficarem iguais em qualquer máquina, sem ler o C:\\TQSW em tempo de uso:
 
 - plotagem (TABPLTA.DAT + TABPLTA.MSG + PENAS\\PLOTPENA.PEN): título, pena, cor e espessura da pena, estilo e hachura;
-- tela: cor (índice da paleta do TQS, igual à do AutoCAD) e estilo de cada nível num DWG 9/13 novo, criado só na
-  memória (nada é gravado), conferidos com a tabela de níveis dos dois desenhos de referência.
+- tela (cor_tela, estilo_tela): a tabela de níveis gravada num desenho de referência (--modelo), lida sem o
+  CarregarCores() da interface; é a que o app grava nos desenhos (os modelos têm cores próprias em 34 níveis);
+- tela padrão (cor_tela_9_13, estilo_tela_9_13): a de um DWG 9/13 novo, criado só na memória, para comparação.
 
 Formato da TABPLTA (lido em 13/10/2026 no projeto principal): seções PENAS, PESOS, ESTILOS e HACHURAS com 256
 caracteres em 3 linhas (80 + 80 + 96), um por nível; "0"-"9" = 0-9 e depois chr(55 + n). Pena n do arquivo = pena
@@ -62,17 +63,30 @@ def ler_tabplt(base):
     return out
 
 
-def ler_tela():
-    """Cor e estilo de tela de cada nível num DWG 9/13 novo (só na memória)."""
+def ler_tela(modelo):
+    """Tabela de níveis de tela: a gravada no desenho de referência e a padrão de um DWG 9/13 novo (só na memória).
+    Devolve também a pena que o TQS dá a cada nível, para conferir a leitura da TABPLTA."""
     from TQS import TQSDwg as T
+    sys.path.insert(0, RAIZ)
+    from ferramentas.ler_modelo import ler
     dwg = T.Dwg()
     dwg.file.New()
     dwg.settings.systemId, dwg.settings.subSystemId = 9, 13
     dwg.file.LoadColors()
     lt = T.LevelsTable(dwg)
-    tela = {nv: dict(cor_tela=lt.GetColor(nv), estilo_tela=lt.GetStyle(nv)) for nv in range(256)}
+    tela = {nv: dict(cor_tela_9_13=lt.GetColor(str(nv)), estilo_tela_9_13=lt.GetStyle(str(nv))) for nv in range(256)}
     dwg.plotting.LoadPlottingTable()
     pena_tqs = {nv: dwg.plotting.AttributeRead(nv)[0] for nv in range(256)}
+    dwg.file.Close()
+    if modelo and os.path.exists(modelo):
+        niv = ler(modelo)["niveis"]
+        for nv in range(256):
+            tela[nv].update(cor_tela=niv[nv]["cor"], estilo_tela=niv[nv]["estilo"])
+    else:                                            # sem o modelo: mantém a tabela já gravada no niveis.json
+        atual = json.load(open(SAIDA, encoding="utf-8"))["niveis"]
+        for nv in range(256):
+            tela[nv].update(cor_tela=atual[str(nv)]["cor_tela"], estilo_tela=atual[str(nv)]["estilo_tela"])
+        print("AVISO: modelo não encontrado; cores de tela mantidas do niveis.json atual")
     return tela, pena_tqs
 
 
@@ -94,17 +108,21 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
     ap.add_argument("--suporte", default=r"C:\TQSW\SUPORTE\NGE")
+    ap.add_argument("--modelo", default=os.path.join(RAIZ, "DesenhosReferencia", "PUN_P02.DWG"),
+                    help="desenho de referência de onde vem a tabela de níveis de tela")
     a = ap.parse_args()
     plot = ler_tabplt(a.suporte)
-    tela, pena_tqs = ler_tela()
+    tela, pena_tqs = ler_tela(a.modelo)
     difs = [nv for nv in range(256) if pena_tqs[nv] + 1 != plot[nv]["pena"]]
     if difs:
         print("AVISO: pena diferente da lida pelo TQS nos níveis", difs)
     niveis = {nv: {**plot[nv], **tela[nv]} for nv in range(256)}
-    dados = {"fonte": f"TABPLTA.DAT, TABPLTA.MSG e PENAS\\PLOTPENA.PEN de {a.suporte}; tela de um DWG 9/13 novo "
-                      f"(TQSPythonInterface). Extraído em {date.today():%d/%m/%Y}.",
+    dados = {"fonte": f"TABPLTA.DAT, TABPLTA.MSG e PENAS\\PLOTPENA.PEN de {a.suporte}; tela (cor_tela, "
+                      f"estilo_tela) da tabela de níveis de {os.path.basename(a.modelo)}; tela padrão de um DWG 9/13 "
+                      f"novo (TQSPythonInterface). Extraído em {date.today():%d/%m/%Y}.",
              "observacao": "pena começa em 1, como na janela do TQS; estilo 0 contínuo, 1 tracejado, 2 pontilhado, "
-                           "3 traço-ponto, 4 traço-dois-pontos; estilo_tela -1 = padrão",
+                           "3 traço-ponto, 4 traço-dois-pontos; estilo_tela -1 = padrão; cor_tela e estilo_tela são "
+                           "os que o app grava nos desenhos (iguais nos dois desenhos de referência)",
              "paleta_tela": paleta_aci(), "niveis": niveis}
     with open(SAIDA, "w", encoding="utf-8", newline="\n") as f:
         json.dump(dados, f, ensure_ascii=False, indent=1)

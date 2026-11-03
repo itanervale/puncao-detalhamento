@@ -1,6 +1,6 @@
 {
- "fonte": "TABPLTA.DAT, TABPLTA.MSG e PENAS\\PLOTPENA.PEN de C:\\TQSW\\SUPORTE\\NGE; tela de um DWG 9/13 novo (TQSPythonInterface). Extraído em 03/11/2026.",
- "observacao": "pena começa em 1, como na janela do TQS; estilo 0 contínuo, 1 tracejado, 2 pontilhado, 3 traço-ponto, 4 traço-dois-pontos; estilo_tela -1 = padrão",
+ "fonte": "TABPLTA.DAT, TABPLTA.MSG e PENAS\\PLOTPENA.PEN de C:\\TQSW\\SUPORTE\\NGE; tela (cor_tela, estilo_tela) da tabela de níveis de PUN_P02.DWG; tela padrão de um DWG 9/13 novo (TQSPythonInterface). Extraído em 03/11/2026.",
+ "observacao": "pena começa em 1, como na janela do TQS; estilo 0 contínuo, 1 tracejado, 2 pontilhado, 3 traço-ponto, 4 traço-dois-pontos; estilo_tela -1 = padrão; cor_tela e estilo_tela são os que o app grava nos desenhos (iguais nos dois desenhos de referência)",
  "paleta_tela": {
   "1": "#ff0000",
   "2": "#ffff00",
@@ -267,7 +267,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 8,
    "estilo_tela": 0
   },
   "1": {
@@ -278,6 +280,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -289,6 +293,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -300,6 +306,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -311,6 +319,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -322,6 +332,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -333,6 +345,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -344,6 +358,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -355,6 +371,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -366,6 +384,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -377,6 +397,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -388,6 +410,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -399,6 +423,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -410,6 +436,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -421,6 +449,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -432,6 +462,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -443,6 +475,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -454,6 +488,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -465,6 +501,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -476,6 +514,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -487,6 +527,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -498,6 +540,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -509,6 +553,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -520,6 +566,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -531,6 +579,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -542,6 +592,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -553,6 +605,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -564,6 +618,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -575,6 +631,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -586,6 +644,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -597,6 +657,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -608,6 +670,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -619,6 +683,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -630,6 +696,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -641,6 +709,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -652,6 +722,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -663,6 +735,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -674,6 +748,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -685,6 +761,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -696,6 +774,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -707,6 +787,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -718,6 +800,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -729,6 +813,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -740,6 +826,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -751,6 +839,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -762,6 +852,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -773,6 +865,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -784,6 +878,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -795,6 +891,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -806,6 +904,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -817,6 +917,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -828,6 +930,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -839,6 +943,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -850,6 +956,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -861,6 +969,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -872,6 +982,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -883,6 +995,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -894,6 +1008,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -905,6 +1021,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -916,6 +1034,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -927,6 +1047,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -938,6 +1060,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -949,6 +1073,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -960,6 +1086,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -971,6 +1099,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -982,6 +1112,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -993,6 +1125,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1004,6 +1138,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1015,6 +1151,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1026,6 +1164,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1037,6 +1177,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1048,6 +1190,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1059,6 +1203,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1070,6 +1216,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1081,6 +1229,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1092,6 +1242,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1103,6 +1255,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1114,6 +1268,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1125,6 +1281,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1136,6 +1294,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1147,6 +1307,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1158,6 +1320,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1169,6 +1333,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1180,6 +1346,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1191,6 +1359,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1202,6 +1372,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1213,6 +1385,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1224,6 +1398,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1235,6 +1411,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1246,6 +1424,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1257,6 +1437,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1268,6 +1450,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1279,6 +1463,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1290,6 +1476,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1301,6 +1489,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1312,6 +1502,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1323,6 +1515,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1334,6 +1528,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1345,6 +1541,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1356,6 +1554,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1367,6 +1567,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1378,6 +1580,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1389,6 +1593,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1400,6 +1606,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1411,6 +1619,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1422,6 +1632,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1433,6 +1645,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1444,6 +1658,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1455,6 +1671,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1466,6 +1684,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1477,6 +1697,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1488,6 +1710,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1499,6 +1723,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1510,6 +1736,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1521,6 +1749,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1532,6 +1762,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1543,6 +1775,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1554,6 +1788,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1565,6 +1801,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1576,6 +1814,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1587,6 +1827,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1598,6 +1840,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1609,6 +1853,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1620,6 +1866,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1631,6 +1879,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1642,6 +1892,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1653,6 +1905,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1664,6 +1918,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1675,6 +1931,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1686,6 +1944,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1697,6 +1957,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1708,6 +1970,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1719,6 +1983,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1730,6 +1996,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1741,6 +2009,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1752,6 +2022,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1763,6 +2035,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1774,6 +2048,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1785,6 +2061,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1796,6 +2074,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1807,6 +2087,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1818,6 +2100,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1829,6 +2113,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1840,6 +2126,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1851,6 +2139,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1862,6 +2152,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1873,6 +2165,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1884,6 +2178,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1895,6 +2191,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1906,6 +2204,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1917,6 +2217,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1928,6 +2230,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1939,6 +2243,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1950,6 +2256,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1961,6 +2269,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1972,6 +2282,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1983,6 +2295,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -1994,6 +2308,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2005,6 +2321,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2016,6 +2334,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2027,6 +2347,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2038,6 +2360,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2049,6 +2373,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2060,6 +2386,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2071,6 +2399,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2082,6 +2412,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2093,6 +2425,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2104,6 +2438,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2115,6 +2451,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2126,6 +2464,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2137,6 +2477,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2148,6 +2490,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2159,6 +2503,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2170,6 +2516,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2181,6 +2529,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2192,6 +2542,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2203,6 +2555,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2214,6 +2568,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2225,6 +2581,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2236,6 +2594,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2247,6 +2607,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2258,6 +2620,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2269,6 +2633,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2280,6 +2646,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2291,6 +2659,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2302,6 +2672,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2313,6 +2685,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2324,6 +2698,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2335,6 +2711,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2346,6 +2724,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2357,6 +2737,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2368,6 +2750,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2379,6 +2763,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2390,6 +2776,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2401,6 +2789,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2412,6 +2802,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2423,6 +2815,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2434,6 +2828,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2445,6 +2841,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2456,6 +2854,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 2,
+   "estilo_tela_9_13": 0,
    "cor_tela": 2,
    "estilo_tela": 0
   },
@@ -2467,6 +2867,8 @@
    "estilo_plot": 2,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 4,
+   "estilo_tela_9_13": 2,
    "cor_tela": 4,
    "estilo_tela": 2
   },
@@ -2478,6 +2880,8 @@
    "estilo_plot": 1,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 4,
+   "estilo_tela_9_13": 1,
    "cor_tela": 4,
    "estilo_tela": 1
   },
@@ -2489,6 +2893,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 1,
+   "estilo_tela_9_13": 0,
    "cor_tela": 1,
    "estilo_tela": 0
   },
@@ -2500,6 +2906,8 @@
    "estilo_plot": 5,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 6,
+   "estilo_tela_9_13": 1,
    "cor_tela": 6,
    "estilo_tela": 1
   },
@@ -2511,7 +2919,9 @@
    "estilo_plot": 3,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 5,
+   "cor_tela_9_13": 5,
+   "estilo_tela_9_13": 3,
+   "cor_tela": 13,
    "estilo_tela": 3
   },
   "205": {
@@ -2522,6 +2932,8 @@
    "estilo_plot": 4,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 5,
+   "estilo_tela_9_13": 4,
    "cor_tela": 5,
    "estilo_tela": 4
   },
@@ -2533,7 +2945,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 60,
    "estilo_tela": 0
   },
   "207": {
@@ -2544,6 +2958,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2555,7 +2971,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 10,
    "estilo_tela": 0
   },
   "209": {
@@ -2566,6 +2984,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2577,7 +2997,9 @@
    "estilo_plot": 2,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 2,
+   "cor_tela": 15,
    "estilo_tela": 2
   },
   "211": {
@@ -2588,7 +3010,9 @@
    "estilo_plot": 1,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 5,
+   "cor_tela_9_13": 5,
+   "estilo_tela_9_13": 1,
+   "cor_tela": 12,
    "estilo_tela": 1
   },
   "212": {
@@ -2599,6 +3023,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2610,6 +3036,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2621,6 +3049,8 @@
    "estilo_plot": 3,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2632,6 +3062,8 @@
    "estilo_plot": 4,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2643,6 +3075,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2654,6 +3088,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2665,7 +3101,9 @@
    "estilo_plot": 5,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 1,
    "estilo_tela": 0
   },
   "219": {
@@ -2676,7 +3114,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 11,
+   "cor_tela_9_13": 11,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 7,
    "estilo_tela": 0
   },
   "220": {
@@ -2687,6 +3127,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 4,
+   "estilo_tela_9_13": 0,
    "cor_tela": 4,
    "estilo_tela": 0
   },
@@ -2698,7 +3140,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 3,
+   "cor_tela_9_13": 3,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 11,
    "estilo_tela": 0
   },
   "222": {
@@ -2709,6 +3153,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 1,
+   "estilo_tela_9_13": 0,
    "cor_tela": 1,
    "estilo_tela": 0
   },
@@ -2720,6 +3166,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 4,
+   "estilo_tela_9_13": 0,
    "cor_tela": 4,
    "estilo_tela": 0
   },
@@ -2735,6 +3183,8 @@
     "angulo": 45.0,
     "parametro": 100.0
    },
+   "cor_tela_9_13": 1,
+   "estilo_tela_9_13": 0,
    "cor_tela": 1,
    "estilo_tela": 0
   },
@@ -2750,6 +3200,8 @@
     "angulo": 45.0,
     "parametro": 20.0
    },
+   "cor_tela_9_13": 9,
+   "estilo_tela_9_13": 0,
    "cor_tela": 9,
    "estilo_tela": 0
   },
@@ -2761,7 +3213,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 60,
    "estilo_tela": 0
   },
   "227": {
@@ -2772,6 +3226,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 1,
+   "estilo_tela_9_13": 0,
    "cor_tela": 1,
    "estilo_tela": 0
   },
@@ -2787,7 +3243,9 @@
     "angulo": 45.0,
     "parametro": 10.0
    },
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 9,
    "estilo_tela": 0
   },
   "229": {
@@ -2802,6 +3260,8 @@
     "angulo": 0.0,
     "parametro": 10.0
    },
+   "cor_tela_9_13": 3,
+   "estilo_tela_9_13": 0,
    "cor_tela": 3,
    "estilo_tela": 0
   },
@@ -2813,6 +3273,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 3,
+   "estilo_tela_9_13": 0,
    "cor_tela": 3,
    "estilo_tela": 0
   },
@@ -2828,7 +3290,9 @@
     "angulo": 45.0,
     "parametro": 0.0
    },
-   "cor_tela": 1,
+   "cor_tela_9_13": 1,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 8,
    "estilo_tela": 0
   },
   "232": {
@@ -2839,6 +3303,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
    "estilo_tela": 0
   },
@@ -2850,7 +3316,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 1,
    "estilo_tela": 0
   },
   "234": {
@@ -2861,7 +3329,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 3,
+   "cor_tela_9_13": 3,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 4,
    "estilo_tela": 0
   },
   "235": {
@@ -2872,7 +3342,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 5,
    "estilo_tela": 0
   },
   "236": {
@@ -2883,7 +3355,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 3,
    "estilo_tela": 0
   },
   "237": {
@@ -2894,7 +3368,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 11,
    "estilo_tela": 0
   },
   "238": {
@@ -2905,7 +3381,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 2,
    "estilo_tela": 0
   },
   "239": {
@@ -2916,6 +3394,8 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 6,
+   "estilo_tela_9_13": 0,
    "cor_tela": 6,
    "estilo_tela": 0
   },
@@ -2931,7 +3411,9 @@
     "angulo": 45.0,
     "parametro": 25.0
    },
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 10,
    "estilo_tela": 0
   },
   "241": {
@@ -2942,7 +3424,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 1,
    "estilo_tela": 0
   },
   "242": {
@@ -2953,7 +3437,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 1,
    "estilo_tela": 0
   },
   "243": {
@@ -2964,7 +3450,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 11,
    "estilo_tela": 0
   },
   "244": {
@@ -2979,7 +3467,9 @@
     "angulo": 45.0,
     "parametro": 100.0
    },
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 11,
    "estilo_tela": 0
   },
   "245": {
@@ -2990,7 +3480,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 5,
    "estilo_tela": 0
   },
   "246": {
@@ -3001,7 +3493,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 5,
    "estilo_tela": 0
   },
   "247": {
@@ -3012,7 +3506,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 6,
    "estilo_tela": 0
   },
   "248": {
@@ -3027,7 +3523,9 @@
     "angulo": 45.0,
     "parametro": 20.0
    },
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 6,
    "estilo_tela": 0
   },
   "249": {
@@ -3038,7 +3536,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 9,
    "estilo_tela": 0
   },
   "250": {
@@ -3053,7 +3553,9 @@
     "angulo": 45.0,
     "parametro": 0.0
    },
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 9,
    "estilo_tela": 0
   },
   "251": {
@@ -3064,7 +3566,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 5,
    "estilo_tela": 0
   },
   "252": {
@@ -3075,7 +3579,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 1,
    "estilo_tela": 0
   },
   "253": {
@@ -3086,7 +3592,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 11,
    "estilo_tela": 0
   },
   "254": {
@@ -3097,7 +3605,9 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
-   "cor_tela": 7,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
+   "cor_tela": 150,
    "estilo_tela": 0
   },
   "255": {
@@ -3108,8 +3618,10 @@
    "estilo_plot": 0,
    "hachura": 0,
    "hachura_def": null,
+   "cor_tela_9_13": 7,
+   "estilo_tela_9_13": 0,
    "cor_tela": 7,
-   "estilo_tela": 0
+   "estilo_tela": 5
   }
  }
 }

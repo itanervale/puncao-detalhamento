@@ -25,7 +25,14 @@ def assinatura(e, tol, dx=0.0, dy=0.0):
     """Tipo, nível, estilo, geometria e texto, e no fim a cor (índice e RGB próprio): uma cor diferente aparece como
     diferença (os ferros com o objeto em outro nível saíam com outra cor no editor do TQS)."""
     s = _assinatura(e, tol, dx, dy)
-    return s + (("cor", e.get("c"), e.get("rgb", 0)),) if s else None
+    if not s:
+        return None
+    if str(e.get("dentro", "")).startswith("<IPOCOT"):
+        # Dentro das cotas, a cor lida é a que o objeto guardou ao ser criado, não a da tabela de níveis: o módulo
+        # de cotas da interface usa sempre as cores padrão (3 e 7), mesmo com a tabela dos modelos gravada
+        # (03/11/2026). Por isso não entra na comparação.
+        return s + (("cor", None, None),)
+    return s + (("cor", e.get("c"), e.get("rgb", 0)),)
 
 
 def _assinatura(e, tol, dx, dy):
@@ -120,7 +127,14 @@ def comparar(a, b, tol=0.05, dx=0.0, dy=0.0):
     cb = Counter(s for s in (assinatura(e, tol, dx, dy) for e in b["ents"] if e["t"] in TIPOS) if s)
     so_a, so_b = _parear(ca - cb, cb - ca, 2.01 * tol)
     fa, fb = ferros(a), ferros(b)
-    return dict(iguais=sum((ca & cb).values()), so_a=so_a, so_b=so_b, ferros_so_a=fa - fb, ferros_so_b=fb - fa)
+    # nível como texto: do JSON vem "221", da leitura direta vem 221
+    na = {str(k): v for k, v in a.get("niveis", {}).items()}
+    nb = {str(k): v for k, v in b.get("niveis", {}).items()}
+    niveis = {n: (na.get(n), nb.get(n)) for n in set(na) | set(nb)
+              if (na.get(n) or {}).get("cor") != (nb.get(n) or {}).get("cor")
+              or (na.get(n) or {}).get("estilo") != (nb.get(n) or {}).get("estilo")}
+    return dict(iguais=sum((ca & cb).values()), so_a=so_a, so_b=so_b, ferros_so_a=fa - fb, ferros_so_b=fb - fa,
+                niveis=niveis)
 
 
 def main():
@@ -155,7 +169,9 @@ def main():
     for nome, c in (("A", r["ferros_so_a"]), ("B", r["ferros_so_b"])):
         for (pos, bit, q, comp), k in sorted(c.items()):
             print(f"  ferro só em {nome}: N{pos} {q} ø{bit} C={comp}")
-    iguais = not (r["so_a"] or r["so_b"] or r["ferros_so_a"] or r["ferros_so_b"])
+    for n, (x, y) in sorted(r["niveis"].items(), key=lambda kv: int(kv[0])):
+        print(f"  tabela de níveis, nível {n}: A {x} | B {y}")
+    iguais = not (r["so_a"] or r["so_b"] or r["ferros_so_a"] or r["ferros_so_b"] or r["niveis"])
     sys.exit(0 if iguais else 1)
 
 

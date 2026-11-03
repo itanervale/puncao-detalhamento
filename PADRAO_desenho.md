@@ -11,7 +11,11 @@ Levantado em 03/11/2026 dos dois desenhos de referência, lidos em cópia pelo `
 
 - **Tipo do desenho:** sistema 9, subsistema 13 ("TQS AGC2 - Desenho de armação"), com a tabela de plotagem `TABPLTA`; `rebarDrawing` = 2.
 - **Escala:** 15 (1:15). As coordenadas estão em cm reais; altura de texto no papel = altura no desenho ÷ 15.
-- **Tabela de níveis:** a de um DWG 9/13 novo é igual, nível a nível, à dos dois modelos (cor e estilo de tela; conferido em 03/11/2026 em `nucleo\niveis.json`). Basta criar o desenho como 9/13.
+- **Tabela de níveis (cores de tela do editor):** os dois modelos guardam a mesma tabela própria, diferente da padrão do 9/13 em 34 níveis. São só as cores do editor; a plotagem segue a `TABPLTA`.
+  - Exemplos: 0 → 8; cotas 221 → 11; pinos e cobrinhas 241 → 1; 242 → 1; 245 e 246 → 5; 253 → 11; 254 → 150; 255 estilo 5.
+  - A lista completa está em `nucleo\niveis.json` (`cor_tela` e `estilo_tela` contra `cor_tela_9_13` e `estilo_tela_9_13`).
+  - O app grava essa tabela em todo desenho (`dwg_tqs\arquivo.aplicar_tabela_niveis`).
+  - Nesta máquina, a tabela padrão vem do `C:\TQSW\SUPORTE\DP\DESARM.COR`; os modelos foram feitos num TQS com outra tabela.
 - **Laje e espessura:** laje de 27 cm nos dois.
 - **Cobrimentos:** 2,5 cm no modelo de conectores. No de cobrinha, as faces da cobrinha ficam a 2,0 cm das faces da laje (pergunta Q1 do plano).
 
@@ -238,11 +242,27 @@ Na comparação entram a geometria, o texto, o nível, o estilo, a cor de cada e
 | Conectores | 956 de 957 | o rótulo "N2" que o modelo guarda dentro do ferro N2 (marca da barra no corte) | N1 8 ø10 C=220 e N2 3 ø10 C=320 |
 | Cobrinha | 1681 de 1692 | dois textos vazios das notas (resíduo de quebra de linha); 5 chamadas com flecha, que no modelo são objetos de cota e na réplica são polilinhas comuns; 4 cotas "11" do gabarito com o objeto no 253 e o texto no 224 (editadas à mão; a interface põe os dois no mesmo nível) | N1 17 ø10 C=450, N2 11 ø12,5 C=395, N3 3 ø10 C=320, N4 8 ø10 C=220 |
 
-**Cores diferentes na 1ª réplica (relato do usuário, 03/11/2026):** a cor de cada entidade e a tabela de níveis estavam iguais. O que mudou foi o **nível do objeto de cada ferro inteligente**.
-- No modelo, todos os objetos IPOFER estão no **220** (ciano).
-- A interface põe o objeto no nível atual do desenho na hora da criação. Na réplica, ficaram no 221 (verde) e no 222 (vermelho), e o editor desenha o ferro na cor desse nível.
-- Correção: `dwg.draw.level = NV_OBJETO_FERRO` (220, em `dwg_tqs\arquivo.py`) antes de cada `SmartRebar`.
-- Desde então, o comparador confere a cor das entidades e o nível dos objetos.
+**Cores diferentes na réplica (relatos do usuário, 03/11/2026).** Foram duas causas.
+
+1. **Nível do objeto dos ferros.** No modelo, todos os objetos IPOFER estão no **220**. A interface põe o objeto no nível atual do desenho na hora da criação; na réplica, ficaram no 221 e no 222, e o editor desenha o ferro na cor desse nível.
+   - Correção: `dwg.draw.level = NV_OBJETO_FERRO` (220) antes de cada `SmartRebar`.
+2. **Tabela de níveis.** O usuário viu que o diálogo de seleção e edição de níveis dos modelos tem outras cores (seção 1). A leitura não tinha pegado isso: o `File.Open` da interface chama `CarregarCores()`, que troca na memória a tabela gravada no arquivo pela padrão do sistema. Ler o modelo com o `File.Open` dava a tabela padrão, igual à da réplica.
+   - Correção: a leitura abre sem o `CarregarCores()` (`dwg_tqs\arquivo.abrir_sem_cores`).
+   - Na gravação, a tabela dos modelos é aplicada no desenho novo e de novo logo antes do `SaveAs` (`aplicar_tabela_niveis`, com o nível como texto).
+   - `SetColor` grava a cor no arquivo: conferido relendo sem o `CarregarCores()`.
+
+**Cores das cotas.** Cada cota guarda a cor de cada linha e texto calculada quando foi criada.
+- Elas diferem entre os modelos: 11 no de conectores (a cor da tabela própria) e 3 e 7 no da cobrinha (as cores padrão).
+- O módulo de cotas da interface grava sempre as cores padrão (3 e 7). Isso não muda com a tabela do desenho, com `draw.color`, com `COTAPLICCOR`, com `COTIFOR`, com `Edit.ModifyColor` nem com um `DESARM.COR` na pasta de trabalho, que só muda a tabela de níveis.
+- Por isso o comparador ignora a cor lida dentro das cotas.
+- Falta o usuário dizer como o editor mostra essas cotas.
+
+**Gravação travada.** Com o DWG aberto no TQS, o `SaveAs` falha sem avisar: o arquivo fica com a data antiga e só o PDF e o DXF são regravados. O `salvar` confere a data e, nesse caso, grava `<nome>_HHMMSS.DWG` e devolve um aviso.
+
+Desde então, o comparador confere:
+- a cor das entidades (fora das cotas);
+- o nível dos objetos;
+- a tabela de níveis gravada no arquivo.
 
 Os PDF e DXF das réplicas saíram do TQS normalmente (`saidas\e0\`).
 

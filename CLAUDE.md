@@ -37,6 +37,13 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - desligue `bendDimRadius`, `bendDimPerimeter` e `bendTickDisplay` para tirar as marcas de dobra.
 - **Leitura dos ferros:** depois de criar, leia `RebarScheduleInfo` para usar os comprimentos do TQS.
 - **Nível do objeto do ferro:** o objeto do ferro inteligente fica no nível atual do desenho, e o editor desenha o ferro na cor desse nível. Fixe `dwg.draw.level = 220` (`NV_OBJETO_FERRO`) antes de cada `SmartRebar`; sem isso, os ferros da réplica saíram verdes e vermelhos.
+- **Tabela de níveis (cores de tela):** os modelos têm uma tabela própria (34 níveis diferentes da padrão).
+  - O `File.Open` e o `LoadColors` da interface a trocam pela padrão do sistema (`CarregarCores`).
+  - Para ler a tabela verdadeira, use `dwg_tqs.arquivo.abrir_sem_cores`.
+  - Para gravar, `aplicar_tabela_niveis` (feito em `novo_desenho` e de novo em `salvar`).
+  - Nos métodos de `LevelsTable`, passe o nível como texto (`"221"`): com número, a interface muda o nível atual.
+- **Cotas:** guardam as cores calculadas na criação, e o módulo de cotas da interface usa sempre as cores padrão (3 e 7). Nada que testamos mudou isso (`PADRAO_desenho.md`, seção 10).
+- **DWG aberto no TQS:** o `SaveAs` falha sem avisar. O `salvar` confere a data do arquivo e grava `<nome>_HHMMSS.DWG`, com aviso.
 - **Cobrinha (C pela soma dos trechos pelo eixo, como no modelo):** `bendTotalLengthMode` = 2, `bendBendLengthMode` = 2 e `bendRadiusDisplay` = 0.
 - **Texto do ferro reposicionado:** `RebarTextDisplayPosition(x, y, altura em cm plotados, ângulo, 0, ICPCENTR_ESQUERD, ICPQUEBR_SEMQUEBRA)`.
 - **Cotas dos modelos:** `dimblk` "DOT" e `dimtsz` 0,2114; os demais valores em `dwg_tqs\arquivo.py` (`COTA`).

@@ -3,6 +3,8 @@
 Despeja um DWG-TQS em JSON: informações do desenho, tabela de níveis, entidades (com o bloco em que estão),
 ferros inteligentes (atributos, tabela, inserções, pontos do ferro genérico) e cotas. Só leitura: o desenho é
 copiado para uma pasta temporária e a cópia é que é aberta (abrir pelo TQS pode gravar arquivos de trabalho).
+O desenho é aberto sem o CarregarCores() do File.Open (dwg_tqs.arquivo.abrir_sem_cores): a tabela de níveis e as
+cores das entidades são as gravadas no arquivo, as que o editor do TQS mostra.
 
 Uso:  python ferramentas/ler_modelo.py <desenho.DWG> [<outro.DWG> ...] [--saida PASTA]
 Grava <PASTA>/<desenho>.json (padrão: saidas/modelos) e imprime um resumo por nível.
@@ -17,6 +19,8 @@ from collections import Counter
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
+if RAIZ not in sys.path:
+    sys.path.insert(0, RAIZ)
 
 ATRIB_FERRO = ("type", "mark", "quantity", "multiplier", "diameter", "spacing", "cover", "comment", "ribbed",
                "leftHook", "rightHook", "bendType", "bendRadius", "bendTotalLengthMode", "bendBendLengthMode",
@@ -56,6 +60,7 @@ def ferro(rb):
 def ler(arq):
     """Lê o DWG (uma cópia) e devolve o dicionário do despejo."""
     from TQS import TQSDwg as T                       # só aqui: o resto da ferramenta roda sem o TQS
+    from dwg_tqs.arquivo import abrir_sem_cores
     tmp = tempfile.mkdtemp(prefix="pun_ler_")
     copia = os.path.join(tmp, os.path.basename(arq))
     shutil.copy2(arq, copia)
@@ -63,7 +68,7 @@ def ler(arq):
     try:
         os.chdir(tmp)
         dwg = T.Dwg()
-        dwg.file.Open(copia)
+        abrir_sem_cores(dwg, copia)
         dwg.settings.levelsReadMode = 0               # lê também os níveis desligados
         info = {"arquivo": os.path.basename(arq)}
         for k in ("systemId", "subSystemId", "rebarDrawing"):
@@ -75,8 +80,8 @@ def ler(arq):
             info["limites"] = None
         lt = T.LevelsTable(dwg)
         niveis = {}
-        for n in range(256):
-            niveis[n] = dict(cor=lt.GetColor(n), estilo=lt.GetStyle(n), ligado=lt.IsOn(n))
+        for n in range(256):                          # nível como texto: com número, a interface muda o nível atual
+            niveis[n] = dict(cor=lt.GetColor(str(n)), estilo=lt.GetStyle(str(n)), ligado=lt.IsOn(str(n)))
         ents, pilha = [], []
         it = dwg.iterator
         it.Begin()
@@ -124,8 +129,7 @@ def ler(arq):
     finally:
         os.chdir(cwd)
         shutil.rmtree(tmp, ignore_errors=True)
-    usados = sorted({e["n"] for e in ents if isinstance(e["n"], int)})
-    return {"info": info, "niveis": {n: niveis[n] for n in usados}, "ents": ents}
+    return {"info": info, "niveis": niveis, "ents": ents}
 
 
 def resumo(d):

@@ -118,6 +118,7 @@ def definir_blocos(dwg, ents, niveis):
         if nome in BLOCOS_TQS:
             if dwg.draw.BlockLoadFromDwg(nome) != 0:
                 print("  AVISO: bloco do TQS não carregado:", nome)
+            arquivo.aplicar_tabela_niveis(dwg)      # o BlockLoadFromDwg volta as cores das cotas às padrão
             continue
         inst = next((ents[k] for k in range(i, len(ents)) if ents[k]["t"] == "Bloco" and ents[k]["b"] == nome
                      and ents[k]["sx"] > 0 and ents[k]["sy"] > 0), e)
@@ -283,6 +284,8 @@ def main():
         r = comparar.comparar(modelo, rep)
         print(f"== {os.path.basename(desp)} -> {os.path.basename(arqs['dwg'])}: {nf} ferros, {nc} cotas; "
               f"arquivos {sorted(arqs)}")
+        if arqs.get("aviso"):
+            print("   AVISO:", arqs["aviso"])
         print(f"   iguais {r['iguais']}, só no modelo {sum(r['so_a'].values())}, só na réplica "
               f"{sum(r['so_b'].values())}")
         for (pos, bit, q, comp), k in sorted((r["ferros_so_a"] + r["ferros_so_b"]).items()):

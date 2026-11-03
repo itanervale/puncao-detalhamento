@@ -281,7 +281,10 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - Conectores: 956 de 957 entidades iguais, com cor e nível dos objetos.
   - Cobrinha: 1681 de 1692, com as diferenças conhecidas.
   - Ferros com os comprimentos do TQS iguais aos do modelo.
-  - Cores diferentes na 1ª réplica (relato do usuário): o objeto dos ferros caía no nível atual (221, 222); corrigido para o 220.
+  - Cores diferentes na réplica (relatos do usuário), duas causas:
+    - o objeto dos ferros caía no nível atual (221, 222); agora vai no 220;
+    - a tabela de níveis de tela dos modelos (34 níveis próprios), que o `File.Open` da interface escondia; agora é gravada em todo desenho.
+  - As cotas continuam com as cores padrão (3 e 7) guardadas em cada uma; falta o usuário conferir no editor.
 - **Aceite:** o usuário abre `saidas\e0\REPLICA_PUN_P02.DWG` e `REPLICA_PUN_P02_R01.DWG` no TQS (editor e tabela de ferros).
 
 **E1. Núcleo da cobrinha (pilar interno)**

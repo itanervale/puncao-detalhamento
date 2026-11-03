@@ -46,6 +46,7 @@ class TesteReplica(unittest.TestCase):
                 modelo, arqs, _, _ = teste_gravacao.replicar(desp)
                 rep = ler_modelo.ler(arqs["dwg"])
                 r = comparar.comparar(modelo, rep)
+                self.assertEqual(r["niveis"], {}, "tabela de níveis (cores de tela) diferente da do modelo")
                 self.assertEqual(sum(r["so_b"].values()), esp["so_replica"], "entidades a mais na réplica")
                 self.assertEqual(sum(r["so_a"].values()), esp["so_modelo"], "entidades faltando na réplica")
                 tab = sorted((e["ferro"]["mark"], e["ferro"]["tabela"][0][2], e["ferro"]["tabela"][0][1],
