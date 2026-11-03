@@ -1,0 +1,25 @@
+# Resultados e conferências (gerados pelo app e pelas ferramentas)
+saidas/
+
+# Modelos do parceiro: não são necessários para rodar o app (decisão de 03/11/2026)
+DesenhosReferencia/
+
+# Arquivos de trabalho do TQS e do editor
+*.BAK
+*.bak
+AutoSalvamento*
+*.CPL
+TMP$TMP.DWG
+SELDWG.TMP
+CUSTOMDL.TMP
+EAGCRIT.DAT
+EAGFER*.DAT
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Sistema
+Thumbs.db
+desktop.ini

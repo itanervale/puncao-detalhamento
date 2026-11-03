@@ -1,0 +1,22 @@
+{
+ "fonte": "Trejor, catálogo 'Conectores de Combate a Punção' (2019), p. 3, tabela 'Resistência dos Pinos de Punção TREJOR'; página https://www.trejor.com/conector-de-combate-a-puncao (consultada em 03/11/2026)",
+ "aco": "CA-50",
+ "comprimento_min_mm": 110,
+ "observacoes": [
+  "Pinos de cabeça dupla, forjados, isentos de solda estrutural, ligados por vergalhões que garantem o espaçamento.",
+  "Produzidos sob medida; diâmetro de 6,3 a 32 mm; comprimentos a partir de 110 mm.",
+  "Montagem 'anterior à armadura' (trilho embaixo) ou 'posterior à armadura' (trilho em cima).",
+  "Resistência = As x fyk do pino (informativa; o app não verifica resistência).",
+  "Espessura da cabeça não informada no catálogo: o app usa a do desenho de referência (pergunta Q3 do plano)."
+ ],
+ "pinos": [
+  {"bitola_mm": 6.3, "cabeca_mm": 20, "resistencia_kN": 14.2},
+  {"bitola_mm": 8.0, "cabeca_mm": 28, "resistencia_kN": 25.2},
+  {"bitola_mm": 10.0, "cabeca_mm": 32, "resistencia_kN": 39.3},
+  {"bitola_mm": 12.5, "cabeca_mm": 40, "resistencia_kN": 56.5},
+  {"bitola_mm": 16.0, "cabeca_mm": 51, "resistencia_kN": 100.5},
+  {"bitola_mm": 20.0, "cabeca_mm": 63, "resistencia_kN": 157.1},
+  {"bitola_mm": 25.0, "cabeca_mm": 79, "resistencia_kN": 245.4},
+  {"bitola_mm": 32.0, "cabeca_mm": 101, "resistencia_kN": 402.0}
+ ]
+}

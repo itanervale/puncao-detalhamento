@@ -1,0 +1,2 @@
+# Só para as ferramentas de conferência (imagens). O app usa a biblioteca padrão e a TQSPythonInterface.
+matplotlib
