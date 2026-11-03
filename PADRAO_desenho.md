@@ -231,10 +231,18 @@ O detalhe por nível está em `nucleo\niveis.json`.
 
 `dwg_tqs\teste_gravacao.py` refez os dois modelos a partir do despejo, sem copiar o arquivo, e comparou entidade a entidade (`testes\teste_e0_replica.py`):
 
+Na comparação entram a geometria, o texto, o nível, o estilo, a cor de cada entidade (índice e RGB próprio) e o nível de cada objeto (cota ou ferro).
+
 | Modelo | Entidades iguais | Diferenças | Ferros pelo TQS |
 |---|---|---|---|
-| Conectores | 910 de 911 | o rótulo "N2" que o modelo guarda dentro do ferro N2 (marca da barra no corte) | N1 8 ø10 C=220 e N2 3 ø10 C=320 |
-| Cobrinha | 1624 de 1626 | dois textos vazios das notas (resíduo de quebra de linha) | N1 17 ø10 C=450, N2 11 ø12,5 C=395, N3 3 ø10 C=320, N4 8 ø10 C=220 |
+| Conectores | 956 de 957 | o rótulo "N2" que o modelo guarda dentro do ferro N2 (marca da barra no corte) | N1 8 ø10 C=220 e N2 3 ø10 C=320 |
+| Cobrinha | 1681 de 1692 | dois textos vazios das notas (resíduo de quebra de linha); 5 chamadas com flecha, que no modelo são objetos de cota e na réplica são polilinhas comuns; 4 cotas "11" do gabarito com o objeto no 253 e o texto no 224 (editadas à mão; a interface põe os dois no mesmo nível) | N1 17 ø10 C=450, N2 11 ø12,5 C=395, N3 3 ø10 C=320, N4 8 ø10 C=220 |
+
+**Cores diferentes na 1ª réplica (relato do usuário, 03/11/2026):** a cor de cada entidade e a tabela de níveis estavam iguais. O que mudou foi o **nível do objeto de cada ferro inteligente**.
+- No modelo, todos os objetos IPOFER estão no **220** (ciano).
+- A interface põe o objeto no nível atual do desenho na hora da criação. Na réplica, ficaram no 221 (verde) e no 222 (vermelho), e o editor desenha o ferro na cor desse nível.
+- Correção: `dwg.draw.level = NV_OBJETO_FERRO` (220, em `dwg_tqs\arquivo.py`) antes de cada `SmartRebar`.
+- Desde então, o comparador confere a cor das entidades e o nível dos objetos.
 
 Os PDF e DXF das réplicas saíram do TQS normalmente (`saidas\e0\`).
 
@@ -267,8 +275,8 @@ O que a gravação precisa para ficar igual aos modelos:
   - fuste do pino ø10 (r 0,5 na planta; 1,0 no corte);
   - cabeça de 32 mm (r 1,6);
   - trilhos com a largura real (ø8 = 0,8).
-- **Confirmar** (perguntas do plano):
-  - Q1: cobrimento de 2,0 na cobrinha do R01;
-  - Q2: largura da cobrinha em planta;
-  - Q3: espessura da cabeça do pino;
-  - Q4: níveis das cotas na cobrinha.
+- **Respostas do usuário (03/11/2026):**
+  - Q1: o R01 usou cobrimento de 2,0;
+  - Q2: cobrinha em planta com a bitola real;
+  - Q3: cabeça do pino de 1,0 cm até a Trejor informar;
+  - Q4: cotas como no modelo de conectores (texto no 221; linhas e símbolo no 253).

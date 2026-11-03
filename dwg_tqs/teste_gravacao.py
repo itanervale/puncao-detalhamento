@@ -187,7 +187,10 @@ def cota(dwg, e, filhos_cota, niveis):
     return True
 
 
-def ferro(dwg, f, filhos_ferro=None):
+def ferro(dwg, f, filhos_ferro=None, nivel_objeto=arquivo.NV_OBJETO_FERRO):
+    # O objeto do ferro fica no nível atual do desenho, e o editor do TQS desenha o ferro na cor desse nível: sem
+    # isto, os ferros saíam verdes (221) ou vermelhos (222) em vez de ciano (220), como no modelo (03/11/2026).
+    dwg.draw.level = nivel_objeto
     r = T.SmartRebar(dwg)
     r.type = f["type"]
     r.mark, r.quantity, r.multiplier = f["mark"], f["quantity"], f["multiplier"]
@@ -251,7 +254,7 @@ def replicar(despejo):
         if e["t"] == "Objeto":
             fs, fim = filhos(ents, i)
             if e["obj"] == "IPOFER" and e.get("ferro"):
-                ferro(dwg, e["ferro"], fs)
+                ferro(dwg, e["ferro"], fs, e["n"])
                 n_ferros += 1
             elif e["obj"] == "IPOCOT" and cota(dwg, e, fs, niveis):
                 n_cotas += 1

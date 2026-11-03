@@ -85,6 +85,12 @@ def ler(arq):
             if t == T.DWGTYPE_EOF:
                 break
             e = {"t": it.elementName, "n": it.level, "c": it.color, "s": it.style}
+            if t not in (T.DWGTYPE_BLOCKEND, T.DWGTYPE_OBJECTEND):
+                rgb = it.colorRGB
+                if rgb:                                   # cor RGB própria da entidade (0 = não tem)
+                    e["rgb"] = rgb
+                if it.hasPlotData:                        # pena, peso e estilo de plotagem próprios
+                    e["plot"] = [it.plotPen, it.plotWeight, it.plotStyle]
             if t == T.DWGTYPE_LINE:
                 e["xy"] = it.xy
             elif t == T.DWGTYPE_TEXT:

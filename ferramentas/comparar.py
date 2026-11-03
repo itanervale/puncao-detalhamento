@@ -14,7 +14,7 @@ import json
 import sys
 from collections import Counter
 
-TIPOS = ("Linha", "Polyline", "Curva", "Circulo", "Arco", "Texto", "Bloco")
+TIPOS = ("Linha", "Polyline", "Curva", "Circulo", "Arco", "Texto", "Bloco", "Objeto")
 
 
 def _r(v, tol):
@@ -22,7 +22,16 @@ def _r(v, tol):
 
 
 def assinatura(e, tol, dx=0.0, dy=0.0):
+    """Tipo, nível, estilo, geometria e texto, e no fim a cor (índice e RGB próprio): uma cor diferente aparece como
+    diferença (os ferros com o objeto em outro nível saíam com outra cor no editor do TQS)."""
+    s = _assinatura(e, tol, dx, dy)
+    return s + (("cor", e.get("c"), e.get("rgb", 0)),) if s else None
+
+
+def _assinatura(e, tol, dx, dy):
     t, n, s = e["t"], e["n"], e.get("s", 0)
+    if t == "Objeto":
+        return (t, n, e.get("obj"))                   # o nível do objeto decide a cor do ferro no editor
     if str(e.get("dentro", "")).startswith("<"):
         s = None                                        # dentro de cota ou ferro: o estilo é o do objeto
     if t in ("Linha", "Polyline", "Curva"):

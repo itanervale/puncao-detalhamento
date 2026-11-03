@@ -36,6 +36,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - o TQS cota as faces externas;
   - desligue `bendDimRadius`, `bendDimPerimeter` e `bendTickDisplay` para tirar as marcas de dobra.
 - **Leitura dos ferros:** depois de criar, leia `RebarScheduleInfo` para usar os comprimentos do TQS.
+- **Nível do objeto do ferro:** o objeto do ferro inteligente fica no nível atual do desenho, e o editor desenha o ferro na cor desse nível. Fixe `dwg.draw.level = 220` (`NV_OBJETO_FERRO`) antes de cada `SmartRebar`; sem isso, os ferros da réplica saíram verdes e vermelhos.
 - **Cobrinha (C pela soma dos trechos pelo eixo, como no modelo):** `bendTotalLengthMode` = 2, `bendBendLengthMode` = 2 e `bendRadiusDisplay` = 0.
 - **Texto do ferro reposicionado:** `RebarTextDisplayPosition(x, y, altura em cm plotados, ângulo, 0, ICPCENTR_ESQUERD, ICPQUEBR_SEMQUEBRA)`.
 - **Cotas dos modelos:** `dimblk` "DOT" e `dimtsz` 0,2114; os demais valores em `dwg_tqs\arquivo.py` (`COTA`).

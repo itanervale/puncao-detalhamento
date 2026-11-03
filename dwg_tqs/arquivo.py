@@ -27,6 +27,9 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DOT sai com os círculos de r = 0,528 e 0,264 da referência (o raio é 2,4973 x dimtsz, na escala 15).
 COTA = dict(idmniv=221, idmnic=253, idmnil=253, idmnib=253, dimblk="DOT", dimtxt=0.18, dimexo=0.10,
             dimexe=0.10, dimdle=0.15, dimtsz=0.2114)
+# Nível do objeto dos ferros inteligentes nos modelos. O objeto fica no nível atual do desenho na hora da criação, e
+# o editor desenha o ferro na cor desse nível: fixe dwg.draw.level = NV_OBJETO_FERRO antes de cada SmartRebar.
+NV_OBJETO_FERRO = 220
 
 
 def novo_desenho(escala=15.0, cota=None):

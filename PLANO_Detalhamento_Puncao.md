@@ -278,9 +278,10 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - `nucleo\niveis.json` (penas da TABPLTA e cores de tela de um DWG 9/13, iguais às dos modelos), `nucleo\catalogo_trejor.json` e `nucleo\textos.py`.
 - `dwg_tqs\arquivo.py`: desenho novo no padrão e gravação de DWG, PDF e DXF.
 - `dwg_tqs\teste_gravacao.py` e `testes\teste_e0_replica.py`: réplica dos dois modelos pela interface.
-  - Conectores: 910 de 911 entidades iguais.
-  - Cobrinha: 1624 de 1626.
+  - Conectores: 956 de 957 entidades iguais, com cor e nível dos objetos.
+  - Cobrinha: 1681 de 1692, com as diferenças conhecidas.
   - Ferros com os comprimentos do TQS iguais aos do modelo.
+  - Cores diferentes na 1ª réplica (relato do usuário): o objeto dos ferros caía no nível atual (221, 222); corrigido para o 220.
 - **Aceite:** o usuário abre `saidas\e0\REPLICA_PUN_P02.DWG` e `REPLICA_PUN_P02_R01.DWG` no TQS (editor e tabela de ferros).
 
 **E1. Núcleo da cobrinha (pilar interno)**
@@ -334,7 +335,14 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **P13.** Um DWG por pilar.
 - **P14.** Ordem: cobrinha, depois conectores.
 
-### Perguntas novas (da E0)
+### Respostas às perguntas da E0 (03/11/2026)
+
+- **Q1.** Sim: o modelo R01 usou cobrimento de 2,0 cm. O teste da E1 reproduz o C=450 com c = 2,0.
+- **Q2.** A cobrinha em planta é desenhada com a bitola real.
+- **Q3.** A cabeça do pino fica com 1,0 cm (0,8 + 0,2, como no modelo) até a Trejor informar.
+- **Q4.** As cotas usam a configuração do modelo de conectores (texto no 221; linhas e símbolo no 253). Os níveis dos modelos não mudam, como já combinado.
+
+### Perguntas da E0 (texto original)
 
 - **Q1. Cobrimento da cobrinha no modelo R01.** Lá, as faces da cobrinha ficam a 2,0 cm das faces da laje: altura externa 23 e pernas de 22 pelo eixo, o que dá C=450. Com c = 2,5, as pernas ficam com 21 pelo eixo e C=439. O R01 usou cobrimento de 2,0? (O teste da E1 reproduz o modelo com c = 2,0.)
 - **Q2. Largura da cobrinha em planta.** O bloco `COBRINHA 12` desenha a cobrinha com 1,6 cm de largura (barra de 16 mm), mas ela é ø10. Desenhar com a bitola real, como os trilhos (P10)?
