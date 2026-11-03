@@ -17,6 +17,9 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - os resultados vão para `saidas\`;
   - antes de regravar um DWG que o usuário possa ter editado, copie o anterior para `saidas\anteriores\`.
 - **Commits:** um por etapa aprovada, com a mensagem dizendo a etapa.
+- **Repositório:** <https://github.com/itanervale/puncao-detalhamento> (público, branch `main`).
+  - O autor dos commits usa o e-mail "noreply" do GitHub (`269206119+itanervale@users.noreply.github.com`), configurado só neste repositório, para não expor o e-mail pessoal.
+  - O envio usa a credencial do Git Credential Manager.
 
 ## Lições do TQS (interface Python 2.1.7)
 - **Fontes:**

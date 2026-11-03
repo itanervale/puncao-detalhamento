@@ -18,8 +18,8 @@ Duas soluções:
 ## Instalação
 
 ```bash
-git clone <endereço do repositório>
-cd <pasta do repositório>
+git clone https://github.com/itanervale/puncao-detalhamento.git
+cd puncao-detalhamento
 ```
 
 Não há outra instalação: o app usa a biblioteca padrão do Python e a interface do TQS.
