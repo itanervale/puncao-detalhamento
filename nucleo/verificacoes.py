@@ -31,6 +31,10 @@ def cobrinha(p, cob):
         checa(n >= 3, f"{n} linhas de pernas além das faces perpendiculares a {eixo}",
               f"só {n} linha(s) de pernas além das faces perpendiculares a {eixo}; a norma recomenda três ou mais",
               f"{ORDEM_ITEM}, 19.5.3.3")
+    tang = cob["esp_tangencial_max"]
+    checa(tang <= 2 * d + 1e-9, f"maior espaçamento entre pernas vizinhas = {_f(tang)} <= 2d = {_f(2 * d)}",
+          f"espaçamento de {_f(tang)} entre pernas vizinhas passa de 2d = {_f(2 * d)}",
+          f"{ORDEM_ITEM}, 19.5.3.4 e Figura 19.8")
     h20 = p["h_laje"] * 10 / 20
     checa(p["cob_bitola"] <= h20 + 1e-9, f"bitola da cobrinha {_f(p['cob_bitola'])} mm <= h/20 = {_f(h20)} mm",
           f"bitola da cobrinha {_f(p['cob_bitola'])} mm passa de h/20 = {_f(h20)} mm", f"{ORDEM_ITEM}, 20.4")

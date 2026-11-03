@@ -44,8 +44,8 @@ PADROES = {
     "cob_linhas_y": None,
     "cob_bitola": 10.0,
     "cob_direcao": "menor",   # cobrinhas paralelas ao lado menor do pilar (decisão P6), ou "maior", "x", "y"
-    "mont_bitola": 12.5,      # montagem positiva (N2), uma por linha de pernas, na dobra de baixo
-    "mont_ext": 60.0,         # além da última linha de cobrinhas (cm; decisão P12)
+    "mont_bitola": 12.5,      # montagem positiva, uma por fileira de pernas, na dobra de baixo
+    "mont_ext": 30.0,         # além da última linha de cobrinhas (cm; 60 no modelo, 30 pelo usuário em 03/11/2026)
     "mont_arred": 5.0,        # comprimento arredondado para cima (cm)
 }
 

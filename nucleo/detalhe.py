@@ -23,10 +23,16 @@ def detalhar(par):
     if p["solucao"] == "cobrinha":
         cob = cobrinha.detalhar(p)
         res["cobrinha"] = cob
-        ferros.append(dict(tipo="cobrinha", bitola=p["cob_bitola"], quant=cob["n_cobrinhas"],
-                           comp=round(cob["comprimento"]), descricao="cobrinha (armadura de punção)"))
-        ferros.append(dict(tipo="montagem", bitola=p["mont_bitola"], quant=len(cob["mont_pos"]),
-                           comp=round(cob["mont_comp"]), descricao="montagem positiva nos vértices de baixo"))
+        for g in cob["posicoes"]:
+            desc = ("cobrinha da face para fora" if g["tipo"] == "extremidade"
+                    else "cobrinha ao lado do pilar, entre as faces")
+            ferros.append(dict(tipo="cobrinha", subtipo=g["tipo"], bitola=p["cob_bitola"], quant=g["quant"],
+                               comp=round(g["comp"]), pontos=g["pontos"], descricao=desc))
+        for g in cob["mont_posicoes"]:
+            desc = ("montagem positiva, contínua" if g["tipo"] == "continua"
+                    else "montagem positiva, da face do pilar para fora")
+            ferros.append(dict(tipo="montagem", subtipo=g["tipo"], bitola=p["mont_bitola"], quant=g["quant"],
+                               comp=round(g["comp"]), descricao=desc))
         res["verificacoes"] = verificacoes.cobrinha(p, cob)
     else:
         res["erros"].append("conectores: etapa E3 (ainda não implementada)")
@@ -54,8 +60,9 @@ def relatorio(res):
         return "\n".join(linhas + [f"   ERRO: {e}" for e in res["erros"]])
     if "cobrinha" in res:
         c = res["cobrinha"]
-        linhas.append(f"   cobrinhas em {c['direcao']}: {c['n_cobrinhas']} linhas ({_esp(c['esp_linhas'])}), "
-                      f"{c['n_pernas']} pernas ({_esp(c['esp_pernas'])}), altura pelo eixo {c['altura_eixo']:g}")
+        linhas.append(f"   cobrinhas em {c['direcao']}: {c['n_linhas']} linhas ({_esp(c['esp_linhas'])}), "
+                      f"fileiras de pernas ({_esp(c['esp_pernas'])}), altura pelo eixo {c['altura_eixo']:g}, "
+                      f"{c['n_pecas']} peças")
     for f in res["ferros"]:
         linhas.append(f"   N{f['pos']}  {f['quant']:>3} ø{_bitola(f['bitola']):<5} C={f['comp']:<5} {f['descricao']}")
     for tipo, txt, ref in res["verificacoes"]:

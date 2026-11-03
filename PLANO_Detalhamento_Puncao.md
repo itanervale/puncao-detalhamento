@@ -195,7 +195,7 @@ Padrões dos modelos. Os itens marcados com † foram acrescentados e aprovados 
 | Linhas de pernas além da face | 4 | contando a de s0; opção de um valor por direção |
 | Bitola da cobrinha | ø10 | |
 | Bitola da montagem positiva (N2) | ø12,5 | |
-| Montagem além da última linha † | 60 | arredondada para cima a 5 cm (P12) |
+| Montagem além da última linha † | 30 | 60 no modelo; 30 pelo usuário em 03/11/2026; arredondada para cima a 5 cm |
 | Direção das cobrinhas † | paralela ao lado menor | com opção de mudar (P6) |
 | Altura externa | h − c_sup − c_inf | pontos do ferro pelo eixo: altura − ø (P4; Q1) |
 
@@ -246,10 +246,11 @@ A fórmula antiga do plano (h − c_sup − ø) deixava d 1 cm maior, contra a s
 
 ### 6.2 Geometria
 
-**Cobrinha:**
-- **Malha:** as linhas partem de s0 em cada face.
-- **Dentro do pilar:** n = parte inteira do vão entre as linhas de s0 dividido por s; a sobra vai em centímetros inteiros para os espaços do meio.
-- **Barra:** pontas horizontais de comprimento s.
+**Cobrinha** (com as regras do usuário de 03/11/2026; detalhes na E1):
+- **Malha:** as linhas partem de s0 em cada face; entre as linhas de s0, n = parte inteira do vão ÷ s, com a sobra no meio.
+- **Nada passa por cima do pilar.**
+- **Peças:** toda peça começa na face do pilar (ou no prolongamento dela) pelo trecho de baixo; a ponta de fora tem o comprimento s.
+- **Montagem:** interrompida nas faces e 30 cm além da última linha.
 
 **Conectores:**
 - **Pentes nas faces:** distribuídos por igual entre as distâncias ao canto.
@@ -294,20 +295,34 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - `nucleo\cobrinha.py`: malha, cobrinhas, pontos pelo eixo, montagem e gabarito;
   - `nucleo\colapso.py`.
 - **Verificações e montagem:**
-  - `nucleo\verificacoes.py`: avisos da seção 6.3;
-  - `nucleo\detalhe.py`: junta tudo e numera os ferros como no modelo (N1 cobrinha, N2 montagem, N3 colapso em x, N4 colapso em y). Linha de comando: `python -m nucleo.detalhe <projeto.json>`.
+  - `nucleo\verificacoes.py`: avisos da seção 6.3, mais o maior espaçamento entre pernas vizinhas ≤ 2d;
+  - `nucleo\detalhe.py`: junta tudo e numera os ferros (cobrinhas, montagem, colapso em x, colapso em y). Linha de comando: `python -m nucleo.detalhe <projeto.json>`.
 - **Testes e exemplos:**
-  - `testes\teste_e1_cobrinha.py`: 15 testes, que não dependem do TQS nem dos modelos;
+  - `testes\teste_e1_cobrinha.py`: 20 testes, que não dependem do TQS nem dos modelos;
   - `exemplos\P2_cobrinha.json` e `exemplos\lote_cobrinha.json`.
-- **Conferência:** `ferramentas\esquema.py` grava a imagem da geometria em `saidas\e1\`.
-- **Resultado:** o P2 sai igual ao modelo:
-  - 17 N1 ø10 C=450, com os mesmos 24 pontos do ferro genérico do modelo;
-  - 11 N2 ø12,5 C=395, 3 N3 ø10 C=320 e 8 N4 ø10 C=220;
-  - linhas em 7×17, 18, 18 e 7×17; pernas em 4×17, 19, 19 e 4×17;
+- **Conferência:** `ferramentas\esquema.py` grava a imagem da geometria em `saidas\e1\` (planta, colapso e dois cortes).
+- **1ª versão:** reproduzia o P2 do modelo, com 17 N1 ø10 C=450 passando por cima do pilar e os mesmos 24 pontos do ferro genérico.
+- **Regras do usuário (03/11/2026), na versão atual:**
+  - **Nada passa por cima do pilar:** evita interferência com a armadura do pilar ("é a forma correta").
+  - **Peças começando na face:** toda cobrinha começa na face do pilar pelo trecho de baixo (na face inferior da laje).
+  - **Montagem:** interrompida nas faces do pilar e com 30 cm além da última linha de cobrinhas (no modelo, 60).
+- **Como as regras foram aplicadas:**
+  - **Linhas diante das faces** (as que passavam por cima do pilar): duas peças, cada uma da face para fora: trecho de baixo até s0, pernas e uma ponta de s além da última.
+  - **Linhas ao lado do pilar:** também cortadas no prolongamento das faces, em três peças.
+    - Duas são iguais às de cima (da face para fora).
+    - A terceira fica entre os prolongamentos, com as pernas ao lado da face e começando pelo trecho de baixo.
+    - Motivo: a montagem é reta e precisa achar a dobra de baixo do mesmo lado em todas as cobrinhas de uma fileira. Com a linha lateral inteira, isso só fecha se o número de espaços ao lado da face for ímpar; no P2 são 4. Cortada, toda peça segue a regra "começa na face pelo trecho de baixo".
+  - **Montagem:** uma barra por fileira de pernas, encostada na perna do lado do trecho de baixo.
+    - Fileiras fora da faixa do pilar: contínuas.
+    - Fileiras ao lado do pilar: duas barras, da face do pilar até 30 cm além da última linha.
+    - Comprimento arredondado para cima a 5 cm.
+- **Resultado no P2:**
+  - N1 34 ø10 C=167 (79 + 4 × 22), N2 8 ø10 C=116 (50 + 3 × 22), N3 8 ø12,5 C=335, N4 6 ø12,5 C=95, N5 3 ø10 C=320 e N6 8 ø10 C=220;
+  - malha do modelo (linhas em 7×17, 18, 18 e 7×17; fileiras em 4×17, 19, 19 e 4×17);
   - d = 23, sem avisos.
-- **Regras adotadas (a confirmar):**
-  - **Espaços por cima do pilar:** n = parte inteira do vão ÷ s, e a sobra vai para o espaço do meio, ou metade para cada um dos dois do meio, mesmo que dê meio centímetro. Isso reproduz o 18 + 18 e o 19 + 19 do modelo, com menos pernas sobre o pilar. Num pilar de 40, porém, o espaço do meio chega a 28 (17, 28, 17). A alternativa é arredondar n, que daria 17, 14, 14, 17 com uma perna a mais (Q5).
-  - **Montagem:** encostada na perna, a (ø cobrinha + ø montagem)/2 = 1,125 do eixo, do lado do trecho de baixo; o modelo desenha a 1,5. O desenho da E2 usa a distância do modelo, e o núcleo guarda a física.
+- **Outras regras adotadas (a confirmar):**
+  - **Espaços entre as linhas de s0:** n = parte inteira do vão ÷ s, com a sobra no espaço do meio (ou metade em cada um dos dois do meio). Isso reproduz o 18 + 18 e o 19 + 19 do modelo. Como nada passa mais por cima do pilar, a regra só define as linhas diante das faces e as pernas ao lado delas; o espaço maior (28 num pilar de 40) passa pelo aviso de 2d.
+  - **Montagem:** no núcleo, encostada na perna, a (ø cobrinha + ø montagem)/2 = 1,125 do eixo; o modelo desenha a 1,5. O desenho da E2 usa a distância do modelo.
   - **Colapso:** n barras por face, cada uma no meio da sua faixa ((i + ½)·L/n), como nos dois modelos; comprimento = lado + 2 × 85, arredondado para cima ao centímetro.
 
 **E2. Prancha da cobrinha em DWG-TQS**
@@ -366,7 +381,8 @@ Cada etapa termina com a aprovação do usuário e um commit.
 
 ### Perguntas da E1
 
-- **Q5. Espaços por cima do pilar.** A sobra vai para o espaço do meio (parte inteira, menos pernas sobre o pilar; reproduz o modelo). Num pilar de 40, isso dá 17, 28, 17. A alternativa é arredondar o número de espaços (17, 14, 14, 17, com uma perna a mais). Qual prefere?
+- **Q5. Espaços por cima do pilar.** Superada pela decisão do usuário de 03/11/2026: nada passa mais por cima do pilar. A regra (sobra no meio) ficou só para as linhas diante das faces e as pernas ao lado delas, e o espaço maior passa pelo aviso de 2d.
+- **Q6. Linhas ao lado do pilar em três peças.** É a forma de manter a montagem reta na dobra de baixo de todas as cobrinhas (E1). A alternativa é manter a linha lateral inteira, com um número ímpar de espaços ao lado da face (no P2, 5 de 14,4 em vez de 17, 19, 19, 17). Confirmar.
 
 ### Perguntas da E0 (texto original)
 
