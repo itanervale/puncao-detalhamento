@@ -48,14 +48,20 @@ def posicoes_malha(L, s0, s, n):
     return pos, [round(b - a, 4) for a, b in zip(pos, pos[1:])]
 
 
+def _arred(v):
+    """Arredondamento ao centímetro, meio para cima (como o TQS arredonda cada trecho do ferro genérico)."""
+    return math.floor(v + 0.5 + 1e-9)
+
+
 def pernas_ao_lado(L, s0, s):
     """Pernas entre as linhas de s0 (-s0 e L + s0), ao lado do pilar: número ímpar de espaços, o menor que deixa
-    cada um <= s; posições arredondadas a 0,5 cm e espelhadas (simétricas). Devolve só as pernas de dentro."""
+    cada um <= s; posições em centímetros inteiros (a dobra é medida em cm) e espelhadas (simétricas). Devolve só
+    as pernas de dentro. Com meio centímetro, o TQS arredondava cada trecho e o C ficava 2 cm maior (E2)."""
     vao = L + 2 * s0
     n = max(1, math.ceil(vao / s - 1e-9))
     if n % 2 == 0:
         n += 1
-    meia = [round((-s0 + vao * i / n) * 2) / 2 for i in range(1, (n + 1) // 2)]
+    meia = [float(_arred(-s0 + vao * i / n)) for i in range(1, (n + 1) // 2)]
     return meia + [round(L - u, 4) for u in reversed(meia)]
 
 
@@ -81,7 +87,8 @@ def _peca(u_ini, pernas, u_fim, H):
         pontos.append((u, nivel))
     pontos.append((u_fim, nivel))
     trechos = [(pontos[i][0], pontos[i + 1][0], pontos[i][1]) for i in range(0, len(pontos), 2)]
-    comp = abs(u_fim - u_ini) + len(pernas) * H
+    # C como o TQS: soma dos trechos pelo eixo, cada um arredondado ao centímetro
+    comp = sum(_arred(abs(b - a)) for a, b, _ in trechos) + len(pernas) * _arred(H)
     # Forma a partir da face (igual para a peça de um lado e a espelhada do outro): agrupa as posições.
     forma = tuple((round(abs(u - u_ini), 3), n) for u, n in pontos)
     return dict(pontos=pontos, trechos=trechos, pernas=list(pernas), comp=round(comp, 2), forma=forma,

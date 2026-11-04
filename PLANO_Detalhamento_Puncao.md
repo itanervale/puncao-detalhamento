@@ -326,12 +326,45 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - d = 23, sem avisos.
 - **Outras regras adotadas (a confirmar):**
   - **Espaços entre as linhas de s0:** n = parte inteira do vão ÷ s, com a sobra no espaço do meio (ou metade em cada um dos dois do meio). Isso reproduz o 18 + 18 e o 19 + 19 do modelo. Como nada passa mais por cima do pilar, a regra só define as linhas diante das faces e as pernas ao lado delas; o espaço maior (28 num pilar de 40) passa pelo aviso de 2d.
-  - **Montagem:** no núcleo, encostada na perna, a (ø cobrinha + ø montagem)/2 = 1,125 do eixo; o modelo desenha a 1,5. O desenho da E2 usa a distância do modelo.
+  - **Montagem:** no núcleo, encostada na perna, a (ø cobrinha + ø montagem)/2 = 1,125 do eixo; o modelo desenha a 1,5. A E2 desenha a 1,125, porque a cobrinha passou a ter a bitola real.
   - **Colapso:** n barras por face, cada uma no meio da sua faixa ((i + ½)·L/n), como nos dois modelos; comprimento = lado + 2 × 85, arredondado para cima ao centímetro.
 
-**E2. Prancha da cobrinha em DWG-TQS**
-- Folha em primitivas e `dwg_tqs\`.
-- Comparação com o `PUN_P02-R01` (enquanto a pasta dos modelos existir na máquina) e imagens lado a lado.
+**E2. Prancha da cobrinha em DWG-TQS** (feita em 04/11/2026; falta a conferência do usuário no TQS)
+- **Módulos:**
+  - `nucleo\folha.py`: folha em primitivas, sem TQS (linha, polilinha, círculo, arco, texto, cota, bloco, ferro), com o contorno de barra e a linha de quebra;
+  - `nucleo\prancha_cobrinha.py`: o leiaute;
+  - `dwg_tqs\gravar.py`: transcreve a folha para o DWG;
+  - `dwg_tqs\prancha.py`: grava DWG, PDF e DXF e confere os comprimentos do TQS com os do núcleo;
+  - `detalhar.py` (raiz): linha de comando, um DWG por pilar (`PUN_<pilar>`), em `saidas\<projeto>\`.
+- **Vistas, no padrão do R01 e com as camadas dele:**
+  - **SEÇÃO A-A e SEÇÃO B-B:** giradas como no modelo e alinhadas com a planta.
+    - A-A pela linha diante da face mais perto do meio, com o pilar cortado; B-B pela linha ao lado do pilar, com o pilar tracejado.
+    - Laje e pilar com quebras (0 e 240); cobrinha em contorno (224 cheio e 233) e eixo em traço-ponto (0).
+    - Barras nos vértices: negativa no 254 e montagem no 243. Colapso: em corte no 245 e, na A-A, a barra em y no 245, interrompida nos trechos de baixo.
+    - Flexão de referência em traço-ponto; chamadas da NOTA 1 (225 e 210) na A-A.
+  - **Para cada cobrinha, dois detalhes:**
+    - o ferro inteligente com os trechos entre eixos (o TQS escreve os comprimentos; NOTA 3) e as cotas em relação às faces do pilar (68 / 11 / 50 / 11 / 68);
+    - o desenho pelas faces (NOTA 4), com as barras nos vértices e as cotas entre faces (18/16, 23, 11,5 e 17,5).
+  - **VISTA EM PLANTA (ARM. PUNÇÃO):**
+    - cobrinhas em blocos `COBRINHA N<pos> <ø>`, com a bitola real (Q2), trechos de cima tracejados e pernas em círculo, inseridas no 241;
+    - montagem no 243 e pilar no 227;
+    - cotas das linhas, das fileiras diante das faces, das pernas ao lado do pilar e do s0;
+    - "PENTE MESTRE P/ LOCAÇÃO" e marcas dos cortes (letra e bandeira no 253);
+    - embaixo, N3 e N4 identificadas (244), com as cotas de 30 e do vão.
+  - **VISTA EM PLANTA (COLAPSO PROGRESSIVO):** como no modelo (203/240, 245, N5 e N6 no 246, cotas de 85 e os dois textos).
+  - **DET. PLANTA:** gabarito dos pentes mestres a 1:25, com as cotas em valores reais (`dimlfc`).
+  - **NOTAS IMPORTANTES** (as 4 do modelo) e título com nome, "Nx" e dimensões.
+- **Ferros:** objeto no 220; inserções no 242 (cobrinhas), 244 (montagem) e 246 (colapso).
+- **Resultado:** os comprimentos do TQS conferem com os do núcleo nos quatro pilares do `exemplos\lote_cobrinha.json`. No P2: 18 ø10 C=167, 8 ø10 C=472, 8 ø12,5 C=335, 8 ø12,5 C=95, 3 ø10 C=320 e 8 ø10 C=220. A folha do P2 tem 80,4 × 34,4 cm (largura útil do A1).
+- **Achado:** o TQS arredonda cada trecho do ferro genérico ao centímetro.
+  - Com as pernas ao lado da face em meio centímetro, o N2 dava C=474 no TQS e 472 no núcleo.
+  - Agora essas pernas ficam em centímetros inteiros (no P2: 14 / 15 / 14 / 15 / 14), e o núcleo soma os trechos arredondados, como o TQS.
+- **Escolhas desta etapa (a confirmar):**
+  - **Montagem em planta:** fica a 1,125 da perna (encostada), não a 1,5 do modelo, porque a cobrinha passou a ser desenhada com a bitola real (Q2).
+  - **Cortes:** dois (A-A e B-B), porque há dois tipos de cobrinha.
+  - **Detalhes:** dois por cobrinha.
+- **Pendente:** prancha com as cobrinhas em x (opção da P6). O núcleo calcula, mas a folha avisa que ainda não desenha.
+- **Testes:** `testes\teste_e2_prancha.py`, sem o TQS (folha, blocos, ferros, só níveis dos modelos) e com ele (DWG do P2 e comprimentos).
 
 **E3. Núcleo dos conectores (radial)**
 - **Aceite:** reproduz o P02: 20 pentes "3P 17 cm", 220 mm, cotas 35, 20 e 39, N1 8 ø10 C=220 e N2 3 ø10 C=320.

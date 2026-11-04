@@ -43,13 +43,14 @@ class TesteMalha(unittest.TestCase):
             self.assertEqual([round(a + b, 4) for a, b in zip(pos, reversed(pos))], [L] * len(pos))
 
     def test_pernas_ao_lado_numero_impar_de_espacos(self):
-        self.assertEqual(cobrinha.pernas_ao_lado(50, 11, 17), [3.5, 18.0, 32.0, 46.5])     # 5 x ~14,4
+        self.assertEqual(cobrinha.pernas_ao_lado(50, 11, 17), [3.0, 18.0, 32.0, 47.0])     # 14/15/14/15/14
         for L in (20, 33, 40, 47, 80, 90, 151):
             meio = cobrinha.pernas_ao_lado(L, 11, 17)
             todas = [-11] + meio + [L + 11]
             esp = [b - a for a, b in zip(todas, todas[1:])]
             self.assertEqual(len(esp) % 2, 1, L)                        # ímpar
-            self.assertTrue(all(e <= 17.5 for e in esp), (L, esp))    # <= s (+ arredondamento de 0,5)
+            self.assertTrue(all(e <= 18 for e in esp), (L, esp))      # <= s (+ arredondamento ao cm)
+            self.assertTrue(all(float(u).is_integer() for u in meio), (L, meio))
             self.assertEqual([round(a + b, 4) for a, b in zip(todas, reversed(todas))], [L] * len(todas))
 
 
@@ -99,7 +100,7 @@ class TesteP2(unittest.TestCase):
     def test_linhas_ao_lado_do_pilar_inteiras(self):
         lado = [p for p in self.c["pecas"] if p["tipo"] == "continua"]
         self.assertEqual(sorted(p["linha"] for p in lado), [-62, -45, -28, -11, 161, 178, 195, 212])
-        self.assertEqual(lado[0]["pernas"], [-62, -45, -28, -11, 3.5, 18, 32, 46.5, 61, 78, 95, 112])
+        self.assertEqual(lado[0]["pernas"], [-62, -45, -28, -11, 3, 18, 32, 47, 61, 78, 95, 112])
         frente = [p for p in self.c["pecas"] if p["tipo"] == "extremidade"]
         self.assertEqual(len(frente), 18)                              # 9 linhas diante das faces x 2
 

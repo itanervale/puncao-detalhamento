@@ -6,8 +6,15 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - **Padrão gráfico:** `PADRAO_desenho.md`, com o mapa elemento → nível e as medidas dos modelos.
 
 ## Estrutura
-- `nucleo\`: Python puro, sem o TQS. Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), colapso (`colapso.py`), verificações (`verificacoes.py`) e o conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
+- `nucleo\`: Python puro, sem o TQS.
+  - Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), colapso (`colapso.py`) e verificações (`verificacoes.py`).
+  - O conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
+  - Folha em primitivas (`folha.py`) e leiaute da prancha da cobrinha (`prancha_cobrinha.py`).
 - `dwg_tqs\`: gravação pelo TQS.
+  - `arquivo.py`: desenho novo e gravação.
+  - `gravar.py`: primitivas para o DWG.
+  - `prancha.py`: um pilar, com a conferência dos comprimentos.
+- `detalhar.py` (raiz): linha de comando, um DWG por pilar.
 - `ferramentas\`: leitura e comparação de DWG, imagens, esquema da geometria.
 - `testes\`: os da E1 não precisam do TQS; os da E0 são pulados sem ele ou sem os modelos.
 - **Unidades e convenções:** comprimentos em cm, bitolas em mm. `bx` é a dimensão do pilar na horizontal da prancha e `by` na vertical; as coordenadas são relativas ao canto inferior esquerdo do pilar.
@@ -55,6 +62,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - **Cotas:** guardam as cores calculadas na criação, e o módulo de cotas da interface usa sempre as cores padrão (3 e 7). Nada que testamos mudou isso (`PADRAO_desenho.md`, seção 10).
 - **DWG aberto no TQS:** o `SaveAs` falha sem avisar. O `salvar` confere a data do arquivo e grava `<nome>_HHMMSS.DWG`, com aviso.
 - **Cobrinha (C pela soma dos trechos pelo eixo, como no modelo):** `bendTotalLengthMode` = 2, `bendBendLengthMode` = 2 e `bendRadiusDisplay` = 0.
+  - O TQS arredonda cada trecho ao centímetro: com trechos de 14,5, o C sai 2 cm maior. Mantenha as pernas em centímetros inteiros; o núcleo soma os trechos arredondados.
 - **Texto do ferro reposicionado:** `RebarTextDisplayPosition(x, y, altura em cm plotados, ângulo, 0, ICPCENTR_ESQUERD, ICPQUEBR_SEMQUEBRA)`.
 - **Cotas dos modelos:** `dimblk` "DOT" e `dimtsz` 0,2114; os demais valores em `dwg_tqs\arquivo.py` (`COTA`).
 - **Bloco da biblioteca do TQS:** `BlockLoadFromDwg` com o caminho sem extensão dá ao bloco esse caminho como nome, igual ao do modelo.

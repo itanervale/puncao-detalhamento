@@ -6,7 +6,15 @@ Duas soluções:
 - **barras dobradas em "cobrinha"**, em malha ortogonal;
 - **conectores tipo pino (studs)** da [Trejor](https://www.trejor.com/conector-de-combate-a-puncao), em arranjo radial.
 
-> **Situação:** em desenvolvimento. Feitas a E0 (base e padrão do desenho) e a E1 (núcleo da cobrinha); a próxima é a E2 (prancha da cobrinha em DWG-TQS). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
+> **Situação:** em desenvolvimento. Feitas a E0 (base e padrão do desenho), a E1 (núcleo da cobrinha) e a E2 (prancha da cobrinha em DWG-TQS); a próxima é a E3 (núcleo dos conectores). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
+
+## Uso
+
+```bash
+python detalhar.py exemplos/P2_cobrinha.json
+```
+
+Grava um DWG-TQS por pilar do projeto (`saidas\<projeto>\PUN_<pilar>.DWG`), com o PDF e o DXF, e confere os comprimentos dos ferros que o TQS calcula com os do núcleo. Use `--png` para a imagem de conferência, `--saida PASTA` para outra pasta e `--pilar P2` para um pilar só. Precisa do TQS.
 
 ## Requisitos
 
