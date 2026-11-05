@@ -44,6 +44,12 @@ def detalhar(par):
     for g in col:
         ferros.append(dict(tipo="colapso", direcao=g["direcao"], bitola=p["col_bitola"], quant=g["quant"],
                            comp=g["comp"], descricao=f"colapso progressivo, face inferior, em {g['direcao']}"))
+    if "conectores" in res:
+        # Montagem opcional depois do colapso: o N1 e o N2 do colapso ficam como no modelo.
+        for g in res["conectores"]["mont_posicoes"]:
+            faces = "esquerda e direita" if g["grupo"] == "by" else "de baixo e de cima"
+            ferros.append(dict(tipo="montagem", subtipo=g["grupo"], bitola=p["mont_bitola"], quant=g["quant"],
+                               comp=round(g["comp"]), descricao=f"montagem positiva nos pentes, faces {faces}"))
     for i, f in enumerate(ferros, 1):
         f["pos"] = i
     res["ferros"] = ferros

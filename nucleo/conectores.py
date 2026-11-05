@@ -24,7 +24,7 @@ import json
 import math
 import os
 
-from .parametros import altura_util
+from .parametros import altura_util, arred_cima
 
 CATALOGO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalogo_trejor.json")
 MAX_INCLINADOS = 12                                   # "auto" desiste daí e avisa
@@ -54,11 +54,27 @@ def comprimento_pino(p, cat=None):
 
 
 def posicoes_face(L, n, dc):
-    """Posições dos pentes ao longo de uma face de comprimento L: n por igual de dc a L - dc (um só: no meio)."""
+    """Posições dos pentes ao longo de uma face de comprimento L, de dc a L - dc (um só: no meio). Os espaços são
+    em centímetros inteiros, com a sobra no espaço do meio (ou metade em cada um dos dois do meio), como as linhas
+    da cobrinha: face de 80 com 4 pentes a 5 dos cantos = 23 / 24 / 23, em vez de 23,33 (o TQS escreveria
+    "23.3" nas cotas)."""
     if n == 1:
         return [L / 2.0]
-    passo = (L - 2.0 * dc) / (n - 1)
-    return [round(dc + i * passo, 6) for i in range(n)]
+    m = n - 1
+    vao = L - 2.0 * dc
+    base = math.floor(round(vao / m, 6))
+    esp = [float(base)] * m
+    resto = round(vao - base * m, 6)
+    if m % 2:
+        esp[m // 2] += resto
+    else:
+        esp[m // 2 - 1] += resto / 2
+        esp[m // 2] += resto / 2
+    pos, x = [dc], dc
+    for e in esp:
+        x += e
+        pos.append(round(x, 6))
+    return pos
 
 
 def _faces(p):
@@ -150,6 +166,36 @@ def inclinados(p, d):
     return MAX_INCLINADOS
 
 
+def montagem(p):
+    """Montagem positiva opcional (Q7; desligada por padrão: o escritório aproveita as barras de flexão da laje,
+    nota 1). Uma barra reta por linha de pinos em cada face, paralela a ela e apoiada nos trilhos, dos pentes de um
+    canto aos do outro e mont_ext além, com o comprimento arredondado para cima a mont_arred. Devolve (barras,
+    posições): barras = [dict(face, grupo, dist, p1, p2, comp)], em que dist é o afastamento da face e grupo é
+    "by" (faces esquerda e direita) ou "bx" (de baixo e de cima)."""
+    if not p["con_montagem"]:
+        return [], []
+    s0, sr, n, ext = p["con_s0"], p["con_sr"], p["con_pinos"], p["mont_ext"]
+    barras, comps = [], {}
+    for nome, o, u, ang, L, nf in _faces(p):
+        ts = posicoes_face(L, nf, p["con_dist_canto"])
+        t0, t1 = min(ts) - ext, max(ts) + ext
+        comp = arred_cima(t1 - t0, p["mont_arred"])
+        t0 -= (comp - (t1 - t0)) / 2                       # a sobra do arredondamento, metade em cada ponta
+        t1 = t0 + comp
+        grupo = "by" if nome in ("esquerda", "direita") else "bx"
+        comps[grupo] = comp
+        a = math.radians(ang)
+        for i in range(n):
+            dist = s0 + i * sr
+            off = (dist * math.cos(a), dist * math.sin(a))
+            p1 = (round(o[0] + u[0] * t0 + off[0], 6), round(o[1] + u[1] * t0 + off[1], 6))
+            p2 = (round(o[0] + u[0] * t1 + off[0], 6), round(o[1] + u[1] * t1 + off[1], 6))
+            barras.append(dict(face=nome, grupo=grupo, dist=dist, p1=p1, p2=p2, comp=comp))
+    posicoes = [dict(grupo=g, quant=sum(1 for b in barras if b["grupo"] == g), comp=comps[g])
+                for g in ("by", "bx")]
+    return barras, posicoes
+
+
 def detalhar(p):
     """Geometria dos conectores de um pilar interno. Devolve um dict com:
     pentes (lista de dict face, base, ang, x, y, pinos), n_pentes, inclinados, k_atende, contornos (afastamentos
@@ -177,6 +223,7 @@ def detalhar(p):
     # Eixo do trilho encostado nas cabeças (no modelo, 1,625 + 0,25 = 1,875 com o trilho de 5 mm; com ø8, 2,0).
     trilhos = dict(quant=p["con_trilhos"], bitola=p["con_trilho_bitola"],
                    afast=round(cabeca / 20.0 + p["con_trilho_bitola"] / 20.0, 6))
+    mont, mont_pos = montagem(p)
     rep = p["repeticoes"]
     quadro = ["ARMADURA DE COMBATE À PUNÇÃO",
               f"QUANTIDADE: {rep} x {len(pentes)} PENTES",
@@ -186,7 +233,7 @@ def detalhar(p):
                 contornos=[round(s0 + i * sr, 6) for i in range(n)], espacamento_faces=esp_faces,
                 vizinhos=viz, esp_canto_max=_maior(viz, True), esp_face_max=_maior(viz, False),
                 esp_externo_max=max(v["dist"] for v in viz), pino=pino, trilhos=trilhos,
-                nome_bloco=f"PUN {n}P {_mm(sr)} cm", quadro=quadro)
+                nome_bloco=f"PUN {n}P {_mm(sr)} cm", quadro=quadro, montagem=mont, mont_posicoes=mont_pos)
 
 
 def _mm(v):

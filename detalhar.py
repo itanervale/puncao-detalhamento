@@ -9,6 +9,7 @@ Saída padrão: saidas/<nome do projeto>/PUN_<pilar>.DWG. Com --png, grava tamb�
 import argparse
 import json
 import os
+import pathlib
 import sys
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
@@ -36,9 +37,6 @@ def main():
         print(relatorio(res))
         if res["erros"]:
             continue
-        if "conectores" in res:
-            print("   prancha dos conectores: etapa E4 (o núcleo acima já vale)")
-            continue
         g = prancha.gerar(res, pasta)
         print(f"   gravado: {', '.join(os.path.basename(v) for k, v in g['arquivos'].items() if k != 'aviso')}")
         if g["arquivos"].get("aviso"):
@@ -48,7 +46,7 @@ def main():
             from ferramentas import ler_modelo, imagem
             d = ler_modelo.ler(g["arquivos"]["dwg"])
             base = os.path.splitext(g["arquivos"]["dwg"])[0]
-            json.dump(d, open(base + ".json", "w", encoding="utf-8"), ensure_ascii=False, default=str)
+            pathlib.Path(base + ".json").write_text(json.dumps(d, ensure_ascii=False, default=str), encoding="utf-8")
             print("   imagem:", imagem.desenhar(d, base + ".png"))
 
 

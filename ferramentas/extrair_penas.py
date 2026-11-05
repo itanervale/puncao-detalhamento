@@ -19,6 +19,7 @@ import argparse
 import colorsys
 import json
 import os
+import pathlib
 import sys
 from datetime import date
 
@@ -83,7 +84,7 @@ def ler_tela(modelo):
         for nv in range(256):
             tela[nv].update(cor_tela=niv[nv]["cor"], estilo_tela=niv[nv]["estilo"])
     else:                                            # sem o modelo: mantém a tabela já gravada no niveis.json
-        atual = json.load(open(SAIDA, encoding="utf-8"))["niveis"]
+        atual = json.loads(pathlib.Path(SAIDA).read_text(encoding="utf-8"))["niveis"]
         for nv in range(256):
             tela[nv].update(cor_tela=atual[str(nv)]["cor_tela"], estilo_tela=atual[str(nv)]["estilo_tela"])
         print("AVISO: modelo não encontrado; cores de tela mantidas do niveis.json atual")

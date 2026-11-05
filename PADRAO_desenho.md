@@ -295,6 +295,10 @@ O que a gravação precisa para ficar igual aos modelos:
   - fuste do pino ø10 (r 0,5 na planta; 1,0 no corte);
   - cabeça de 32 mm (r 1,6);
   - trilhos com a largura real (ø8 = 0,8).
+- **Aplicado na prancha dos conectores (E4, 05/11/2026):**
+  - bloco do pente com cabeça r 1,6, fuste r 0,5 e trilhos de 0,8 a 2,0 do eixo, com o gancho de raio 1,6 × afastamento pelo eixo;
+  - bloco do pino em corte com cabeça de 3,2 × 0,8, concordância de 0,2 e fuste de 1,0;
+  - cotas "39" alinhadas com os pinos (no modelo, inclinadas a 22,5°).
 - **Respostas do usuário (03/11/2026):**
   - Q1: o R01 usou cobrimento de 2,0;
   - Q2: cobrinha em planta com a bitola real;

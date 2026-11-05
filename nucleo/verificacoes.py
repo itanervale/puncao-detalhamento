@@ -84,8 +84,8 @@ def conectores(p, con):
           f"pino de {_f(pino['comprimento_mm'])} mm, abaixo do mínimo de {pino['minimo_mm']} mm do fabricante",
           "catálogo Trejor, p. 3")
     if p["con_montagem"]:
-        out.append(("aviso", "montagem positiva nos conectores ainda não definida (pergunta Q7 do plano); "
-                    "nenhuma barra de montagem foi gerada", "PLANO, P7"))
+        out.append(("ok", "montagem positiva nos conectores ligada (opcional; o padrão do escritório aproveita as "
+                    "barras de flexão da laje, nota 1)", "PLANO, P7 e Q7"))
     out.append(("ok", f"d = {_f(d)} cm (negativa abaixo da cabeça do pino de {_f(p['con_cabeca_esp'])} cm)",
                 f"{ORDEM_ITEM}, 19.5.2.1"))
     return out

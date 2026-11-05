@@ -18,6 +18,7 @@ import glob
 import json
 import math
 import os
+import pathlib
 import sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -238,7 +239,7 @@ def posicao_texto(mark, filhos_ferro):
 
 
 def replicar(despejo):
-    d = json.load(open(despejo, encoding="utf-8"))
+    d = json.loads(pathlib.Path(despejo).read_text(encoding="utf-8"))
     ents, niveis = d["ents"], d["niveis"]
     dwg = arquivo.novo_desenho(d["info"]["escala"])
     definir_blocos(dwg, ents, niveis)
@@ -280,7 +281,7 @@ def main():
         modelo, arqs, nc, nf = replicar(desp)
         rep = ler_modelo.ler(arqs["dwg"])
         saida = os.path.splitext(arqs["dwg"])[0] + ".json"
-        json.dump(rep, open(saida, "w", encoding="utf-8"), ensure_ascii=False, default=str)
+        pathlib.Path(saida).write_text(json.dumps(rep, ensure_ascii=False, default=str), encoding="utf-8")
         r = comparar.comparar(modelo, rep)
         print(f"== {os.path.basename(desp)} -> {os.path.basename(arqs['dwg'])}: {nf} ferros, {nc} cotas; "
               f"arquivos {sorted(arqs)}")

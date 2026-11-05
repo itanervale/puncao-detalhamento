@@ -124,6 +124,14 @@ class TesteVariantes(unittest.TestCase):
         self.assertEqual([(pt["x"], pt["y"]) for pt in baixo], [(25, -11)])
         self.assertIsNone(c["espacamento_faces"]["baixo"])
 
+    def test_espacos_das_faces_em_cm_inteiros(self):
+        pf = conectores.posicoes_face
+        self.assertEqual(pf(150, 5, 5), [5, 40, 75, 110, 145])           # o modelo: exato
+        self.assertEqual(pf(80, 4, 5), [5, 28, 52, 75])                  # 23 / 24 / 23, sobra no meio
+        self.assertEqual(pf(60, 4, 5), [5, 21, 39, 55])                  # 16 / 18 / 16
+        self.assertEqual(pf(55, 3, 5), [5, 27.5, 50])                    # sobra ímpar: meio cm nos dois do meio
+        self.assertEqual(pf(40, 1, 5), [20])
+
     def test_face_longa_avisa(self):
         r = detalhar({**P02, "con_n_face_by": 2})
         avisos = [t for tipo, t, _ in r["verificacoes"] if tipo == "aviso"]
@@ -140,10 +148,15 @@ class TesteVariantes(unittest.TestCase):
         self.assertTrue(any("fora do catálogo" in t for tipo, t, _ in r["verificacoes"] if tipo == "aviso"))
         self.assertEqual(r["conectores"]["pino"]["cabeca_mm"], 45)
 
-    def test_montagem_ligada_so_avisa(self):
+    def test_montagem_opcional(self):
+        self.assertEqual(len(detalhar(P02)["ferros"]), 2)     # desligada por padrão (P7, Q7)
         r = detalhar({**P02, "con_montagem": True})
-        self.assertEqual(len(r["ferros"]), 2)
-        self.assertTrue(any("Q7" in t for tipo, t, _ in r["verificacoes"] if tipo == "aviso"))
+        # uma por linha de pinos em cada face: faces de 150 com 140 + 2 x 30 = 200, de 50 com 40 + 60 = 100
+        self.assertEqual([(f["pos"], f["quant"], f["bitola"], f["comp"]) for f in r["ferros"]],
+                         [(1, 8, 10.0, 220), (2, 3, 10.0, 320), (3, 6, 12.5, 200), (4, 6, 12.5, 100)])
+        esq = [b for b in r["conectores"]["montagem"] if b["face"] == "esquerda"]
+        self.assertEqual(sorted(b["p1"][0] for b in esq), [-45, -28, -11])
+        self.assertEqual({(b["p1"][1], b["p2"][1]) for b in esq}, {(175, -25)})
 
     def test_erros(self):
         for extra, trecho in (({"con_sr": 0}, "con_sr"), ({"con_pinos": 0}, "con_pinos"),

@@ -11,6 +11,7 @@ Sai com código 0 quando não há diferença.
 """
 import argparse
 import json
+import pathlib
 import sys
 from collections import Counter
 
@@ -147,8 +148,8 @@ def main():
     ap.add_argument("--alinhar-titulo", action="store_true")
     ap.add_argument("--detalhes", type=int, default=8)
     o = ap.parse_args()
-    a = json.load(open(o.a, encoding="utf-8"))
-    b = json.load(open(o.b, encoding="utf-8"))
+    a = json.loads(pathlib.Path(o.a).read_text(encoding="utf-8"))
+    b = json.loads(pathlib.Path(o.b).read_text(encoding="utf-8"))
     dx = dy = 0.0
     if o.deslocar:
         dx, dy = (float(v) for v in o.deslocar.split(","))

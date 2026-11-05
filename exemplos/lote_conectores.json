@@ -1,0 +1,17 @@
+{
+ "formato": "puncao-detalhamento",
+ "versao": 1,
+ "descricao": "Lote de conferência dos conectores: o P02 do modelo, um pilar quadrado, um alongado com 5 pinos por pente (leque de 3 inclinados por canto), um com a montagem opcional ligada e um em cruz.",
+ "pilares": [
+  {"titulo": "P02", "bx": 50, "by": 150, "h_laje": 27, "solucao": "conectores",
+   "col_n_face_bx": 3, "col_n_face_by": 8, "con_n_face_bx": 3, "con_n_face_by": 5},
+  {"titulo": "P5", "repeticoes": 2, "bx": 40, "by": 40, "h_laje": 25, "solucao": "conectores",
+   "col_n_face_bx": 3, "col_n_face_by": 3, "con_n_face_bx": 3, "con_n_face_by": 3},
+  {"titulo": "P7", "bx": 30, "by": 80, "h_laje": 30, "solucao": "conectores", "con_pinos": 5,
+   "col_n_face_bx": 2, "col_n_face_by": 4, "con_n_face_bx": 2, "con_n_face_by": 4},
+  {"titulo": "P9", "bx": 60, "by": 60, "h_laje": 25, "solucao": "conectores", "con_montagem": true,
+   "mont_bitola": 8, "col_n_face_bx": 4, "col_n_face_by": 4, "con_n_face_bx": 4, "con_n_face_by": 4},
+  {"titulo": "P11", "bx": 40, "by": 100, "h_laje": 25, "solucao": "conectores", "con_inclinados": "cruz",
+   "col_n_face_bx": 3, "col_n_face_by": 5, "con_n_face_bx": 3, "con_n_face_by": 4}
+ ]
+}

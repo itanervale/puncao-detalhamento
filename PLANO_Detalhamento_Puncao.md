@@ -375,7 +375,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - colapso N1 8 ø10 C=220 e N2 3 ø10 C=320.
 - **Módulos:** `nucleo\conectores.py` (pentes, leque dos cantos, pino pelo catálogo, contornos, distâncias, quadro) e `verificacoes.conectores`. O `detalhe.py` junta tudo: os pentes não são ferros do TQS (P11), e os ferros são só os do colapso.
 - **Regras implementadas:**
-  - **Pentes das faces:** por igual entre as distâncias ao canto (`con_dist_canto`); um só fica no meio da face.
+  - **Pentes das faces:** por igual entre as distâncias ao canto (`con_dist_canto`); um só fica no meio da face. Desde a E4, os espaços ficam em cm inteiros, com a sobra no meio.
   - **Inclinados (P9):** saem do canto, com o 1º pino a s0 dele, e os ângulos repartidos por igual entre as direções das duas faces (k = 1: a 45°; k = 3: 202,5°, 225° e 247,5° no canto inferior esquerdo).
     - `con_inclinados` = "auto" (padrão): o menor k que deixa os pinos de fora vizinhos nos cantos a ≤ 2d.
     - "cruz" = nenhum.
@@ -399,11 +399,35 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Exemplo:** `exemplos\P02_conectores.json`.
 - **Conferência:** `python ferramentas/esquema.py exemplos/P02_conectores.json --saida saidas/e3`. A imagem mostra a planta dos pinos (inclinados em roxo, trilhos com a largura real, contornos e as distâncias nos cantos), o colapso e um pente em corte.
 - **Linha de comando:** o `detalhar.py` imprime o núcleo dos conectores e avisa que a prancha é a E4.
-- **Montagem positiva nos conectores (P7):** o parâmetro existe (`con_montagem`, desligado), mas a geometria não está definida. Ligado, só gera um aviso (pergunta Q7).
+- **Montagem positiva nos conectores (P7):** na E3, o parâmetro (`con_montagem`, desligado) só gerava um aviso. A geometria entrou na E4, depois da resposta à Q7.
 - **Correção de passagem:** `dwg_tqs\arquivo.py` fechava mal os arquivos lidos e gravados (`ResourceWarning` nos testes); agora usa `with`.
 
-**E4. Prancha dos conectores em DWG-TQS**
-- Inclui as correções do pino ø10 e dos trilhos ø8.
+**E4. Prancha dos conectores em DWG-TQS** (feita em 05/11/2026)
+- **Módulos:** `nucleo\prancha_conectores.py` (folha em primitivas, sem TQS); `dwg_tqs\prancha.py` escolhe a prancha pela solução. O `detalhar.py` grava os conectores como a cobrinha.
+- **Leiaute:** o do PUN_P02, com os afastamentos do modelo (cm de desenho na escala 15, proporcionais à escala do pilar) e as posições que dependem do pilar calculadas.
+  - Planta dos pinos: pilar, contornos (200), pentes, cotas entre pentes, das faces aos pinos e entre os pinos de fora nos cantos, marcas do corte A-A (`$CORTEA` do TQS) e identificação do colapso (N1 em cima, N2 à direita, com as cotas de `col_ext` e as legendas).
+  - Vista do colapso à direita, alinhada com a planta.
+  - Corte A-A embaixo, pela fileira de pentes das faces esquerda e direita mais perto do meio. Mostra a laje e o pilar com as quebras (`folha.quebra`, amplitude = lado ÷ 2,8, como no modelo), os pinos, os trilhos, as barras de flexão de referência junto de cada pino e o colapso. As chamadas da nota 1 saem das barras de cima do pente da direita.
+  - Abaixo do corte, o pente sozinho, com a altura e os espaçamentos (notas 2 e 3).
+  - Quadro no canto superior direito, notas no canto inferior direito e título; a moldura se ajusta ao conteúdo.
+- **Resultado no P02:** a folha tem as mesmas contagens do modelo (44 cotas; 34 blocos: 20 pentes, 12 pinos em corte e 2 marcas) e a mesma moldura (−106 a 434 × −225,5 a 320). O TQS dá N1 8 ø10 C=220 e N2 3 ø10 C=320, como o núcleo.
+  - Comparação entidade a entidade com o modelo: 560 iguais.
+  - As diferenças são as correções aprovadas: blocos do pente e do pino em corte com fuste ø10, cabeça de 32 mm e trilhos ø8 com a largura real, a 2,0 do eixo, com o gancho refeito para esses trilhos.
+  - Diferenças menores, de propósito:
+    - **Cotas "39" alinhadas com os pinos** (`DimAligned`, texto arredondado ao cm), em vez de inclinadas a 22,5°, que mediam uma projeção. Os pontos vão da esquerda para a direita, para o texto não ficar de cabeça para baixo.
+    - **Legendas do colapso** centradas no pilar.
+    - **Quebra da nota 2:** feita por regra; o modelo foi quebrado à mão.
+    - **Corte:** o colapso N2 fica na 2ª camada de baixo, 0,5 cm acima do modelo, e o "N2" é texto comum (no modelo, era marca do ferro).
+- **Espaços entre pentes em cm inteiros:** a sobra vai para o espaço do meio, como nas linhas da cobrinha (face de 80 com 4 pentes: 23 / 24 / 23). Sem isso, o TQS escrevia "23.3" nas cotas. O P02 não muda (35 e 20 exatos).
+- **Montagem opcional (Q7):**
+  - na planta, as barras no 243;
+  - no corte, os círculos no 243 sobre os trilhos;
+  - embaixo, as linhas de identificação no 244, com legenda.
+
+  No P9 (60 × 60, montagem ø8): N3 e N4 6 ø8 C=110, iguais no TQS.
+- **Lote de conferência:** `exemplos\lote_conectores.json`, com 5 pilares (P02, quadrado 2X, 5 pinos com leque de 3, montagem ligada e cruz). Os comprimentos do TQS conferem com o núcleo em todos, e as imagens ficam em `saidas\lote_conectores\`.
+- **Testes:** `testes\teste_e4_prancha_conectores.py`, com 11 testes, inclusive o DWG do P02 e do P9 pelo TQS; a suíte tem 56.
+- **Limpeza:** todos os `open` sem `with` do repositório viraram leitura e gravação por `pathlib`; os testes rodam com `-W error::ResourceWarning`.
 
 **E5. Janela (Tk)**
 - Interface da seção 4, com prévia, propriedades e avisos.
@@ -454,10 +478,13 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Q5. Espaços por cima do pilar.** Superada pela decisão do usuário de 03/11/2026: nada passa mais por cima do pilar. A regra (sobra no meio) ficou só para as linhas diante das faces e as pernas ao lado delas, e o espaço maior passa pelo aviso de 2d.
 - **Q6. Linhas ao lado do pilar.** Resposta do usuário (03/11/2026): linha inteira, com número ímpar de espaços ao lado da face (no P2, 5 de cerca de 14,4 em vez de 17, 19, 19, 17). A outra opção era cortar a linha em três peças.
 
-### Perguntas da E3
+### Perguntas da E3 (respondidas em 05/11/2026)
 
-- **Q7. Montagem positiva nos conectores (P7).** O parâmetro está pronto, mas falta a geometria. Proposta: uma barra reta por linha de pinos em cada face, paralela a ela, apoiada nos trilhos (face inferior), dos pentes de um canto aos do outro, mais `mont_ext` além. Nos cantos, as barras de faces vizinhas se cruzam em camadas diferentes. Outra opção: só uma barra, na linha dos pinos de fora. Qual vale, ou fica sem montagem?
-- **Q8. Leque dos cantos.** Com mais de um inclinado por canto, os ângulos ficam repartidos por igual entre as direções das duas faces (k = 3: 22,5°, 45° e 67,5° a partir da face). A outra opção reparte o ângulo contando também o afastamento dos pentes das faces a 5 cm do canto, o que deixa os espaços um pouco mais iguais. A regra atual serve?
+- **Q7. Montagem positiva nos conectores (P7).** Resposta do usuário: "Deixe a opção de montagem opcional. No padrão do escritório, a montagem dos pentes/pinos deve aproveitar as barras positivas e negativas da laje, conforme nota já existente."
+  - A opção continua desligada por padrão.
+  - Ligada, usa a geometria proposta: uma barra reta por linha de pinos em cada face, paralela a ela e apoiada nos trilhos, dos pentes de um canto aos do outro e `mont_ext` além, com o comprimento arredondado a `mont_arred`.
+  - As posições vêm depois do colapso (N3 nas faces esquerda e direita, N4 nas de baixo e de cima), para o N1 e o N2 ficarem como no modelo.
+- **Q8. Leque dos cantos.** Resposta do usuário: sim, ângulos repartidos por igual entre as direções das duas faces.
 
 ### Perguntas da E0 (texto original)
 

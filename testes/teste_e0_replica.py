@@ -34,6 +34,7 @@ ESPERADO = {"PUN_P02": dict(so_modelo=1, so_replica=0, ferros=[(1, 8, 10.0, 220.
 class TesteReplica(unittest.TestCase):
     def test_replicas(self):
         import json
+        import pathlib
         from ferramentas import ler_modelo, comparar
         from dwg_tqs import teste_gravacao
         pasta = os.path.join(RAIZ, "saidas", "modelos")
@@ -41,8 +42,8 @@ class TesteReplica(unittest.TestCase):
         for nome, esp in ESPERADO.items():
             with self.subTest(nome=nome):
                 desp = os.path.join(pasta, nome + ".json")
-                json.dump(ler_modelo.ler(os.path.join(MODELOS, nome + ".DWG")), open(desp, "w", encoding="utf-8"),
-                          ensure_ascii=False, default=str)
+                pathlib.Path(desp).write_text(json.dumps(ler_modelo.ler(os.path.join(MODELOS, nome + ".DWG")),
+                                                         ensure_ascii=False, default=str), encoding="utf-8")
                 modelo, arqs, _, _ = teste_gravacao.replicar(desp)
                 rep = ler_modelo.ler(arqs["dwg"])
                 r = comparar.comparar(modelo, rep)

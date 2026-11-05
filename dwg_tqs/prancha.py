@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Prancha de um pilar em DWG-TQS (mais PDF e DXF), com a conferência dos comprimentos que o TQS calcula."""
-from nucleo import prancha_cobrinha
+from nucleo import prancha_cobrinha, prancha_conectores
 from nucleo.textos import limpar_nome
 
 from . import arquivo, gravar
@@ -10,9 +10,8 @@ def gerar(res, pasta, nome=None, pdf=True, dxf=True):
     p = res["p"]
     if res["erros"]:
         raise ValueError("; ".join(res["erros"]))
-    if p["solucao"] != "cobrinha":
-        raise NotImplementedError("prancha dos conectores: etapa E4")
-    folha = prancha_cobrinha.montar(res)
+    modulo = prancha_cobrinha if p["solucao"] == "cobrinha" else prancha_conectores
+    folha = modulo.montar(res)
     dwg = arquivo.novo_desenho(p["escala"])
     ferros = gravar.desenhar(dwg, folha)
     tab = gravar.tabela(ferros)

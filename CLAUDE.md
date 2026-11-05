@@ -9,14 +9,14 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - `nucleo\`: Python puro, sem o TQS.
   - Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), conectores (`conectores.py`, com o catálogo da Trejor em `catalogo_trejor.json`), colapso (`colapso.py`) e verificações (`verificacoes.py`).
   - O conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
-  - Folha em primitivas (`folha.py`) e leiaute da prancha da cobrinha (`prancha_cobrinha.py`).
+  - Folha em primitivas (`folha.py`) e leiaute das pranchas da cobrinha (`prancha_cobrinha.py`) e dos conectores (`prancha_conectores.py`).
 - `dwg_tqs\`: gravação pelo TQS.
   - `arquivo.py`: desenho novo e gravação.
   - `gravar.py`: primitivas para o DWG.
   - `prancha.py`: um pilar, com a conferência dos comprimentos.
 - `detalhar.py` (raiz): linha de comando, um DWG por pilar.
 - `ferramentas\`: leitura e comparação de DWG, imagens, esquema da geometria.
-- `testes\`: os da E1 e da E3 não precisam do TQS; os da E0 e o DWG da E2 são pulados sem ele ou sem os modelos.
+- `testes\`: os da E1 e da E3 não precisam do TQS; os da E0 e os DWG da E2 e da E4 são pulados sem ele ou sem os modelos.
 - **Unidades e convenções:** comprimentos em cm, bitolas em mm. `bx` é a dimensão do pilar na horizontal da prancha e `by` na vertical; as coordenadas são relativas ao canto inferior esquerdo do pilar.
 
 ## Regras
@@ -72,5 +72,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - `dim.dimtxu` vale só para a próxima cota;
   - sem ele, o TQS escreve a medida;
   - num DWG novo, defina `idmniv`, `idmnic`, `idmnil` e `idmnib`, senão chamadas e ticks saem no 216.
+- **Cota alinhada (`DimAligned`):** o texto segue o sentido do 1º ao 2º ponto; com os pontos da direita para a esquerda, ele sai de cabeça para baixo. Ordene os pontos da esquerda para a direita.
+- **Arquivos:** leia e grave com `with` ou `pathlib`; os testes rodam limpos com `-W error::ResourceWarning`.
 - **Iterador:** pula os níveis desligados (`dwg.settings.levelsReadMode = 0` para ler todos) e entrega o conteúdo dos blocos em coordenadas globais.
 - **Console:** use `PYTHONIOENCODING=utf-8`; as listagens do TQS estão em cp1252.

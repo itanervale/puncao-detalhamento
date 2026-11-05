@@ -12,6 +12,7 @@ import argparse
 import json
 import math
 import os
+import pathlib
 import sys
 
 import matplotlib
@@ -21,7 +22,7 @@ from matplotlib.patches import Arc, Circle, Polygon
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
-NIVEIS = json.load(open(os.path.join(RAIZ, "nucleo", "niveis.json"), encoding="utf-8"))
+NIVEIS = json.loads(pathlib.Path(os.path.join(RAIZ, "nucleo", "niveis.json")).read_text(encoding="utf-8"))
 ESTILOS = {0: "-", 1: (0, (6, 3)), 2: (0, (1, 2)), 3: (0, (8, 2, 1, 2)), 4: (0, (8, 2, 1, 2, 1, 2)), 5: (0, (4, 2))}
 PT_MM = 72 / 25.4
 
@@ -120,7 +121,7 @@ def main():
     ap.add_argument("--saida")
     ap.add_argument("--dpi", type=int, default=150)
     a = ap.parse_args()
-    d = json.load(open(a.despejo, encoding="utf-8"))
+    d = json.loads(pathlib.Path(a.despejo).read_text(encoding="utf-8"))
     jan = [float(v) for v in a.janela.split(",")] if a.janela else None
     png = a.saida or os.path.splitext(a.despejo)[0] + ("_tela" if a.modo == "tela" else "") + ".png"
     print("gravado", desenhar(d, png, a.modo, jan, a.dpi))
