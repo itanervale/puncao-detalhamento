@@ -223,9 +223,6 @@ class Prancha:
         xm = -R - 30 * k
         f.bloco(CORTEA, xm, y, 0.0, sx=esc, sy=esc, n=226)
         f.texto(226, xm - 7 * k, y + 2.5 * k, H_LETRA, "A")
-        self.x_marca_dir = self.X0 + self.bx + self.ext + 7 * k
-        f.bloco(CORTEA, self.x_marca_dir, y, 0.0, sx=-esc, sy=esc, n=226)
-        f.texto(226, self.x_marca_dir + 4.5 * k, y + 2.5 * k, H_LETRA, "A")
         f.texto(226, self.x_esq, self.y_tit, H_VISTA, "VISTA EM PLANTA (PINOS)")
         f.texto(0, self.x_esq, self.y_tit - 6 * k, H_ESCALA, f"ESCALA 1:{E:g}")
 
@@ -262,6 +259,11 @@ class Prancha:
             f.linha(245, (X0 + col_x["ini"], v), (X0 + col_x["fim"], v))
         for v in col_y["pos"]:
             f.linha(245, (X0 + v, col_y["ini"]), (X0 + v, col_y["fim"]))
+        # marca A da direita: além do colapso, na linha do corte (no modelo, em x = 411)
+        k, esc, y = self.k, ESC_CORTEA * self.E, self.y_corte
+        self.x_marca_dir = self.X0 + self.bx + self.ext + 7 * k
+        f.bloco(CORTEA, self.x_marca_dir, y, 0.0, sx=-esc, sy=esc, n=226)
+        f.texto(226, self.x_marca_dir + 4.5 * k, y + 2.5 * k, H_LETRA, "A")
         f.texto(226, self.x_n2, self.y_tit, H_VISTA, "VISTA EM PLANTA (COLAPSO PROGRESSIVO)")
         f.texto(0, self.x_n2, self.y_tit - 6 * self.k, H_ESCALA, f"ESCALA 1:{self.E:g}")
 
@@ -385,6 +387,8 @@ class Prancha:
             f.linha(205, (x, Yt + 13 * k), (x, Yd - 20 * k), s=4)
         self.y_min_corte = Yd - 36 * k                    # -225,5 no modelo (borda da folha)
         self.x_max_corte = xb + h / 2.8
+        # região da vista (sem as linhas das faces que descem da planta): do título ao pente
+        self.reg_corte = (xa - h / 2.8, self.y_min_corte, self.x_max_corte, y_tit + H_VISTA * E)
         return Yd
 
     def montagem_identificacao(self, y):
@@ -453,10 +457,15 @@ class Prancha:
     # ------------------------------------------------------------------ montagem da folha
     def montar(self):
         f, E, k = self.f, self.E, self.k
+        i0 = len(f.prims)
         self.planta()
         self.colapso_identificacao()
+        f.regiao("planta", i0)
+        i0 = len(f.prims)
         self.colapso()
+        f.regiao("colapso", i0)
         self.corte()
+        f.regioes["corte"] = self.reg_corte
         y_min = self.montagem_identificacao(self.y_min_corte)
         self.titulo()
         topo = self.y_tit + 52 * k
@@ -470,6 +479,7 @@ class Prancha:
         self.notas(dir_, base)
         self.quadro(dir_, topo)
         f.retangulo(0, esq, base, dir_, topo)
+        f.regiao("prancha", 0)
         return f
 
 

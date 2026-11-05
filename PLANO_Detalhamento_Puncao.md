@@ -429,12 +429,46 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Testes:** `testes\teste_e4_prancha_conectores.py`, com 11 testes, inclusive o DWG do P02 e do P9 pelo TQS; a suíte tem 56.
 - **Limpeza:** todos os `open` sem `with` do repositório viraram leitura e gravação por `pathlib`; os testes rodam com `-W error::ResourceWarning`.
 
-**E5. Janela (Tk)**
-- Interface da seção 4, com prévia, propriedades e avisos.
+**E5. Janela (Tk)** (feita em 05/11/2026)
+- **Abertura:** `Detalhar Punção.bat` ou `pythonw janela_puncao.pyw [projeto.json]`.
+- **Módulos (`janela\`):**
+  - `cad_ribbon.py`, `cad_vista.py`, `cad_dialogo.py` e `cad_icones.py`: copiados do app de telas (`tela_ribbon`, `tela_vista`, `tela_dialogos` e `tela_icones`), com a origem anotada no cabeçalho e as mudanças descritas.
+    - Dos ícones, ficaram os genéricos, e entraram os da punção: pente, cobrinha, conectores, colapso, planta, corte, + pilar, duplicar, apagar, colar do Excel, lote, gerar o lote, cores e verificações.
+    - Sem o Pillow, a janela abre com ícones vazios.
+  - `cena.py`: prévia da folha em primitivas na área CAD.
+    - Modo "tela": fundo preto, com as cores de tela da tabela de níveis dos modelos.
+    - Modo "plot": fundo branco, com a cor e a espessura das penas da TABPLTA e as hachuras de porcentagem.
+    - Blocos expandidos; o `$CORTEA` é desenhado com a geometria lida do modelo.
+    - Cotas como o TQS as escreve; ferros com a linha e o texto.
+    - Uma chave por primitiva, para a dica com o nível e a medida e para a seleção.
+  - `app.py`: a janela.
+- **Janela, no padrão do app de telas:**
+  - menus, acesso rápido e ribbon com as abas Pilar, Cobrinha, Conectores, Colapso, Lote, Exibir e Saídas, com todos os parâmetros do núcleo e dicas;
+  - à esquerda, a árvore (pilares; no atual, ferros, pentes ou cobrinhas, verificações e vistas) e as propriedades;
+  - área CAD com as abas Planta, Corte, Colapso, Prancha e Tabela. Cada aba enquadra a sua região, que a folha passou a registrar (`Folha.regiao`);
+  - mensagens com as verificações e barra de status (coordenadas, pilar atual, aço).
+- **Comportamento:**
+  - a prévia é refeita 0,35 s depois de cada mudança ("Atualizar automaticamente", F5);
+  - o pilar só guarda o que difere dos padrões;
+  - um valor inválido só avisa no status.
+- **Lote:** pilar atual (PgUp/PgDn), + Pilar, Duplicar, Apagar e Colar do Excel.
+  - Colar do Excel: Título; bx; by; h; repetições; solução, com tabulação ou ponto e vírgula e o cabeçalho ignorado.
+  - Os pilares colados herdam o resto do pilar atual, inclusive a solução, quando a coluna vem vazia.
+  - A tabela do lote mostra todos os pilares.
+- **Saídas:** pasta (vazia = `saidas\<projeto>`, guardada no projeto como `pasta_saida`), PDF e DXF, Gerar o pilar (Ctrl+G) e Gerar o lote (Ctrl+Shift+G).
+  - O TQS roda numa thread, com o resultado devolvido por fila; as mensagens mostram os arquivos e a conferência dos comprimentos.
+  - Também abre o PDF e a pasta.
+- **Pilar de um projeto novo:** 150 × 50 (o P2 da cobrinha). Com 50 × 150, as cobrinhas paralelas ao lado menor correm em x, e essa prancha ainda não existe (pendência da E2). A mensagem de erro diz como contornar.
+- **Lições:**
+  - as variáveis do Tk só podem ser lidas na thread principal: o que a thread de gravação usa é lido antes;
+  - os ícones pertencem ao interpretador Tk em que foram criados, então o cache é refeito quando a raiz muda;
+  - os `after()` pendentes são cancelados direto no Tcl ao fechar, porque o `after_cancel` do Python falha em comandos já apagados.
+- **Conferência:** `python ferramentas/capturar_janela.py <projeto.json>` abre a janela, passa por vistas e abas e grava cada estado em PNG pelo `PrintWindow` (ctypes), em `saidas\janela\`.
+- **Testes:** `testes\teste_e5_janela.py`, com 9 testes: colagem, prévia, edição, troca de pilar, duplicar, colar, salvar e reabrir, vistas e cores, e a gravação pelo TQS na thread. A suíte tem 65.
 
 **E6. Lote e saídas**
-- Lote de pilares, um DWG por pilar (`PUN_<pilar>`), PDF e DXF do TQS, relatório.
-- `detalhar.py` pela linha de comando.
+- Já feito na E5: lote na janela, um DWG por pilar (`PUN_<pilar>`), PDF e DXF do TQS, gravação do lote e `detalhar.py` pela linha de comando.
+- Falta: o relatório do lote (pilares, ferros, pentes, aço e avisos) em arquivo.
 
 **E7. Fechamento do repositório**
 - README de uso, exemplos e teste num clone limpo (sem os modelos), do clone ao DWG.

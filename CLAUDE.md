@@ -15,6 +15,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - `gravar.py`: primitivas para o DWG.
   - `prancha.py`: um pilar, com a conferência dos comprimentos.
 - `detalhar.py` (raiz): linha de comando, um DWG por pilar.
+- `janela\` (E5): `app.py` (a janela), `cena.py` (prévia da folha na área CAD) e os módulos copiados do app de telas (`cad_ribbon`, `cad_vista`, `cad_dialogo`, `cad_icones`, com a origem no cabeçalho). Abertura: `Detalhar Punção.bat` / `janela_puncao.pyw`.
 - `ferramentas\`: leitura e comparação de DWG, imagens, esquema da geometria.
 - `testes\`: os da E1 e da E3 não precisam do TQS; os da E0 e os DWG da E2 e da E4 são pulados sem ele ou sem os modelos.
 - **Unidades e convenções:** comprimentos em cm, bitolas em mm. `bx` é a dimensão do pilar na horizontal da prancha e `by` na vertical; as coordenadas são relativas ao canto inferior esquerdo do pilar.
@@ -74,5 +75,11 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - num DWG novo, defina `idmniv`, `idmnic`, `idmnil` e `idmnib`, senão chamadas e ticks saem no 216.
 - **Cota alinhada (`DimAligned`):** o texto segue o sentido do 1º ao 2º ponto; com os pontos da direita para a esquerda, ele sai de cabeça para baixo. Ordene os pontos da esquerda para a direita.
 - **Arquivos:** leia e grave com `with` ou `pathlib`; os testes rodam limpos com `-W error::ResourceWarning`.
+
+## Lições do Tk (janela)
+- **Threads:** a gravação pelo TQS roda numa thread e devolve o resultado por uma fila. As variáveis do Tk (`StringVar.get()`) só podem ser lidas na thread principal: leia tudo antes de abrir a thread.
+- **Ícones:** a `PhotoImage` pertence ao interpretador Tk em que foi criada. Com outra raiz no mesmo processo (testes), o cache é refeito (`cad_icones.foto`).
+- **Fechar a janela:** cancele os `after()` pendentes direto no Tcl (`after cancel`). O `after_cancel` do Python falha em comandos já apagados, e a janela não fechava.
+- **Conferir sem a tela:** `ferramentas/capturar_janela.py` grava a janela em PNG pelo `PrintWindow` (o `ImageGrab` pega a tela bloqueada).
 - **Iterador:** pula os níveis desligados (`dwg.settings.levelsReadMode = 0` para ler todos) e entrega o conteúdo dos blocos em coordenadas globais.
 - **Console:** use `PYTHONIOENCODING=utf-8`; as listagens do TQS estão em cp1252.

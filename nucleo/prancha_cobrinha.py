@@ -45,7 +45,8 @@ def _fmt(v):
 class Prancha:
     def __init__(self, res):
         if res["cobrinha"]["direcao"] != "y":
-            raise NotImplementedError("prancha com as cobrinhas em x: ainda não implementada (E2)")
+            raise NotImplementedError("a prancha com as cobrinhas em x (paralelas a bx) ainda não está pronta: use "
+                                      "a direção y (aba Cobrinha > Direção) ou troque bx e by")
         self.r, self.p, self.c = res, res["p"], res["cobrinha"]
         p = self.p
         self.f = Folha(p["escala"])
@@ -415,6 +416,8 @@ class Prancha:
     def montar(self):
         f, E = self.f, self.E
         self.planta()
+        f.regiao("planta", 0)
+        i0 = len(f.prims)
         x = self.t0 - 1.2 * E
         # à esquerda da planta: detalhes pelas faces e entre eixos (N2 e N1) e os cortes B-B e A-A
         fe_ext = self.pos[("cobrinha", "extremidade")]
@@ -431,11 +434,14 @@ class Prancha:
         x = esq - 1.0 * E
         esq, _ = self.corte(x - zp, self.t_frente, "A", nota1=True)
         x_esq = esq - 1.6 * E
+        f.regiao("corte", i0)
         # linhas das faces do pilar, dos cortes até a planta (como no modelo)
         for u in (0.0, self.L):
             f.linha(204, (x_esq + 1.5 * E, u), (0.0, u), s=3)
         # à direita: colapso; em cima: título, gabarito e notas
+        i0 = len(f.prims)
         x_dir = self.colapso(self.t1 + 1.6 * E + self.p["col_ext"])
+        f.regiao("colapso", i0)
         y_top = self.y_tit + 1.2 * E
         xg, yg = self.gabarito(x_dir - 13.5 * E, y_top + 9.0 * E)
         self.notas(x_dir - 13.5 * E - 15.0 * E, y_top + 9.0 * E)
@@ -443,6 +449,7 @@ class Prancha:
         x1, y1, x2, y2 = f.extensao()
         m = 0.8 * E
         f.retangulo(0, x1 - m, y1 - m, max(x2, xg) + m, max(y2, y_top + 9.0 * E) + m)
+        f.regiao("prancha", 0)
         return f
 
 

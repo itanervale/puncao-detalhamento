@@ -20,6 +20,7 @@ class Folha:
         self.E = float(escala)
         self.prims = []
         self.blocos = {}             # nome -> lista de primitivas em coordenadas do bloco ("" = bloco do TQS)
+        self.regioes = {}            # nome da vista -> (x1, y1, x2, y2), para a janela enquadrar cada vista
 
     # ------------------------------------------------------------------ primitivas
     def _add(self, p):
@@ -75,6 +76,35 @@ class Folha:
         """Bloco da biblioteca do TQS (carregado pelo caminho, sem extensão)."""
         self.blocos[nome] = None
 
+    def regiao(self, nome, i0, i1=None):
+        """Guarda a extensão das primitivas prims[i0:i1] como a região de uma vista (blocos e ferros incluídos)."""
+        xs, ys = [], []
+        for p in self.prims[i0:i1]:
+            if p["t"] == "Bloco":
+                for q in self.blocos.get(p["b"]) or []:
+                    for x, y in _pontos(q):
+                        X, Y = _transformar(x, y, p)
+                        xs.append(X)
+                        ys.append(Y)
+                xs.append(p["x"])
+                ys.append(p["y"])
+            elif p["t"] == "Ferro":
+                for i in p["ins"]:
+                    a = math.radians(i.get("ang", 0.0))
+                    L = p.get("comp") or 0.0
+                    xs += [i["x"], i["x"] + L * math.cos(a)]
+                    ys += [i["y"], i["y"] + L * math.sin(a)]
+                for x, y in p.get("pontos") or []:
+                    xs.append(p["ins"][0]["x"] + x)
+                    ys.append(p["ins"][0]["y"] + y)
+            else:
+                for x, y in _pontos(p):
+                    xs.append(x)
+                    ys.append(y)
+        if xs:
+            self.regioes[nome] = (min(xs), min(ys), max(xs), max(ys))
+        return self.regioes.get(nome)
+
     def extensao(self):
         xs, ys = [], []
         for p in self.prims:
@@ -96,6 +126,28 @@ class Folha:
                 xs.append(p["x"])
                 ys.append(p["y"])
         return min(xs), min(ys), max(xs), max(ys)
+
+
+def _pontos(p):
+    """Pontos que delimitam uma primitiva (linha, polilinha, círculo, arco, texto ou cota)."""
+    if p.get("xy"):
+        return [tuple(q) for q in p["xy"]]
+    if p["t"] in ("Circulo", "Arco"):
+        return [(p["x"] - p["r"], p["y"] - p["r"]), (p["x"] + p["r"], p["y"] + p["r"])]
+    if p["t"] == "Texto":
+        larg = len(p["txt"]) * p["h"]
+        a = math.radians(p["a"])
+        return [(p["x"], p["y"]), (p["x"] + larg * math.cos(a), p["y"] + larg * math.sin(a) + p["h"])]
+    if p["t"] == "Cota":
+        return [tuple(p["p1"]), tuple(p["p2"]), tuple(p["p3"])]
+    return []
+
+
+def _transformar(x, y, ins):
+    """Ponto de um bloco levado para o desenho pela inserção (escala, giro em graus e translação)."""
+    x, y = x * ins.get("sx", 1.0), y * ins.get("sy", 1.0)
+    a = math.radians(ins.get("ang", 0.0))
+    return ins["x"] + x * math.cos(a) - y * math.sin(a), ins["y"] + x * math.sin(a) + y * math.cos(a)
 
 
 def contorno_barra(pontos, diam):

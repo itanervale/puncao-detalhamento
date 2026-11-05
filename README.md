@@ -11,11 +11,24 @@ Duas soluções:
 > - a E1 (núcleo da cobrinha);
 > - a E2 (prancha da cobrinha em DWG-TQS);
 > - a E3 (núcleo dos conectores);
-> - a E4 (prancha dos conectores em DWG-TQS).
+> - a E4 (prancha dos conectores em DWG-TQS);
+> - a E5 (janela).
 >
-> A próxima é a E5 (janela). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
+> A próxima é a E6 (relatório do lote). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Uso
+
+### Janela
+
+Abra pelo `Detalhar Punção.bat` (ou `pythonw janela_puncao.pyw [projeto.json]`). A janela segue o estilo dos editores do TQS:
+- ribbon com as abas Pilar, Cobrinha, Conectores, Colapso, Lote, Exibir e Saídas;
+- árvore do projeto e propriedades à esquerda;
+- área CAD com a prévia da prancha, nas cores de tela do TQS ou nas de plotagem, e as abas Planta, Corte, Colapso, Prancha e Tabela;
+- mensagens com as verificações.
+
+Um projeto tem vários pilares (aba Lote: + Pilar, Duplicar, Apagar, Colar do Excel). A prévia não precisa do TQS. "Gerar o pilar" (Ctrl+G) e "Gerar o lote" (Ctrl+Shift+G) gravam pelo TQS.
+
+### Linha de comando
 
 ```bash
 python detalhar.py exemplos/P2_cobrinha.json
@@ -28,6 +41,7 @@ Grava um DWG-TQS por pilar do projeto (`saidas\<projeto>\PUN_<pilar>.DWG`), com 
 - Windows.
 - Python 3.13.
 - TQS V25 com a `TQSPythonInterface` (2.1.7 ou mais nova). Ela vem com a instalação do TQS e não faz parte deste repositório. Só é necessária para gravar DWG, PDF e DXF.
+- Para os ícones da janela: `pip install -r requirements.txt` (Pillow). Sem ele, a janela abre com ícones vazios.
 - Para as ferramentas de conferência: `pip install -r requirements-dev.txt`.
 
 ## Instalação
@@ -45,7 +59,7 @@ Não há outra instalação: o app usa a biblioteca padrão do Python e a interf
 |---|---|
 | `nucleo\` | Cálculo do desenho em Python puro (sem TQS): parâmetros, geometria, prancha em primitivas, verificações; dados dos níveis e do catálogo dos conectores |
 | `dwg_tqs\` | Gravação pelo TQS: DWG-TQS com ferros inteligentes, PDF e DXF |
-| `janela\` | Interface (a partir da etapa E5) |
+| `janela\` | Janela (Tk) no estilo do TQS: ribbon, vista CAD, prévia da prancha, lote |
 | `ferramentas\` | Leitura e comparação de DWG-TQS, imagens de conferência, extração das penas |
 | `exemplos\` | Projetos de exemplo (`.json`) |
 | `testes\` | Testes que reproduzem os desenhos de referência |

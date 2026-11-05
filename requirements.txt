@@ -1,0 +1,3 @@
+# Para os ícones da janela (Pillow). Sem ele, a janela abre com ícones vazios. O núcleo e a gravação usam a
+# biblioteca padrão e a TQSPythonInterface (vem com o TQS).
+Pillow
