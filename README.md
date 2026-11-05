@@ -68,7 +68,7 @@ Não há outra instalação: o app usa a biblioteca padrão do Python e a interf
 ## Projeto e núcleo (E1)
 
 O projeto é um arquivo `.json` com uma lista de pilares; cada pilar guarda só o que difere dos padrões (`nucleo\parametros.py`, `PADROES`). Exemplos:
-- `exemplos\P2_cobrinha.json` e `exemplos\lote_cobrinha.json` (cobrinha);
+- `exemplos\P2_cobrinha.json`, `exemplos\P2x_cobrinha.json` (o mesmo pilar girado, com as cobrinhas em x) e `exemplos\lote_cobrinha.json` (cobrinha);
 - `exemplos\P02_conectores.json` (conectores).
 
 Os dois `P2`/`P02` são os pilares dos desenhos de referência.

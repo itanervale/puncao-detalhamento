@@ -65,6 +65,47 @@ class TesteFolha(unittest.TestCase):
             self.assertIn(t, txt)
 
 
+P2X = dict(P2, bx=50, by=150, col_n_face_bx=3, col_n_face_by=8)     # o P2 girado: cobrinhas em x
+
+
+class TesteFolhaX(unittest.TestCase):
+    """Cobrinhas em x: os cortes e os detalhes embaixo da planta, alinhados com ela, face superior para cima."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.res = detalhar(P2X)
+        cls.f = prancha_cobrinha.montar(cls.res)
+
+    def test_mesmos_ferros_do_p2(self):
+        self.assertEqual(self.res["cobrinha"]["direcao"], "x")
+        y = {f["pos"]: (f["quant"], f["comp"]) for f in detalhar(P2)["ferros"]}
+        x = {f["pos"]: (f["quant"], f["comp"]) for f in self.res["ferros"]}
+        self.assertEqual({k: x[k] for k in (1, 2, 3, 4)}, {k: y[k] for k in (1, 2, 3, 4)})
+        self.assertEqual({x[5], x[6]}, {y[5], y[6]})                     # colapso com as faces trocadas
+
+    def test_cobrinhas_horizontais(self):
+        ins = [p for p in self.f.prims if p["t"] == "Bloco" and p["b"].startswith("COBRINHA")]
+        self.assertEqual(len(ins), 26)
+        self.assertEqual({p["ang"] for p in ins}, {-90.0})
+        self.assertEqual({p["sy"] for p in ins}, {1.0, -1.0})
+
+    def test_cortes_embaixo_da_planta_e_alinhados(self):
+        reg = self.f.regioes
+        self.assertLess(reg["corte"][3], reg["planta"][1])
+        txt = {p["txt"]: p for p in self.f.prims if p["t"] == "Texto"}
+        self.assertLess(txt["SEÇÃO A-A"]["y"], txt["SEÇÃO B-B"]["y"])      # A-A é a mais afastada
+        self.assertEqual(txt["TOPO LAJE"]["a"], 0.0)
+        gen = [p for p in self.f.prims if p["t"] == "Ferro" and p["tipo"] == "gen"]
+        self.assertEqual(len(gen), 2)
+        for p in gen:                                                   # trechos de cima acima dos de baixo
+            self.assertEqual({round(y, 6) for _, y in p["pontos"]}, {0.0, self.res["cobrinha"]["altura_eixo"]})
+
+    def test_so_niveis_dos_modelos(self):
+        usados = {p["n"] for p in self.f.prims if "n" in p}
+        usados |= {p["n"] for prims in self.f.blocos.values() if prims for p in prims}
+        self.assertTrue(usados <= NIVEIS_MODELOS, usados - NIVEIS_MODELOS)
+
+
 @unittest.skipUnless(TEM_TQS, "sem o TQS")
 class TesteDWG(unittest.TestCase):
     def test_p2_pelo_tqs(self):
@@ -77,6 +118,17 @@ class TesteDWG(unittest.TestCase):
                                                (4, 8, 12.5, 95), (5, 3, 10.0, 320), (6, 8, 10.0, 220)])
             for k in ("dwg", "pdf", "dxf"):
                 self.assertTrue(os.path.exists(g["arquivos"][k]), k)
+        finally:
+            shutil.rmtree(pasta, ignore_errors=True)
+
+    def test_p2_em_x_pelo_tqs(self):
+        from dwg_tqs import prancha
+        pasta = tempfile.mkdtemp(prefix="pun_e2x_")
+        try:
+            g = prancha.gerar(detalhar(P2X), pasta)
+            self.assertTrue(g["confere"], (g["tabela_tqs"], g["esperado"]))
+            self.assertEqual(g["tabela_tqs"], [(1, 18, 10.0, 167), (2, 8, 10.0, 472), (3, 8, 12.5, 335),
+                                               (4, 8, 12.5, 95), (5, 8, 10.0, 220), (6, 3, 10.0, 320)])
         finally:
             shutil.rmtree(pasta, ignore_errors=True)
 

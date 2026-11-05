@@ -51,9 +51,9 @@ TEXTOS = ("titulo", "solucao", "cob_direcao", "con_inclinados")
 INTEIROS = ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas", "cob_linhas_x", "cob_linhas_y",
             "con_pinos", "con_n_face_bx", "con_n_face_by", "con_trilhos")
 COLUNAS_EXCEL = ("titulo", "bx", "by", "h_laje", "repeticoes", "solucao")
-# Pilar de um projeto novo: o do modelo da cobrinha (150 x 50). Com 50 x 150, as cobrinhas paralelas ao lado menor
-# correm em x, e essa prancha ainda não existe (pendência da E2).
-NOVO_PILAR = dict(titulo="P1", bx=150.0, by=50.0)
+# Pilar de um projeto novo: os padrões do núcleo (50 x 150, cobrinha; as cobrinhas, paralelas ao lado menor,
+# correm em x).
+NOVO_PILAR = dict(titulo="P1")
 
 
 def _kg(bitola, comp_cm, quant):

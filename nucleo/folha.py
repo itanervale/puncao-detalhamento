@@ -78,6 +78,32 @@ class Folha:
 
     def regiao(self, nome, i0, i1=None):
         """Guarda a extensão das primitivas prims[i0:i1] como a região de uma vista (blocos e ferros incluídos)."""
+        cx = self.caixa(i0, i1)
+        if cx:
+            self.regioes[nome] = cx
+        return self.regioes.get(nome)
+
+    def mover(self, i0, dx, dy, i1=None):
+        """Desloca as primitivas prims[i0:i1] (para empilhar uma vista desenhada na origem)."""
+        for p in self.prims[i0:i1]:
+            if p.get("xy"):
+                p["xy"] = [[q[0] + dx, q[1] + dy] for q in p["xy"]]
+            if p["t"] in ("Circulo", "Arco", "Texto", "Bloco"):
+                p["x"] += dx
+                p["y"] += dy
+            elif p["t"] == "Cota":
+                for k in ("p1", "p2", "p3"):
+                    p[k] = [p[k][0] + dx, p[k][1] + dy]
+            elif p["t"] == "Ferro":
+                for i in p["ins"]:
+                    i["x"] += dx
+                    i["y"] += dy
+                if p.get("texto"):
+                    p["texto"]["x"] += dx
+                    p["texto"]["y"] += dy
+
+    def caixa(self, i0=0, i1=None):
+        """Extensão (x1, y1, x2, y2) das primitivas prims[i0:i1], com blocos e ferros; None se vazia."""
         xs, ys = [], []
         for p in self.prims[i0:i1]:
             if p["t"] == "Bloco":
@@ -101,9 +127,11 @@ class Folha:
                 for x, y in _pontos(p):
                     xs.append(x)
                     ys.append(y)
-        if xs:
-            self.regioes[nome] = (min(xs), min(ys), max(xs), max(ys))
-        return self.regioes.get(nome)
+        if p_texto := [p for p in self.prims[i0:i1] if p["t"] == "Ferro" and p.get("texto")]:
+            for p in p_texto:                             # texto do ferro reposicionado
+                xs.append(p["texto"]["x"])
+                ys.append(p["texto"]["y"])
+        return (min(xs), min(ys), max(xs), max(ys)) if xs else None
 
     def extensao(self):
         xs, ys = [], []

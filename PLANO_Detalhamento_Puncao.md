@@ -363,7 +363,18 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - **Montagem em planta:** fica a 1,125 da perna (encostada), não a 1,5 do modelo, porque a cobrinha passou a ser desenhada com a bitola real (Q2).
   - **Cortes:** dois (A-A e B-B), porque há dois tipos de cobrinha.
   - **Detalhes:** dois por cobrinha.
-- **Pendente:** prancha com as cobrinhas em x (opção da P6). O núcleo calcula, mas a folha avisa que ainda não desenha.
+- **Prancha com as cobrinhas em x** (opção da P6): feita em 05/11/2026, a pedido do usuário, depois da E5.
+  - **Coordenadas locais:** a prancha desenha em coordenadas locais. Na planta, `Pl(t, u)`: t transversal, u ao longo da cobrinha. Nos cortes e detalhes, `T(u, z)`, com z na altura. A direção decide a passagem para a prancha, o modo das cotas (`_modo`) e o ângulo dos textos ao longo de u.
+  - **Em y:** a folha saiu idêntica à de antes, primitiva por primitiva, nos 6 pilares de conferência (P2, o lote da cobrinha e o pilar novo).
+  - **Em x:**
+    - os detalhes e as seções ficam embaixo da planta, alinhados com ela (x = u) e com a face superior para cima, na mesma ordem a partir da planta;
+    - cada um é desenhado na base 0 e descido até abaixo do anterior (`Folha.caixa` e `Folha.mover`);
+    - os blocos das cobrinhas são inseridos girados de -90°;
+    - as marcas A e B ficam nas laterais da planta, com a bandeira para baixo;
+    - as barras de montagem são identificadas na vertical, à esquerda;
+    - o colapso e o gabarito usam bx e by da prancha.
+  - **Exemplos:** `exemplos\P2x_cobrinha.json`, o P2 girado (os mesmos ferros; o colapso troca de face), e o P8 (40 × 90) no `lote_cobrinha.json`. Os comprimentos do TQS conferem com o núcleo nos dois.
+  - **Testes:** 4 da folha em x e o DWG do P2 em x pelo TQS, em `testes	este_e2_prancha.py`.
 - **Testes:** `testes\teste_e2_prancha.py`, sem o TQS (folha, blocos, ferros, só níveis dos modelos) e com ele (DWG do P2 e comprimentos).
 
 **E3. Núcleo dos conectores (radial)** (feita em 05/11/2026)
@@ -458,7 +469,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Saídas:** pasta (vazia = `saidas\<projeto>`, guardada no projeto como `pasta_saida`), PDF e DXF, Gerar o pilar (Ctrl+G) e Gerar o lote (Ctrl+Shift+G).
   - O TQS roda numa thread, com o resultado devolvido por fila; as mensagens mostram os arquivos e a conferência dos comprimentos.
   - Também abre o PDF e a pasta.
-- **Pilar de um projeto novo:** 150 × 50 (o P2 da cobrinha). Com 50 × 150, as cobrinhas paralelas ao lado menor correm em x, e essa prancha ainda não existe (pendência da E2). A mensagem de erro diz como contornar.
+- **Pilar de um projeto novo:** os padrões do núcleo (50 × 150, cobrinha em x), desde que a prancha em x ficou pronta. Antes, era 150 × 50.
 - **Lições:**
   - as variáveis do Tk só podem ser lidas na thread principal: o que a thread de gravação usa é lido antes;
   - os ícones pertencem ao interpretador Tk em que foram criados, então o cache é refeito quando a raiz muda;

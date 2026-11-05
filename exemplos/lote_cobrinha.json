@@ -1,11 +1,12 @@
 {
  "formato": "puncao-detalhamento",
  "versao": 1,
- "descricao": "Lote de exemplo: o P2 do modelo e variações (pilar quadrado, outra direção, cobrimento de 2,5).",
+ "descricao": "Lote de exemplo: o P2 do modelo e variações (pilar quadrado, outra direção, cobrimento de 2,5 e um pilar com as cobrinhas em x).",
  "pilares": [
   {"titulo": "P2", "bx": 150, "by": 50, "h_laje": 27, "c_sup": 2.0, "c_inf": 2.0, "col_n_face_bx": 8, "col_n_face_by": 3},
   {"titulo": "P5", "repeticoes": 2, "bx": 40, "by": 40, "h_laje": 25, "col_n_face_bx": 3, "col_n_face_by": 3},
   {"titulo": "P7", "bx": 25, "by": 80, "h_laje": 27, "cob_direcao": "maior", "col_n_face_bx": 2, "col_n_face_by": 5},
-  {"titulo": "P2-c25", "bx": 150, "by": 50, "h_laje": 27, "c_sup": 2.5, "c_inf": 2.5, "col_n_face_bx": 8, "col_n_face_by": 3}
+  {"titulo": "P2-c25", "bx": 150, "by": 50, "h_laje": 27, "c_sup": 2.5, "c_inf": 2.5, "col_n_face_bx": 8, "col_n_face_by": 3},
+  {"titulo": "P8", "bx": 40, "by": 90, "h_laje": 25, "col_n_face_bx": 3, "col_n_face_by": 5}
  ]
 }
