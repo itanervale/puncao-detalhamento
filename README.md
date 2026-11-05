@@ -6,7 +6,13 @@ Duas soluções:
 - **barras dobradas em "cobrinha"**, em malha ortogonal;
 - **conectores tipo pino (studs)** da [Trejor](https://www.trejor.com/conector-de-combate-a-puncao), em arranjo radial.
 
-> **Situação:** em desenvolvimento. Feitas a E0 (base e padrão do desenho), a E1 (núcleo da cobrinha) e a E2 (prancha da cobrinha em DWG-TQS); a próxima é a E3 (núcleo dos conectores). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
+> **Situação:** em desenvolvimento. Feitas:
+> - a E0 (base e padrão do desenho);
+> - a E1 (núcleo da cobrinha);
+> - a E2 (prancha da cobrinha em DWG-TQS);
+> - a E3 (núcleo dos conectores).
+>
+> A próxima é a E4 (prancha dos conectores). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Uso
 
@@ -14,7 +20,7 @@ Duas soluções:
 python detalhar.py exemplos/P2_cobrinha.json
 ```
 
-Grava um DWG-TQS por pilar do projeto (`saidas\<projeto>\PUN_<pilar>.DWG`), com o PDF e o DXF, e confere os comprimentos dos ferros que o TQS calcula com os do núcleo. Use `--png` para a imagem de conferência, `--saida PASTA` para outra pasta e `--pilar P2` para um pilar só. Precisa do TQS.
+Grava um DWG-TQS por pilar do projeto (`saidas\<projeto>\PUN_<pilar>.DWG`), com o PDF e o DXF, e confere os comprimentos dos ferros que o TQS calcula com os do núcleo. Use `--png` para a imagem de conferência, `--saida PASTA` para outra pasta e `--pilar P2` para um pilar só. Precisa do TQS. Por enquanto, a prancha é só a da cobrinha. Nos pilares com conectores, o comando imprime o núcleo e avisa que a prancha vem na E4.
 
 ## Requisitos
 
@@ -46,19 +52,25 @@ Não há outra instalação: o app usa a biblioteca padrão do Python e a interf
 
 ## Projeto e núcleo (E1)
 
-O projeto é um arquivo `.json` com uma lista de pilares; cada pilar guarda só o que difere dos padrões (`nucleo\parametros.py`, `PADROES`). Veja `exemplos\P2_cobrinha.json` (o pilar do desenho de referência) e `exemplos\lote_cobrinha.json`.
+O projeto é um arquivo `.json` com uma lista de pilares; cada pilar guarda só o que difere dos padrões (`nucleo\parametros.py`, `PADROES`). Exemplos:
+- `exemplos\P2_cobrinha.json` e `exemplos\lote_cobrinha.json` (cobrinha);
+- `exemplos\P02_conectores.json` (conectores).
+
+Os dois `P2`/`P02` são os pilares dos desenhos de referência.
 
 ```bash
 python -m nucleo.detalhe exemplos/P2_cobrinha.json
 ```
 
-Imprime os ferros de cada pilar (posição, quantidade, bitola, comprimento) e as verificações da NBR 6118:2026. Não precisa do TQS.
+Imprime, para cada pilar, os ferros (posição, quantidade, bitola, comprimento) e as verificações da NBR 6118:2026. Com conectores, imprime também os pentes e o quadro "ARMADURA DE COMBATE À PUNÇÃO"; o aço dos pentes não vira ferro do TQS e fica só no quadro. Não precisa do TQS.
 
 ```bash
 python ferramentas/esquema.py exemplos/lote_cobrinha.json
 ```
 
-Grava a imagem de conferência da geometria (planta da punção, colapso e corte ao longo da cobrinha) em `saidas\e1\`.
+Grava a imagem de conferência da geometria em `saidas\e1\` (outra pasta com `--saida`).
+- Cobrinha: planta da punção, colapso e cortes ao longo da cobrinha.
+- Conectores: planta dos pinos, colapso e um pente em corte.
 
 ## Ferramentas (E0)
 

@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Esquema de conferência da geometria calculada pelo núcleo (não é a prancha: essa vem na E2). Vistas:
-planta da punção (peças de cobrinha com os trechos de cima tracejados e os de baixo contínuos, como no modelo;
-pernas; montagem; gabarito dos pentes mestres), planta do colapso e dois cortes ao longo das cobrinhas: uma linha
-diante da face do pilar e uma linha ao lado do pilar.
+Esquema de conferência da geometria calculada pelo núcleo (não é a prancha). Vistas:
+- cobrinha: planta da punção (peças com os trechos de cima tracejados e os de baixo contínuos, como no modelo;
+  pernas; montagem; gabarito dos pentes mestres), planta do colapso e dois cortes ao longo das cobrinhas (uma linha
+  diante da face do pilar e uma ao lado dele);
+- conectores: planta dos pinos (pentes das faces em azul, inclinados em roxo, trilhos, contornos e as distâncias
+  entre pinos de fora vizinhos nos cantos), planta do colapso e um pente em corte.
 
 Uso:  python ferramentas/esquema.py <projeto.json> [--saida PASTA]     (padrão: saidas/e1)
 Requer matplotlib (requirements-dev.txt).
 """
 import argparse
+import math
 import os
 import sys
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, Rectangle
+from matplotlib.patches import Arc, Circle, Rectangle
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
@@ -98,7 +101,100 @@ def _esp_txt(esp):
     return " / ".join(f"{e:g}".replace(".", ",") for e in esp)
 
 
+def _contorno(ax, bx, by, a, **kw):
+    """Retângulo de cantos arredondados afastado `a` do pilar (os contornos do nível 200 do modelo)."""
+    for (x0, y0), (x1, y1) in (((0, -a), (bx, -a)), ((bx + a, 0), (bx + a, by)), ((bx, by + a), (0, by + a)),
+                               ((-a, by), (-a, 0))):
+        ax.plot([x0, x1], [y0, y1], **kw)
+    for (cx, cy), t1 in (((bx, 0), 270), ((bx, by), 0), ((0, by), 90), ((0, 0), 180)):
+        ax.add_patch(Arc((cx, cy), 2 * a, 2 * a, theta1=t1, theta2=t1 + 90, color=kw.get("color"),
+                         lw=kw.get("lw", 0.6), ls=kw.get("ls", "-")))
+
+
+def planta_pinos(ax, r):
+    p, c = r["p"], r["conectores"]
+    ax.add_patch(Rectangle((0, 0), p["bx"], p["by"], fc=COR["pilar"], ec=COR["borda"], lw=1.2, zorder=1))
+    for a in c["contornos"]:
+        _contorno(ax, p["bx"], p["by"], a, color=COR["gab"], lw=0.6, ls=(0, (1, 2)), zorder=1)
+    rc, rf, t = c["pino"]["cabeca_mm"] / 20.0, c["pino"]["bitola"] / 20.0, c["trilhos"]
+    for pt in c["pentes"]:
+        cor = COR["cob"][1] if pt["face"].startswith("canto") else COR["cob"][0]
+        a = math.radians(pt["ang"])
+        u, n = (math.cos(a), math.sin(a)), (-math.sin(a), math.cos(a))
+        (x0, y0), (x1, y1) = pt["pinos"][0], pt["pinos"][-1]
+        for lado in (1, -1):                           # trilhos com a largura real, ao lado das cabeças
+            off = lado * t["afast"]
+            ax.plot([x0 + n[0] * off - u[0] * rc, x1 + n[0] * off + u[0] * rc],
+                    [y0 + n[1] * off - u[1] * rc, y1 + n[1] * off + u[1] * rc],
+                    color=COR["mont"], lw=t["bitola"] / 10.0, zorder=2, solid_capstyle="butt")
+        for x, y in pt["pinos"]:
+            ax.add_patch(Circle((x, y), rc, fc="white", ec=cor, lw=0.9, zorder=3))
+            ax.add_patch(Circle((x, y), rf, fc=cor, ec="none", zorder=4))
+    for v in c["vizinhos"]:
+        if not v["canto"]:
+            continue
+        pa, pb = c["pentes"][v["i"]]["pinos"][-1], c["pentes"][v["j"]]["pinos"][-1]
+        ax.plot([pa[0], pb[0]], [pa[1], pb[1]], color="#c0392b", lw=0.6, ls=(0, (2, 2)), zorder=2)
+        ax.text((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2, f"{v['dist']:.1f}", fontsize=6.5, color="#c0392b",
+                ha="center", va="center", zorder=5, bbox=dict(fc="white", ec="none", pad=0.4))
+    ax.set_title(f"{p['titulo']}: planta dos pinos ({c['n_pentes']} pentes {c['nome_bloco']}, "
+                 f"{c['inclinados']} inclinado(s) por canto; vermelho: pinos de fora vizinhos nos cantos, "
+                 f"2d = {2 * c['d']:.1f})", fontsize=9)
+
+
+def corte_pente(ax, r):
+    """Um pente em corte, como a A-A do modelo: laje, pinos de face a face pelos cobrimentos, cabeças, trilhos."""
+    p, c = r["p"], r["conectores"]
+    h, L = p["h_laje"], c["pino"]["comprimento_mm"] / 10.0
+    s0, sr, n = p["con_s0"], p["con_sr"], p["con_pinos"]
+    u1 = s0 + (n - 1) * sr + 15
+    ax.add_patch(Rectangle((-15, 0), u1 + 15, h, fc="#f2f2f2", ec=COR["laje"], lw=0.8, zorder=0))
+    ax.add_patch(Rectangle((-15, -25), 15, 25 + h + 25, fc=COR["pilar"], ec=COR["borda"], lw=1, zorder=1))
+    for y in (p["c_inf"], h - p["c_sup"]):
+        ax.axhline(y, color=COR["gab"], lw=0.5, ls=":", zorder=1)
+    rc, rf, esp = c["pino"]["cabeca_mm"] / 20.0, c["pino"]["bitola"] / 20.0, p["con_cabeca_esp"]
+    z0 = p["c_inf"]
+    for i in range(n):
+        u = s0 + i * sr
+        ax.add_patch(Rectangle((u - rf, z0), 2 * rf, L, fc=COR["cob"][0], ec="none", zorder=3))
+        for zc in (z0, z0 + L - esp):
+            ax.add_patch(Rectangle((u - rc, zc), 2 * rc, esp, fc=COR["cob"][0], ec="none", zorder=3))
+    rt = c["trilhos"]["bitola"] / 20.0
+    ax.add_patch(Rectangle((s0 - rc, z0 + esp), (n - 1) * sr + 2 * rc, 2 * rt, fc=COR["mont"], ec="none", zorder=2))
+    d = c["d"]                                         # da face inferior (comprimida) ao centro da negativa
+    ax.axhline(d, color="#c0392b", lw=0.6, ls=(0, (4, 2)), zorder=2)
+    ax.text(u1, d, f"  negativa (centro): d = {d:g} da face inferior".replace(".", ","), fontsize=7,
+            color="#c0392b", va="center")
+    ax.set_xlim(-15, u1 + 25)
+    ax.set_ylim(-10, h + 10)
+    ax.set_title(f"pente em corte: pinos de {c['pino']['comprimento_mm']:g} mm (livre {c['pino']['livre_mm']:g}), "
+                 f"cabeça ø{c['pino']['cabeca_mm']} mm x {esp:g} cm, s0 = {s0:g}, sr = {sr:g}", fontsize=9)
+
+
+def gerar_conectores(r, pasta):
+    fig = plt.figure(figsize=(16, 13))
+    gs = fig.add_gridspec(2, 2, height_ratios=[3, 1], hspace=0.25)
+    a1, a2, a3 = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, :])
+    planta_pinos(a1, r)
+    planta_colapso(a2, r)
+    corte_pente(a3, r)
+    for a in (a1, a2, a3):
+        a.set_aspect("equal")
+        a.grid(True, lw=0.3, alpha=0.4)
+    for a in (a1, a2):
+        a.autoscale_view()
+    fig.text(0.01, 0.005, relatorio(r), family="monospace", fontsize=6.5, va="bottom")
+    fig.subplots_adjust(left=0.05, right=0.98, top=0.97, bottom=0.2, wspace=0.12)
+    os.makedirs(pasta, exist_ok=True)
+    arq = os.path.join(pasta, f"{r['p']['titulo']}_esquema.png")
+    fig.savefig(arq, dpi=110)
+    plt.close(fig)
+    return arq
+
+
 def gerar(r, pasta):
+    if "conectores" in r:
+        return gerar_conectores(r, pasta)
     c = r["cobrinha"]
     Lt = r["p"]["bx"] if c["direcao"] == "y" else r["p"]["by"]
     diante = min((t for t in c["linhas"] if 0 < t < Lt), default=c["linhas"][0])

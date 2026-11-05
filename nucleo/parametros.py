@@ -47,6 +47,20 @@ PADROES = {
     "mont_bitola": 12.5,      # montagem positiva, uma por fileira de pernas, na dobra de baixo
     "mont_ext": 30.0,         # além da última linha de cobrinhas (cm; 60 no modelo, 30 pelo usuário em 03/11/2026)
     "mont_arred": 5.0,        # comprimento arredondado para cima (cm)
+    # Conectores (pentes Trejor, arranjo radial)
+    "con_s0": 11.0,           # distância da face à 1ª linha de pinos (cm)
+    "con_sr": 17.0,           # distância entre linhas de pinos (cm)
+    "con_pinos": 3,           # pinos por pente (linhas de pinos)
+    "con_n_face_bx": 3,       # pentes em cada face de comprimento bx (faces horizontais da prancha)
+    "con_n_face_by": 5,       # pentes em cada face de comprimento by (faces verticais da prancha)
+    "con_dist_canto": 5.0,    # distância do pente ao canto do pilar, ao longo da face (cm)
+    "con_inclinados": "auto",  # pentes inclinados por canto: "auto" (o menor nº com <= 2d), "cruz" (0) ou um número
+    "con_bitola": 10.0,       # pino CA-50 (mm); a cabeça vem do catálogo
+    "con_cabeca_esp": 1.0,    # espessura da cabeça (cm): 0,8 + 0,2 de concordância, do modelo (Q3)
+    "con_arred_mm": 5.0,      # comprimento do pino arredondado para baixo (mm; P4)
+    "con_trilhos": 2,         # vergalhões que ligam os pinos
+    "con_trilho_bitola": 8.0,
+    "con_montagem": False,    # montagem positiva nos conectores: opcional, desligada (P7)
 }
 
 
@@ -82,9 +96,10 @@ def normalizar(par):
     p = copy.deepcopy(PADROES)
     p.update({k: v for k, v in (par or {}).items() if v is not None or k in ("d",)})
     erros = []
-    inteiros = ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas", "cob_linhas_x", "cob_linhas_y")
+    inteiros = ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas", "cob_linhas_x", "cob_linhas_y",
+                "con_pinos", "con_n_face_bx", "con_n_face_by", "con_trilhos")
     for k in PADROES:
-        if k in ("titulo", "solucao", "cob_direcao"):
+        if k in ("titulo", "solucao", "cob_direcao", "con_inclinados", "con_montagem"):
             continue
         if p.get(k) is None and PADROES[k] is None:
             continue
@@ -98,6 +113,13 @@ def normalizar(par):
     p["cob_s_y"] = p["cob_s_y"] or p["cob_s"]
     p["cob_linhas_x"] = p["cob_linhas_x"] or p["cob_linhas"]
     p["cob_linhas_y"] = p["cob_linhas_y"] or p["cob_linhas"]
+    inc = str(p["con_inclinados"]).strip().lower()
+    if inc in ("auto", "cruz"):
+        p["con_inclinados"] = inc
+    else:
+        n = _num(inc, "con_inclinados", erros, inteiro=True)
+        p["con_inclinados"] = n if n is not None else "auto"
+    p["con_montagem"] = bool(p["con_montagem"]) and str(p["con_montagem"]).lower() not in ("0", "false", "nao")
     if not erros:
         erros += _validar(p)
     return p, erros
@@ -117,6 +139,20 @@ def _validar(p):
             erros.append(f"{k} deve ser 1 ou mais")
     if not erros and p["solucao"] == "cobrinha" and altura_eixo_cobrinha(p) <= 0:
         erros.append("a cobrinha não cabe na laje: h - cobrimentos - bitola <= 0")
+    if p["solucao"] == "conectores":
+        for k in ("con_s0", "con_sr", "con_bitola", "con_cabeca_esp", "con_trilho_bitola", "con_arred_mm"):
+            if not p[k] or p[k] <= 0:
+                erros.append(f"{k} deve ser maior que zero")
+        for k in ("con_pinos", "con_n_face_bx", "con_n_face_by"):
+            if p[k] is None or p[k] < 1:
+                erros.append(f"{k} deve ser 1 ou mais")
+        if p["con_dist_canto"] is None or p["con_dist_canto"] < 0:
+            erros.append("con_dist_canto não pode ser negativo")
+        for k, L in (("con_n_face_bx", p["bx"]), ("con_n_face_by", p["by"])):
+            if p[k] and p[k] > 1 and p["con_dist_canto"] * 2 >= L:
+                erros.append(f"{k}: a distância ao canto não deixa lugar para {p[k]} pentes na face de {L:g}")
+        if isinstance(p["con_inclinados"], int) and p["con_inclinados"] < 0:
+            erros.append("con_inclinados: use auto, cruz ou um número de 0 em diante")
     return erros
 
 
@@ -125,7 +161,7 @@ def espessura_acima_da_negativa(p):
     da cobrinha, que ficam acima da armadura de flexão (19.5.3.3: extremidades ancoradas fora do plano dela)."""
     if p["solucao"] == "cobrinha":
         return p["cob_bitola"] / 10.0
-    return p.get("pino_cabeca_esp", 1.0)              # conectores (E3): 0,8 + 0,2 de concordância, do modelo
+    return p["con_cabeca_esp"]                        # conectores: 0,8 + 0,2 de concordância, do modelo (Q3)
 
 
 def altura_util(p):

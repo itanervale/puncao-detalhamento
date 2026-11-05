@@ -1,0 +1,29 @@
+{
+ "formato": "puncao-detalhamento",
+ "versao": 1,
+ "descricao": "Pilar do desenho de referência PUN_P02 (conectores): 50 x 150, laje de 27, cobrimentos de 2,5, 5 pentes nas faces de 150 e 3 nas de 50, inclinados automáticos (1 por canto), pinos ø10 de 220 mm; colapso 8 ø10 em x e 3 ø10 em y.",
+ "pilares": [
+  {
+   "titulo": "P02",
+   "repeticoes": 1,
+   "bx": 50,
+   "by": 150,
+   "h_laje": 27,
+   "c_sup": 2.5,
+   "c_inf": 2.5,
+   "solucao": "conectores",
+   "col_n_face_bx": 3,
+   "col_n_face_by": 8,
+   "con_s0": 11,
+   "con_sr": 17,
+   "con_pinos": 3,
+   "con_n_face_bx": 3,
+   "con_n_face_by": 5,
+   "con_dist_canto": 5,
+   "con_inclinados": "auto",
+   "con_bitola": 10,
+   "con_trilhos": 2,
+   "con_trilho_bitola": 8
+  }
+ ]
+}

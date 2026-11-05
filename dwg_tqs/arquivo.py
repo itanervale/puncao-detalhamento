@@ -32,6 +32,22 @@ COTA = dict(idmniv=221, idmnic=253, idmnil=253, idmnib=253, dimblk="DOT", dimtxt
 NV_OBJETO_FERRO = 220
 
 
+def _ler_json(arq):
+    with open(arq, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _ler_texto(arq):
+    """DXF do TQS em latin-1, sem trocar os fins de linha (newline="")."""
+    with open(arq, encoding="latin-1", newline="") as f:
+        return f.read()
+
+
+def _gravar_texto(arq, texto):
+    with open(arq, "w", encoding="latin-1", newline="") as f:
+        f.write(texto)
+
+
 def novo_desenho(escala=15.0, cota=None):
     """DWG 9/13 com a tabela de níveis (cor e estilo de tela) dos desenhos de referência."""
     dwg = TQSDwg.Dwg()
@@ -46,7 +62,7 @@ def novo_desenho(escala=15.0, cota=None):
 
 def tabela_niveis():
     """{nível: (cor, estilo)} de tela dos desenhos de referência (nucleo/niveis.json)."""
-    niv = json.load(open(os.path.join(RAIZ, "nucleo", "niveis.json"), encoding="utf-8"))["niveis"]
+    niv = _ler_json(os.path.join(RAIZ, "nucleo", "niveis.json"))["niveis"]
     return {int(n): (v["cor_tela"], v["estilo_tela"]) for n, v in niv.items()}
 
 
@@ -114,7 +130,7 @@ def _aci_mais_proxima(rgb, pal=_paleta_aci()):
 
 def cores_plotagem():
     """Cor ACI de cada nível pela pena da TABPLTA (nucleo/niveis.json)."""
-    niv = json.load(open(os.path.join(RAIZ, "nucleo", "niveis.json"), encoding="utf-8"))["niveis"]
+    niv = _ler_json(os.path.join(RAIZ, "nucleo", "niveis.json"))["niveis"]
     out = {}
     for n, v in niv.items():
         c = v["cor_plot"]
@@ -126,7 +142,7 @@ def cores_plotagem():
 def dxf_com_cores(arq, cores):
     """Cor de cada camada (nível) pela pena da plotagem; nas entidades com cor própria igual à cor original da
     camada, a mesma troca. As cores especiais (ferros por bitola) ficam como o TQS gravou."""
-    lin = open(arq, encoding="latin-1", newline="").read().split("\n")
+    lin = _ler_texto(arq).split("\n")
     eol = "\r" if lin and lin[0].endswith("\r") else ""
     val = lambda j: lin[j].rstrip("\r").strip()
     em_layer, nome, camada = False, None, None
@@ -150,14 +166,14 @@ def dxf_com_cores(arq, cores):
             sinal = -1 if v.startswith("-") else 1
             lin[j + 1] = f"{sinal * cores[int(nv)]:6d}" + eol
             n_trocas += 1
-    open(arq, "w", encoding="latin-1", newline="").write("\n".join(lin))
+    _gravar_texto(arq, "\n".join(lin))
     return n_trocas
 
 
 def dxf_continuo(arq):
     """O "Salvar como DXF" do TQS grava duas entradas CONTINUOUS na tabela LTYPE (a 2ª tracejada), e os leitores que
     ficam com a última desenham tudo tracejado. Tira as repetidas e mantém a primeira."""
-    lin = open(arq, encoding="latin-1", newline="").read().split("\n")
+    lin = _ler_texto(arq).split("\n")
     val = lambda j: lin[j].rstrip("\r").strip()
     tabela, entradas, ini = None, [], None
     for j in range(0, len(lin) - 1, 2):
@@ -181,7 +197,7 @@ def dxf_continuo(arq):
     for a, b in reversed(tirar):
         del lin[a:b]
     if tirar:
-        open(arq, "w", encoding="latin-1", newline="").write("\n".join(lin))
+        _gravar_texto(arq, "\n".join(lin))
     return len(tirar)
 
 

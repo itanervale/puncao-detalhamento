@@ -50,5 +50,46 @@ def cobrinha(p, cob):
     return out
 
 
+def conectores(p, con):
+    d = con["d"]
+    out = []
+
+    def checa(cond, ok, ruim, ref):
+        out.append(("ok" if cond else "aviso", ok if cond else ruim, ref))
+
+    s0, sr, n = p["con_s0"], p["con_sr"], p["con_pinos"]
+    checa(s0 <= 0.5 * d + 1e-9, f"s0 = {_f(s0)} <= 0,5d = {_f(0.5 * d)}",
+          f"s0 = {_f(s0)} passa de 0,5d = {_f(0.5 * d)} (d = {_f(d)})", f"{ORDEM_ITEM}, 19.5.3.3 e Figura 19.9")
+    checa(sr <= 0.75 * d + 1e-9, f"sr = {_f(sr)} <= 0,75d = {_f(0.75 * d)}",
+          f"sr = {_f(sr)} passa de 0,75d = {_f(0.75 * d)} (d = {_f(d)})", f"{ORDEM_ITEM}, 19.5.3.3 e Figura 19.9")
+    checa(n >= 3, f"{n} pinos por pente (linhas de pinos)",
+          f"só {n} pino(s) por pente; a norma recomenda três linhas ou mais", f"{ORDEM_ITEM}, 19.5.3.3")
+    k = con["inclinados"]
+    canto, face = con["esp_canto_max"], con["esp_face_max"]
+    txt_k = "sem pentes inclinados (cruz)" if k == 0 else f"{k} pente(s) inclinado(s) por canto"
+    checa(canto <= 2 * d + 1e-9,
+          f"{txt_k}: pinos de fora vizinhos nos cantos a {_f(canto)} <= 2d = {_f(2 * d)}",
+          f"{txt_k}: pinos de fora vizinhos nos cantos a {_f(canto)}, mais que 2d = {_f(2 * d)}; o contorno C'' "
+          f"fica interrompido nos cantos (arranjo em cruz)", f"{ORDEM_ITEM}, 19.5.3.4 e Figura 19.8")
+    if face:
+        checa(face <= 2 * d + 1e-9, f"pentes vizinhos ao longo das faces a {_f(face)} <= 2d = {_f(2 * d)}",
+              f"pentes vizinhos ao longo das faces a {_f(face)}, mais que 2d = {_f(2 * d)}: aumente o nº de pentes "
+              f"na face", f"{ORDEM_ITEM}, 19.5.3.4 e Figura 19.8")
+    pino = con["pino"]
+    checa(pino["no_catalogo"], f"pino ø{_f(pino['bitola'])} do catálogo Trejor (cabeça de {pino['cabeca_mm']} mm)",
+          f"pino ø{_f(pino['bitola'])} fora do catálogo Trejor (ø6,3 a ø32); a cabeça foi desenhada com "
+          f"{pino['cabeca_mm']} mm", "catálogo Trejor, p. 3")
+    checa(pino["comprimento_mm"] >= pino["minimo_mm"],
+          f"pino de {_f(pino['comprimento_mm'])} mm >= {pino['minimo_mm']} mm",
+          f"pino de {_f(pino['comprimento_mm'])} mm, abaixo do mínimo de {pino['minimo_mm']} mm do fabricante",
+          "catálogo Trejor, p. 3")
+    if p["con_montagem"]:
+        out.append(("aviso", "montagem positiva nos conectores ainda não definida (pergunta Q7 do plano); "
+                    "nenhuma barra de montagem foi gerada", "PLANO, P7"))
+    out.append(("ok", f"d = {_f(d)} cm (negativa abaixo da cabeça do pino de {_f(p['con_cabeca_esp'])} cm)",
+                f"{ORDEM_ITEM}, 19.5.2.1"))
+    return out
+
+
 def avisos(lista):
     return [v for v in lista if v[0] == "aviso"]

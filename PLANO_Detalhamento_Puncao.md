@@ -366,8 +366,41 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Pendente:** prancha com as cobrinhas em x (opção da P6). O núcleo calcula, mas a folha avisa que ainda não desenha.
 - **Testes:** `testes\teste_e2_prancha.py`, sem o TQS (folha, blocos, ferros, só níveis dos modelos) e com ele (DWG do P2 e comprimentos).
 
-**E3. Núcleo dos conectores (radial)**
+**E3. Núcleo dos conectores (radial)** (feita em 05/11/2026)
 - **Aceite:** reproduz o P02: 20 pentes "3P 17 cm", 220 mm, cotas 35, 20 e 39, N1 8 ø10 C=220 e N2 3 ø10 C=320.
+- **Resultado:**
+  - os 20 pentes saem nas mesmas posições e ângulos dos blocos do modelo, como os contornos (11, 28 e 45), os espaçamentos entre pentes (35 nas faces de 150, 20 nas de 50) e as oito distâncias de 39,1 nos cantos (a cota "39");
+  - pino de 220 mm, cabeça de 32 mm, d = 22,5;
+  - quadro igual ao do modelo, linha a linha;
+  - colapso N1 8 ø10 C=220 e N2 3 ø10 C=320.
+- **Módulos:** `nucleo\conectores.py` (pentes, leque dos cantos, pino pelo catálogo, contornos, distâncias, quadro) e `verificacoes.conectores`. O `detalhe.py` junta tudo: os pentes não são ferros do TQS (P11), e os ferros são só os do colapso.
+- **Regras implementadas:**
+  - **Pentes das faces:** por igual entre as distâncias ao canto (`con_dist_canto`); um só fica no meio da face.
+  - **Inclinados (P9):** saem do canto, com o 1º pino a s0 dele, e os ângulos repartidos por igual entre as direções das duas faces (k = 1: a 45°; k = 3: 202,5°, 225° e 247,5° no canto inferior esquerdo).
+    - `con_inclinados` = "auto" (padrão): o menor k que deixa os pinos de fora vizinhos nos cantos a ≤ 2d.
+    - "cruz" = nenhum.
+    - Também aceita um número fixo.
+    - O "auto" só olha os cantos. O espaçamento entre pentes da mesma face depende do nº de pentes nela e tem verificação própria ("aumente o nº de pentes na face").
+  - **Pino:** h − c_sup − c_inf, arredondado para baixo a 5 mm. A cabeça vem do catálogo; fora dele, aviso, e a cabeça é desenhada com 3,2·ø.
+  - **Trilhos:** eixo encostado nas cabeças, a (cabeça + ø do trilho)/2 do eixo dos pinos (ø8 com cabeça de 32: 2,0; no modelo, 1,875).
+- **Verificações (avisos):**
+  - s0 ≤ 0,5d e sr ≤ 0,75d;
+  - 3 pinos ou mais por pente;
+  - pinos de fora vizinhos nos cantos e ao longo das faces a ≤ 2d (19.5.3.4, Figura 19.8; "cruz" avisa que o C'' fica interrompido nos cantos);
+  - pino do catálogo e ≥ 110 mm.
+
+  No P02, o único aviso é o já conhecido: sr = 17 passa de 0,75d = 16,875 por 1 mm.
+- **Outros casos (lote de conferência):**
+  - pilar 40 × 40: 1 inclinado por canto;
+  - 5 pinos por pente: 3 inclinados (pinos de fora a 79 do canto);
+  - laje de 18: 3 inclinados (2d = 27);
+  - face de 100 com 2 pentes: aviso de 90 > 2d.
+- **Testes:** `testes\teste_e3_conectores.py`, com 17 testes sem o TQS; a suíte inteira tem 44.
+- **Exemplo:** `exemplos\P02_conectores.json`.
+- **Conferência:** `python ferramentas/esquema.py exemplos/P02_conectores.json --saida saidas/e3`. A imagem mostra a planta dos pinos (inclinados em roxo, trilhos com a largura real, contornos e as distâncias nos cantos), o colapso e um pente em corte.
+- **Linha de comando:** o `detalhar.py` imprime o núcleo dos conectores e avisa que a prancha é a E4.
+- **Montagem positiva nos conectores (P7):** o parâmetro existe (`con_montagem`, desligado), mas a geometria não está definida. Ligado, só gera um aviso (pergunta Q7).
+- **Correção de passagem:** `dwg_tqs\arquivo.py` fechava mal os arquivos lidos e gravados (`ResourceWarning` nos testes); agora usa `with`.
 
 **E4. Prancha dos conectores em DWG-TQS**
 - Inclui as correções do pino ø10 e dos trilhos ø8.
@@ -420,6 +453,11 @@ Cada etapa termina com a aprovação do usuário e um commit.
 
 - **Q5. Espaços por cima do pilar.** Superada pela decisão do usuário de 03/11/2026: nada passa mais por cima do pilar. A regra (sobra no meio) ficou só para as linhas diante das faces e as pernas ao lado delas, e o espaço maior passa pelo aviso de 2d.
 - **Q6. Linhas ao lado do pilar.** Resposta do usuário (03/11/2026): linha inteira, com número ímpar de espaços ao lado da face (no P2, 5 de cerca de 14,4 em vez de 17, 19, 19, 17). A outra opção era cortar a linha em três peças.
+
+### Perguntas da E3
+
+- **Q7. Montagem positiva nos conectores (P7).** O parâmetro está pronto, mas falta a geometria. Proposta: uma barra reta por linha de pinos em cada face, paralela a ela, apoiada nos trilhos (face inferior), dos pentes de um canto aos do outro, mais `mont_ext` além. Nos cantos, as barras de faces vizinhas se cruzam em camadas diferentes. Outra opção: só uma barra, na linha dos pinos de fora. Qual vale, ou fica sem montagem?
+- **Q8. Leque dos cantos.** Com mais de um inclinado por canto, os ângulos ficam repartidos por igual entre as direções das duas faces (k = 3: 22,5°, 45° e 67,5° a partir da face). A outra opção reparte o ângulo contando também o afastamento dos pentes das faces a 5 cm do canto, o que deixa os espaços um pouco mais iguais. A regra atual serve?
 
 ### Perguntas da E0 (texto original)
 

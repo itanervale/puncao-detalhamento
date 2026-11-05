@@ -36,6 +36,9 @@ def main():
         print(relatorio(res))
         if res["erros"]:
             continue
+        if "conectores" in res:
+            print("   prancha dos conectores: etapa E4 (o núcleo acima já vale)")
+            continue
         g = prancha.gerar(res, pasta)
         print(f"   gravado: {', '.join(os.path.basename(v) for k, v in g['arquivos'].items() if k != 'aviso')}")
         if g["arquivos"].get("aviso"):

@@ -7,7 +7,7 @@ Imprime, para cada pilar, os ferros (posição, quantidade, bitola, comprimento)
 """
 import sys
 
-from . import cobrinha, colapso, verificacoes
+from . import cobrinha, colapso, conectores, verificacoes
 from .parametros import altura_util, ler_projeto, normalizar
 
 
@@ -35,8 +35,10 @@ def detalhar(par):
                                comp=round(g["comp"]), descricao=desc))
         res["verificacoes"] = verificacoes.cobrinha(p, cob)
     else:
-        res["erros"].append("conectores: etapa E3 (ainda não implementada)")
-        return res
+        # Os pentes não são ferros do TQS: o aço deles vai só no quadro (P11).
+        con = conectores.detalhar(p)
+        res["conectores"] = con
+        res["verificacoes"] = verificacoes.conectores(p, con)
     col = colapso.detalhar(p)
     res["colapso"] = col
     for g in col:
@@ -63,6 +65,14 @@ def relatorio(res):
         linhas.append(f"   cobrinhas em {c['direcao']}: {c['n_linhas']} linhas ({_esp(c['esp_linhas'])}), "
                       f"pernas nas linhas ao lado do pilar ({_esp(c['esp_lado'])}), "
                       f"altura pelo eixo {c['altura_eixo']:g}, {c['n_pecas']} peças")
+    if "conectores" in res:
+        c = res["conectores"]
+        faces = ", ".join(f"{k} {v:g}" for k, v in c["espacamento_faces"].items() if v)
+        linhas.append(f"   {c['n_pentes']} pentes {c['nome_bloco']} ({c['inclinados']} inclinado(s) por canto), "
+                      f"contornos a {', '.join(f'{v:g}' for v in c['contornos'])}, entre pentes: {faces}; "
+                      f"cantos {c['esp_canto_max']:.1f}")
+        for q in c["quadro"][1:]:
+            linhas.append(f"   {q}")
     for f in res["ferros"]:
         linhas.append(f"   N{f['pos']}  {f['quant']:>3} ø{_bitola(f['bitola']):<5} C={f['comp']:<5} {f['descricao']}")
     for tipo, txt, ref in res["verificacoes"]:

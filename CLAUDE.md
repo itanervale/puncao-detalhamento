@@ -7,7 +7,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 
 ## Estrutura
 - `nucleo\`: Python puro, sem o TQS.
-  - Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), colapso (`colapso.py`) e verificações (`verificacoes.py`).
+  - Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), conectores (`conectores.py`, com o catálogo da Trejor em `catalogo_trejor.json`), colapso (`colapso.py`) e verificações (`verificacoes.py`).
   - O conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
   - Folha em primitivas (`folha.py`) e leiaute da prancha da cobrinha (`prancha_cobrinha.py`).
 - `dwg_tqs\`: gravação pelo TQS.
@@ -16,7 +16,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - `prancha.py`: um pilar, com a conferência dos comprimentos.
 - `detalhar.py` (raiz): linha de comando, um DWG por pilar.
 - `ferramentas\`: leitura e comparação de DWG, imagens, esquema da geometria.
-- `testes\`: os da E1 não precisam do TQS; os da E0 são pulados sem ele ou sem os modelos.
+- `testes\`: os da E1 e da E3 não precisam do TQS; os da E0 e o DWG da E2 são pulados sem ele ou sem os modelos.
 - **Unidades e convenções:** comprimentos em cm, bitolas em mm. `bx` é a dimensão do pilar na horizontal da prancha e `by` na vertical; as coordenadas são relativas ao canto inferior esquerdo do pilar.
 
 ## Regras
