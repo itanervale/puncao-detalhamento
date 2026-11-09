@@ -471,6 +471,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - O TQS roda numa thread, com o resultado devolvido por fila; as mensagens mostram os arquivos e a conferência dos comprimentos.
   - Também abre o PDF e a pasta.
 - **Pilar de um projeto novo:** os padrões do núcleo (50 × 150, cobrinha em x), desde que a prancha em x ficou pronta. Antes, era 150 × 50.
+  - Colapso do pilar padrão invertido em 09/11/2026, a pedido do usuário: 3 barras na face bx (50) e 8 na face by (150), como no P02 (8 ø10 C=220 em x e 3 ø10 C=320 em y). Antes, o padrão herdado do pilar de 150 × 50 punha 8 barras na face de 50. Os arquivos de exemplo não mudam: todos declaram as próprias quantidades.
 - **Lições:**
   - as variáveis do Tk só podem ser lidas na thread principal: o que a thread de gravação usa é lido antes;
   - os ícones pertencem ao interpretador Tk em que foram criados, então o cache é refeito quando a raiz muda;

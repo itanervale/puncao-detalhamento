@@ -194,7 +194,7 @@ O projeto é uma lista de pilares. Cada pilar guarda só o que difere dos padrõ
 |---|---|---|
 | `col_bitola` | 10 | Bitola |
 | `col_ext` | 85 | Comprimento além da face |
-| `col_n_face_bx`, `col_n_face_by` | 8, 3 | Barras em cada face de comprimento bx e by |
+| `col_n_face_bx`, `col_n_face_by` | 3, 8 | Barras em cada face de comprimento bx e by (no pilar padrão de 50 × 150: 3 na face de 50 e 8 na de 150, como no P02) |
 
 **Cobrinha** (malha ortogonal)
 

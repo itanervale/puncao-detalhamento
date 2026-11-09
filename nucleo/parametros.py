@@ -33,8 +33,8 @@ PADROES = {
     # Colapso progressivo (face inferior, passando dentro do pilar)
     "col_bitola": 10.0,
     "col_ext": 85.0,          # comprimento além da face (cm)
-    "col_n_face_bx": 8,       # barras em cada face de comprimento bx (correm na direção y)
-    "col_n_face_by": 3,       # barras em cada face de comprimento by (correm na direção x)
+    "col_n_face_bx": 3,       # barras em cada face de comprimento bx (correm na direção y); pilar padrão 50 x 150:
+    "col_n_face_by": 8,       # 3 na face de 50 e 8 na de 150, como no P02 (pedido do usuário em 09/11/2026)
     # Cobrinha (malha ortogonal)
     "cob_s": 17.0,            # espaçamento da malha (cm)
     "cob_s_x": None,          # espaçamento na direção x (None = cob_s)

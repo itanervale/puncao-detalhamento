@@ -137,6 +137,16 @@ class TesteP2(unittest.TestCase):
         self.assertEqual(self.c["gabarito"], (-11, -11, 161, 61))
 
 
+class TestePilarPadrao(unittest.TestCase):
+    def test_colapso_como_o_p02(self):
+        """Pilar de um projeto novo (50 x 150): 3 barras na face bx e 8 na face by, como no P02 (pedido do usuário
+        em 09/11/2026; antes, 8 na face de 50 e 3 na de 150)."""
+        r = detalhar(dict(titulo="P1"))
+        col = [(f["direcao"], f["quant"], f["bitola"], f["comp"]) for f in r["ferros"] if f["tipo"] == "colapso"]
+        self.assertEqual((r["p"]["bx"], r["p"]["by"]), (50.0, 150.0))
+        self.assertEqual(col, [("x", 8, 10.0, 220), ("y", 3, 10.0, 320)])
+
+
 class TesteVariacoes(unittest.TestCase):
     def test_cobrimento_25_encurta_as_cobrinhas_e_avisa(self):
         r = detalhar(dict(P2, c_sup=2.5, c_inf=2.5))
