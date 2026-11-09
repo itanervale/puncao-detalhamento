@@ -12,9 +12,10 @@ Duas soluções:
 > - a E2 (prancha da cobrinha em DWG-TQS);
 > - a E3 (núcleo dos conectores);
 > - a E4 (prancha dos conectores em DWG-TQS);
-> - a E5 (janela).
+> - a E5 (janela);
+> - a E6 (relatório do lote).
 >
-> A próxima é a E6 (relatório do lote). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
+> A próxima é a E7 (fechamento do repositório). O plano está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md) e o padrão gráfico em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Uso
 
@@ -34,7 +35,17 @@ Um projeto tem vários pilares (aba Lote: + Pilar, Duplicar, Apagar, Colar do Ex
 python detalhar.py exemplos/P2_cobrinha.json
 ```
 
-Grava um DWG-TQS por pilar do projeto (`saidas\<projeto>\PUN_<pilar>.DWG`), com o PDF e o DXF, e confere os comprimentos dos ferros que o TQS calcula com os do núcleo. Use `--png` para a imagem de conferência, `--saida PASTA` para outra pasta e `--pilar P2` para um pilar só. Precisa do TQS. Serve às duas soluções; exemplos de conectores: `exemplos/P02_conectores.json` e `exemplos/lote_conectores.json`.
+Grava um DWG-TQS por pilar do projeto (`saidas\<projeto>\PUN_<pilar>.DWG`), com o PDF e o DXF, e confere os comprimentos dos ferros que o TQS calcula com os do núcleo. No fim, grava o relatório do lote:
+- `RELATORIO_<projeto>.txt`: pilares, ferros, aço por bitola com as repetições, pentes, avisos e erros;
+- `RELATORIO_<projeto>_pilares.csv` e `RELATORIO_<projeto>_ferros.csv`, para o Excel.
+
+Precisa do TQS. Serve às duas soluções; exemplos de conectores: `exemplos/P02_conectores.json` e `exemplos/lote_conectores.json`.
+
+Opções:
+- `--png`: imagem de conferência;
+- `--saida PASTA`: outra pasta (sem ela, a `pasta_saida` do projeto, se houver, ou `saidas\<projeto>`);
+- `--pilar P2`: um pilar só;
+- `--so-relatorio`: só o relatório, sem gravar DWG e sem o TQS, com os comprimentos do núcleo.
 
 ## Requisitos
 

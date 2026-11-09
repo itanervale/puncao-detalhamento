@@ -8,6 +8,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 ## Estrutura
 - `nucleo\`: Python puro, sem o TQS.
   - Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), conectores (`conectores.py`, com o catálogo da Trejor em `catalogo_trejor.json`), colapso (`colapso.py`) e verificações (`verificacoes.py`).
+  - Relatório do lote (`relatorio.py`, E6): TXT e CSV (Excel) com pilares, ferros, aço por bitola (NBR 7480), pentes e avisos; os comprimentos são os do TQS quando o pilar foi gravado.
   - O conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
   - Folha em primitivas (`folha.py`) e leiaute das pranchas da cobrinha (`prancha_cobrinha.py`) e dos conectores (`prancha_conectores.py`).
   - A prancha da cobrinha desenha em coordenadas locais: `Pl(t, u)` na planta e `T(u, z)` nos cortes. A direção das cobrinhas decide a passagem para a prancha: em y, os cortes ficam à esquerda, girados, como no modelo; em x, embaixo da planta, empilhados por `Folha.caixa` e `Folha.mover`. Ao mexer nela, compare as folhas em y com as de antes, primitiva por primitiva.

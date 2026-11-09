@@ -477,9 +477,24 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Conferência:** `python ferramentas/capturar_janela.py <projeto.json>` abre a janela, passa por vistas e abas e grava cada estado em PNG pelo `PrintWindow` (ctypes), em `saidas\janela\`.
 - **Testes:** `testes\teste_e5_janela.py`, com 9 testes: colagem, prévia, edição, troca de pilar, duplicar, colar, salvar e reabrir, vistas e cores, e a gravação pelo TQS na thread. A suíte tem 65.
 
-**E6. Lote e saídas**
-- Já feito na E5: lote na janela, um DWG por pilar (`PUN_<pilar>`), PDF e DXF do TQS, gravação do lote e `detalhar.py` pela linha de comando.
-- Falta: o relatório do lote (pilares, ferros, pentes, aço e avisos) em arquivo.
+**E6. Lote e saídas** (feita em 09/11/2026)
+- **Feito na E5:** lote na janela, um DWG por pilar (`PUN_<pilar>`), PDF e DXF do TQS, gravação do lote e `detalhar.py` pela linha de comando.
+- **Relatório do lote:** `nucleoelatorio.py`, sem o TQS. Grava três arquivos na pasta de saída:
+  - `RELATORIO_<projeto>.txt`, legível, com:
+    - os pilares: dimensões, h, solução, d, armadura de punção, aço por pilar e com as repetições, avisos, DWG e a conferência do TQS;
+    - os ferros de cada pilar;
+    - o resumo de aço por bitola, com as repetições;
+    - os pentes Trejor somados por tipo e comprimento de pino;
+    - os avisos e os pilares com erro;
+  - `RELATORIO_<projeto>_pilares.csv` e `RELATORIO_<projeto>_ferros.csv`, para o Excel: ponto e vírgula, vírgula decimal, UTF-8 com BOM.
+- **Comprimentos:** os do TQS quando o pilar foi gravado (`tabela_tqs`), com "confere" ou "difere"; sem o TQS, os do núcleo. O relatório diz qual vale em cada pilar.
+  - Na janela, os comprimentos do TQS de uma gravação anterior só entram se o pilar não mudou desde ela.
+- **Massa linear:** a nominal da NBR 7480. O aço dos pentes fica só no quadro dos conectores, pelo fabricante.
+- **Onde é gravado:**
+  - `detalhar.py`: no fim de todo lote; `--so-relatorio` grava só o relatório, sem o TQS e sem DWG, com os comprimentos do núcleo. O `detalhar.py` também passou a respeitar a `pasta_saida` gravada pela janela no projeto.
+  - Janela: no fim de "Gerar o lote" e pelo botão "Relatório do lote" (abas Lote e Saídas, menu Saídas), que não precisa do TQS; "Abrir o relatório" abre o TXT.
+- **Conferido:** lote da cobrinha gravado pelo TQS, com os 5 pilares conferindo e 431,9 kg no total (ø10: 260,7; ø12,5: 171,2).
+- **Testes:** `testes	este_e6_relatorio.py`, com 11 testes, inclusive a linha de comando sem o TQS e o "Gerar o lote" da janela pelo TQS. A suíte tem 82.
 
 **E7. Fechamento do repositório**
 - README de uso, exemplos e teste num clone limpo (sem os modelos), do clone ao DWG.

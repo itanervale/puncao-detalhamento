@@ -31,6 +31,7 @@ if RAIZ not in sys.path:
 
 from nucleo import conectores as nc                                      # noqa: E402
 from nucleo import prancha_cobrinha, prancha_conectores                  # noqa: E402
+from nucleo import relatorio as rel_lote                                 # noqa: E402
 from nucleo.detalhe import detalhar                                      # noqa: E402
 from nucleo.parametros import FORMATO, PADROES, VERSAO, altura_util, ler_projeto, novo_projeto  # noqa: E402
 
@@ -149,6 +150,8 @@ class App(tk.Tk):
         self.res = self.folha = None
         self.info = {}
         self.arquivos = {}                          # por pilar: arquivos gravados pelo TQS
+        self.gerados = {}                           # por pilar: o retorno da gravação (comprimentos do TQS)
+        self.arq_relatorio = None                   # relatório do lote gravado (TXT e CSV)
         self.modificado = False
         self.ocupado = False
         self.fila = queue.Queue()
@@ -252,8 +255,10 @@ class App(tk.Tk):
         s = tk.Menu(mb, tearoff=0)
         s.add_command(label="Gerar DWG / PDF / DXF do pilar", accelerator="Ctrl+G", command=self.gerar)
         s.add_command(label="Gerar o lote", accelerator="Ctrl+Shift+G", command=self.gerar_lote)
+        s.add_command(label="Relatório do lote (TXT e CSV)", command=self.relatorio_lote)
         s.add_separator()
         s.add_command(label="Abrir o PDF do pilar", command=lambda: self.abrir_saida("pdf"))
+        s.add_command(label="Abrir o relatório do lote", command=lambda: self.abrir_saida("relatorio"))
         s.add_command(label="Abrir a pasta de saída", command=lambda: self.abrir_saida("pasta"))
         mb.add_cascade(label="Saídas", menu=s)
         a = tk.Menu(mb, tearoff=0)
@@ -408,7 +413,11 @@ class App(tk.Tk):
         g = a.grupo("Lote")
         g.grande("lote", "Tabela do lote", lambda: self.ver_tabela("lote"), "Todos os pilares: dimensões, solução, "
                  "pentes ou peças, aço e avisos.")
-        g.grande("gerar_lote", "Gerar o lote", self.gerar_lote, "Um DWG-TQS por pilar (PDF e DXF), pelo TQS.")
+        g.grande("listar", "Relatório do lote", self.relatorio_lote, "Pilares, ferros, resumo de aço por bitola, "
+                 "pentes, avisos e erros em TXT e CSV (Excel), na pasta de saída. Não precisa do TQS: usa os "
+                 "comprimentos do TQS dos pilares já gravados e sem mudança; nos outros, os do núcleo.")
+        g.grande("gerar_lote", "Gerar o lote", self.gerar_lote, "Um DWG-TQS por pilar (PDF e DXF), pelo TQS, e o "
+                 "relatório do lote.")
         # ---------------------------------------------------------------- Exibir
         a = rb.aba("Exibir")
         g = a.grupo("Vistas")
@@ -441,10 +450,14 @@ class App(tk.Tk):
         g = a.grupo("Gerar")
         g.grande("gerar", "Gerar o pilar", self.gerar, "DWG-TQS do pilar atual, com PDF e DXF, e conferência dos "
                  "comprimentos que o TQS calcula (Ctrl+G).")
-        g.grande("gerar_lote", "Gerar o lote", self.gerar_lote, "Todos os pilares (Ctrl+Shift+G).")
+        g.grande("gerar_lote", "Gerar o lote", self.gerar_lote, "Todos os pilares e o relatório do lote "
+                 "(Ctrl+Shift+G).")
+        g.grande("listar", "Relatório do lote", self.relatorio_lote, "TXT e CSV (Excel) com pilares, ferros, aço "
+                 "por bitola, pentes e avisos, sem o TQS.")
         g = a.grupo("Abrir")
         c = g.coluna()
         c.pequeno("pdf", "PDF do pilar", lambda: self.abrir_saida("pdf"))
+        c.pequeno("listar", "Relatório do lote", lambda: self.abrir_saida("relatorio"))
         c.pequeno("pasta", "Pasta de saída", lambda: self.abrir_saida("pasta"))
         rb.selecionar("Pilar")
 
@@ -1067,6 +1080,7 @@ class App(tk.Tk):
             return
         self.projeto = novo_projeto([dict(NOVO_PILAR)])
         self.arq, self.i, self.modificado, self.arquivos = None, 0, False, {}
+        self.gerados, self.arq_relatorio = {}, None
         self.pasta.set("")
         self._limpar_msgs()
         self._carregar_pilar(enquadrar=True)
@@ -1087,6 +1101,7 @@ class App(tk.Tk):
             messagebox.showerror(APP, f"Não foi possível abrir {arquivo}:\n{e}", parent=self)
             return
         self.projeto, self.arq, self.i, self.modificado, self.arquivos = proj, os.path.abspath(arquivo), 0, False, {}
+        self.gerados, self.arq_relatorio = {}, None
         self.pasta.set(proj.get("pasta_saida", ""))
         self._limpar_msgs()
         self._carregar_pilar(enquadrar=True)
@@ -1196,6 +1211,7 @@ class App(tk.Tk):
                 self.msg(f"{titulo}: não gravado ({'; '.join(erros)})", "erro")
                 continue
             self.arquivos[titulo] = g["arquivos"]
+            self.gerados[titulo] = g
             nomes = ", ".join(os.path.basename(v) for k, v in g["arquivos"].items() if k != "aviso")
             self.msg(f"{titulo}: {nomes}", "ok")
             if g["arquivos"].get("aviso"):
@@ -1233,7 +1249,41 @@ class App(tk.Tk):
         pilares, pasta, pdf, dxf = (copy.deepcopy(self.projeto["pilares"]), self._pasta_saida(), self.pdf.get(),
                                     self.dxf.get())
         self._trabalho(f"Gravando o lote ({n} pilares) pelo TQS...",
-                       lambda: self._gerar_pilares(pilares, pasta, pdf, dxf), self._gerados)
+                       lambda: self._gerar_pilares(pilares, pasta, pdf, dxf), self._lote_gerado)
+
+    def _lote_gerado(self, saida):
+        self._gerados(saida)
+        self.relatorio_lote(abrir=False)
+
+    def relatorio_lote(self, abrir=True):
+        """Relatório do lote (TXT e CSV) na pasta de saída. Usa os comprimentos do TQS dos pilares gravados nesta
+        sessão e sem mudança desde então; nos outros, os do núcleo."""
+        itens = []
+        for par in self.projeto["pilares"]:
+            res = detalhar(par)
+            g = self.gerados.get(res["p"]["titulo"])
+            if g and not res["erros"]:
+                esperado = sorted((f["pos"], f["quant"], round(f["bitola"], 1), f["comp"]) for f in res["ferros"])
+                if esperado != g["esperado"]:
+                    g = None                            # o pilar mudou depois da gravação
+            itens.append(rel_lote.item(res, g if not res["erros"] else None))
+        nome = self._nome_projeto()
+        r = rel_lote.montar(itens, projeto=nome, arquivo=self.arq)
+        try:
+            arqs = rel_lote.gravar(r, self._pasta_saida(), nome)
+        except OSError as e:
+            self.msg(f"Relatório não gravado: {e}", "erro")
+            self.status("Relatório não gravado (o arquivo está aberto em outro programa?).", "erro")
+            return None
+        self.arq_relatorio = arqs
+        fonte = (f"comprimentos do TQS em {r['n_tqs']} de {r['n']} pilar(es)" if r["n_tqs"]
+                 else "comprimentos do núcleo")
+        self.msg(f"Relatório do lote: {', '.join(os.path.basename(v) for v in arqs.values())} ({fonte}; "
+                 f"{len(r['avisos'])} aviso(s), {len(r['erros'])} erro(s)) em {self._pasta_saida()}", "ok")
+        self.status(f"Relatório do lote gravado em {self._pasta_saida()}.", "ok")
+        if abrir:
+            os.startfile(arqs["txt"])
+        return arqs
 
     def abrir_saida(self, tipo):
         if tipo == "pasta":
@@ -1242,6 +1292,12 @@ class App(tk.Tk):
                 os.startfile(pasta)
             else:
                 self.status("A pasta de saída ainda não existe (gere o pilar).", "aviso")
+            return
+        if tipo == "relatorio":
+            if self.arq_relatorio and os.path.exists(self.arq_relatorio["txt"]):
+                os.startfile(self.arq_relatorio["txt"])
+            else:
+                self.status("Grave o relatório antes (Lote > Relatório do lote).", "aviso")
             return
         arqs = self.arquivos.get(self._efetivo()["titulo"], {})
         if arqs.get(tipo) and os.path.exists(arqs[tipo]):
