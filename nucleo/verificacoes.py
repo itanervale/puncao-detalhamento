@@ -91,5 +91,31 @@ def conectores(p, con):
     return out
 
 
+def colapso(res):
+    """Armadura contra colapso progressivo (19.5.4): ancoragem além de C'' (com armadura de punção, regra do usuário de
+    09/11/2026) e, com as cargas do TQS, As·fyd >= 1,5·FSd."""
+    from . import colapso as col
+    p, out = res["p"], []
+    anc = col.ancoragem(res)
+    iguais = abs(anc["x"]["a"] - anc["y"]["a"]) < 1e-6
+    for direcao, v in (("x e y", anc["x"]),) if iguais else tuple(anc.items()):
+        base = (f"C'' a {_f(v['a'])} cm da face (última linha a {_f(v['ult'])} cm + 2d); lb = {_f(v['lb'])} cm "
+                f"(ø{_f(p['col_bitola'])}, fck {_f(p['fck'])} MPa)")
+        if v["ok"]:
+            out.append(("ok", f"colapso em {direcao}: {_f(v['disponivel'])} cm além de C'' >= lb; {base}",
+                        f"{ORDEM_ITEM}, 19.5.4 e 9.4.2.4"))
+        else:
+            falta = "termina antes de C''" if v["disponivel"] < 0 else f"só {_f(v['disponivel'])} cm além de C''"
+            out.append(("aviso", f"colapso em {direcao}: a barra {falta}; {base}; use pelo menos {_f(v['minimo'])} cm "
+                        f"além da face (hoje {_f(p['col_ext'])})", f"{ORDEM_ITEM}, 19.5.4 e 9.4.2.4"))
+    cap = col.capacidade(p)
+    if cap:
+        txt = (f"colapso: As = {_f(cap['as_ef'])} cm2 (barras que cruzam cada face) e 1,5·FSd/fyd = "
+               f"{_f(cap['as_nec'])} cm2, FSd = 1,2 x {_f(cap['fk'] / col.TF_KN)} tf (comb. {cap['n']}, do TQS)")
+        out.append(("ok" if cap["ok"] else "aviso", txt if cap["ok"] else txt + ": aumente as barras ou a bitola",
+                    f"{ORDEM_ITEM}, 19.5.4"))
+    return out
+
+
 def avisos(lista):
     return [v for v in lista if v[0] == "aviso"]

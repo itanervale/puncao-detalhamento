@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -112,8 +113,16 @@ def _lista_plantas(b, edificio):
         if not os.path.isabs(cam):
             cam = os.path.join(edificio, cam)
         out.append(dict(nome=nome, projeto=fp.GetProjectNumber(i), repeticao=fp.GetRepetition(i),
-                        classe=fp.GetClass(i), pasta=cam, existe=os.path.isdir(cam)))
+                        classe=fp.GetClass(i), pasta=cam, existe=os.path.isdir(cam), indice=i))
     return out
+
+
+def _concreto(b, indice):
+    """Concreto das lajes da planta: o específico dela ou, vazio, o de vigas e lajes do edifício ("C25")."""
+    m = b.materials
+    classe = (m.GetFloorPlanConcreteStrength(indice) or m.beamConcreteStrength or "").strip()
+    achado = re.search(r"(\d+(?:[.,]\d+)?)", classe)
+    return classe, (float(achado.group(1).replace(",", ".")) if achado else None)
 
 
 def plantas(edificio, tmp=None):
@@ -222,9 +231,10 @@ def ler_planta(edificio, planta, tmp=None, com_esforcos=True):
             raise ErroLeitura(f"a pasta da planta não existe: {info['pasta']}")
         orig, dest = pasta_na_copia(edificio, info["pasta"], copia)
         shutil.copytree(orig, dest, dirs_exist_ok=True)
+        concreto, fck = _concreto(b, info["indice"])
         dados = dict(formato="puncao-leitura-tqs", versao=1, edificio=os.path.normpath(edificio), planta=planta,
                      projeto=info["projeto"], repeticao=info["repeticao"], data=datetime.now().isoformat(timespec="seconds"),
-                     cobrimentos=_cobrimentos(b))
+                     cobrimentos=_cobrimentos(b), concreto=concreto, fck=fck)
         os.chdir(copia)
         dados.update(_ler_modelo(planta))
         dados["grelha"] = esforcos(dest, info["projeto"]) if com_esforcos else dict(aviso="esforços não lidos")

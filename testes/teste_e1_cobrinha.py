@@ -60,9 +60,14 @@ class TesteP2(unittest.TestCase):
         cls.r = detalhar(P2)
         cls.c = cls.r["cobrinha"]
 
-    def test_sem_erros_nem_avisos(self):
+    def test_sem_erros_e_so_o_aviso_do_colapso(self):
+        """O modelo só tem um aviso: as barras de colapso (85 além da face) terminam antes de C'' (última perna a 62
+        + 2d = 108), e a regra do usuário de 09/11/2026 pede a ancoragem além de C'' (108 + lb = 145,67)."""
         self.assertEqual(self.r["erros"], [])
-        self.assertEqual([v for v in self.r["verificacoes"] if v[0] == "aviso"], [])
+        avisos = [v[1] for v in self.r["verificacoes"] if v[0] == "aviso"]
+        self.assertEqual(len(avisos), 1)
+        self.assertIn("termina antes de C''; C'' a 108 cm da face", avisos[0])
+        self.assertIn("use pelo menos 145,67 cm", avisos[0])
         self.assertAlmostEqual(self.r["d"], 23.0)
 
     def test_ferros(self):
@@ -137,7 +142,9 @@ class TesteVariacoes(unittest.TestCase):
         r = detalhar(dict(P2, c_sup=2.5, c_inf=2.5))
         self.assertEqual([f["comp"] for f in r["ferros"][:2]], [163, 460])      # pernas de 21 pelo eixo
         self.assertAlmostEqual(r["d"], 22.5)
-        self.assertEqual(sum(1 for v in r["verificacoes"] if v[0] == "aviso"), 2)   # 17 > 0,75d em x e y
+        avisos = [v[1] for v in r["verificacoes"] if v[0] == "aviso"]
+        self.assertEqual(len(avisos), 3)                      # 17 > 0,75d em x e y; colapso antes de C''
+        self.assertEqual(sum("passa de 0,75d" in a for a in avisos), 2)
 
     def test_outra_direcao(self):
         c = detalhar(dict(P2, cob_direcao="maior"))["cobrinha"]

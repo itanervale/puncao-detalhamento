@@ -77,7 +77,7 @@ Um projeto tem vários pilares. Na aba Lote:
 
 ### Importar do TQS
 
-**Lote > Importar do TQS** (ou o menu Pilar) traz os pilares de uma planta de um edifício do TQS.
+**Lote > Importar do TQS** (ou o menu Pilar) traz os pilares de uma planta de um edifício do TQS. Antes de abrir a importação, o app avisa: "Programa em fase de testes, recomenda-se a duplicação do edifício".
 
 1. Escolha a pasta do edifício (a que tem o `EDIFICIO.BDE`) e a planta, e clique em **Ler a planta**.
 2. A leitura é feita numa cópia temporária (a raiz do edifício e a pasta da planta), num processo à parte. O edifício não é alterado, e o TQS pode estar aberto.
@@ -86,14 +86,25 @@ Um projeto tem vários pilares. Na aba Lote:
    - **borda e canto:** podem ser marcados, com confirmação, porque o app os detalharia como internos;
    - **seção não retangular** (circular, L, U): não podem ser marcados.
 4. **OK** acrescenta os pilares ao projeto. Os que já estão no projeto com o mesmo nome têm atualizadas as dimensões, o h, os cobrimentos e as repetições; o detalhamento escolhido fica. Os demais parâmetros vêm do pilar atual da janela.
-5. **Ajustar s0 e os espaçamentos aos limites da NBR 6118** (opção ligada por padrão): com o d de cada pilar importado, s0 e os espaçamentos da cobrinha e dos conectores que passam de 0,5d e 0,75d descem até o limite, arredondados para baixo ao centímetro (laje de 20, d = 15,5: s0 = 7 e sr = 11). O número de linhas não muda. Vale também para os pilares do projeto que forem atualizados; as mensagens dizem o que mudou.
+5. **Sugerir o colapso progressivo** (opção ligada por padrão): a mesma sugestão do botão da aba Colapso (abaixo), depois do ajuste de s0 e dos espaçamentos.
+6. **Ajustar s0 e os espaçamentos aos limites da NBR 6118** (opção ligada por padrão): com o d de cada pilar importado, s0 e os espaçamentos da cobrinha e dos conectores que passam de 0,5d e 0,75d descem até o limite, arredondados para baixo ao centímetro (laje de 20, d = 15,5: s0 = 7 e sr = 11). O número de linhas não muda. Vale também para os pilares do projeto que forem atualizados; as mensagens dizem o que mudou.
 
 **O que vem do TQS:**
 - **pilar:** nome e seção. Girado de 0° ou 90°, bx e by saem da poligonal; em outro ângulo, ficam nos eixos do pilar, com aviso;
-- **laje:** espessura e cobrimentos (os de laje do edifício, ou os de laje protendida). Com lajes de espessuras diferentes na planta, vale a mais comum, com aviso, porque a interface do TQS não dá o contorno de cada laje;
+- **laje:** espessura, cobrimentos (os de laje do edifício, ou os de laje protendida) e fck (o concreto da planta ou, sem ele, o de vigas e lajes do edifício). Com lajes de espessuras diferentes na planta, vale a mais comum, com aviso, porque a interface do TQS não dá o contorno de cada laje;
 - **repetições:** as da planta (um pavimento tipo repetido 5 vezes dá "5X");
 - **posição:** interno quando nenhuma borda da laje (contornos) nem viga fica a menos de 2d da face do pilar, ou seja, o contorno C' não é cortado; borda com um lado, canto com dois;
 - **esforços, só para conferência:** as reações da grelha por pilar em cada combinação de ELU (título começando por "ELU"), em tf e tf·m, característicos. Ficam no pilar (árvore e propriedades) e na tabela do lote. O app não dimensiona.
+
+### Colapso progressivo (NBR 6118:2026, 19.5.4)
+
+O app confere a armadura contra colapso progressivo de cada pilar:
+- **Ancoragem além de C'':** com armadura de punção, as barras de colapso devem estar ancoradas além do contorno C'', que fica 2d além da última linha da armadura de punção. A parte da barra além de C'' (comprimento além da face menos a distância a C'') deve ter pelo menos lb (9.4.2.4: barra reta, boa aderência na face inferior, fck da laje). Nos modelos do escritório, as barras de 85 cm além da face terminam antes de C'' (P2 da cobrinha: C'' a 108 cm; P02 dos conectores: a 90 cm), e a verificação avisa.
+- **Capacidade, com as cargas do TQS:** As·fyd ≥ 1,5·FSd, com FSd = 1,2 × a maior força Z das combinações de ELU (característica, 1 tf = 10 kN) e As a soma das barras que cruzam cada face do pilar (uma barra que atravessa o pilar cruza duas faces).
+
+Na aba Colapso, **Sugerir no pilar** e **Sugerir em todos** propõem, com a bitola escolhida:
+- o nº de barras por face pelas cargas do TQS, na proporção dos lados, com no mínimo 2 por face;
+- o comprimento além da face: a distância a C'' mais o lb, para cima a 5 cm. Sem cargas, só esse comprimento.
 
 Os esforços precisam da grelha processada no TQS (`FOR<nº>M.GRE` e `.RSX` na pasta da planta). As listagens `GREANA*.LST` não são necessárias: o app roda o `FGREANA.EXE` do TQS para cada combinação.
 
@@ -171,6 +182,7 @@ O projeto é uma lista de pilares. Cada pilar guarda só o que difere dos padrõ
 | `bx`, `by` | 50, 150 | Dimensões do pilar |
 | `h_laje` | 27 | Espessura da laje |
 | `c_sup`, `c_inf` | 2,5 | Cobrimentos. O pino e a cobrinha vão de cobrimento a cobrimento |
+| `fck` | 25 | Concreto da laje (MPa), para o lb da ancoragem do colapso além de C'' |
 | `solucao` | cobrinha | `cobrinha` ou `conectores` |
 | `escala` | 15 | Escala da prancha |
 | `neg_bitola_ext`, `neg_bitola_int` | 10, 10 | Bitolas das duas camadas da negativa existente (para a altura útil e o aviso dos vértices) |
@@ -228,7 +240,7 @@ As verificações (s0 ≤ 0,5d, espaçamentos ≤ 0,75d, pinos ou pernas vizinho
 
 - Só pilares internos e retangulares. Faltam os de borda e de canto, os circulares e as aberturas na laje.
 - Conectores só no arranjo "antes da armadura" (pentes com trilhos); falta o "posterior à armadura".
-- A importação do TQS ajusta só s0 e os espaçamentos (opção). O número de linhas, as bitolas e o colapso progressivo continuam com o projetista; as verificações mostram o que passa dos limites.
+- A importação do TQS ajusta s0 e os espaçamentos e sugere o colapso (opções). O número de linhas e as bitolas continuam com o projetista; as verificações mostram o que passa dos limites.
 
 ## Testes
 

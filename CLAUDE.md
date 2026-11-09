@@ -8,6 +8,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 ## Estrutura
 - `nucleo\`: Python puro, sem o TQS.
   - Parâmetros e altura útil (`parametros.py`), cobrinha (`cobrinha.py`), conectores (`conectores.py`, com o catálogo da Trejor em `catalogo_trejor.json`), colapso (`colapso.py`) e verificações (`verificacoes.py`).
+  - Colapso progressivo (NBR 6118:2026, 19.5.4): com armadura de punção, ancoragem além de C'' (2d além da última linha), com o lb da 9.4.2.4 e o `fck` da laje; com as cargas do TQS, As·fyd >= 1,5·FSd (FSd = 1,2·Fk; As das barras que cruzam cada face). `colapso.sugerir` dá o nº de barras com a bitola escolhida e o comprimento além da face.
   - Relatório do lote (`relatorio.py`, E6): TXT e CSV (Excel) com pilares, ferros, aço por bitola (NBR 7480), pentes e avisos; os comprimentos são os do TQS quando o pilar foi gravado.
   - O conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
   - Folha em primitivas (`folha.py`) e leiaute das pranchas da cobrinha (`prancha_cobrinha.py`) e dos conectores (`prancha_conectores.py`).

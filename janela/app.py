@@ -30,6 +30,7 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if RAIZ not in sys.path:
     sys.path.insert(0, RAIZ)
 
+from nucleo import colapso as ncol                                       # noqa: E402
 from nucleo import conectores as nc                                      # noqa: E402
 from nucleo import importacao as imp                                     # noqa: E402
 from nucleo import prancha_cobrinha, prancha_conectores                  # noqa: E402
@@ -55,6 +56,9 @@ TEXTOS = ("titulo", "solucao", "cob_direcao", "con_inclinados")
 INTEIROS = ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas", "cob_linhas_x", "cob_linhas_y",
             "con_pinos", "con_n_face_bx", "con_n_face_by", "con_trilhos")
 COLUNAS_EXCEL = ("titulo", "bx", "by", "h_laje", "repeticoes", "solucao")
+AVISO_IMPORTACAO = ("Programa em fase de testes, recomenda-se a duplicação do edifício.\n\n"
+                    "A leitura é feita numa cópia temporária, mas trabalhe de preferência numa duplicata do edifício "
+                    "no TQS. Para importar os esforços, a grelha da planta precisa estar processada.")
 # Pilar de um projeto novo: os padrões do núcleo (50 x 150, cobrinha; as cobrinhas, paralelas ao lado menor,
 # correm em x).
 NOVO_PILAR = dict(titulo="P1")
@@ -313,6 +317,9 @@ class App(tk.Tk):
         self._campo(c, "c_sup", "c sup.", "cm", lr=6, dica="Cobrimento superior: a cabeça do pino ou o trecho de "
                     "cima da cobrinha vão até ele.")
         self._campo(c, "c_inf", "c inf.", "cm", lr=6, dica="Cobrimento inferior.")
+        c = g.coluna()
+        self._campo(c, "fck", "fck", "MPa", lr=4, dica="Concreto da laje: dá o lb da ancoragem das barras de colapso "
+                    "além do contorno C'' (NBR 6118, 9.4.2.4). A importação do TQS traz o do edifício.")
         g = a.grupo("Altura útil")
         c = g.coluna()
         self._combo(c, "neg_bitola_ext", "Negativa ext.", BITOLAS, largura=5, lr=11,
@@ -407,6 +414,12 @@ class App(tk.Tk):
                dica="Barras em cada face de comprimento bx (correm em y).", ao_mudar=lambda: self._mudou("col_n_face_bx"))
         c.spin("Face by", self._V("col_n_face_by"), 1, 30, largura=4, largura_rot=8,
                dica="Barras em cada face de comprimento by (correm em x).", ao_mudar=lambda: self._mudou("col_n_face_by"))
+        g = a.grupo("Sugestão (NBR 6118, 19.5.4)")
+        g.grande("colapso", "Sugerir no pilar", self.sugerir_colapso, "Com a bitola atual: o nº de barras por face "
+                 "pelas cargas do TQS (As·fyd >= 1,5·FSd, FSd = 1,2·Fk, barras que cruzam cada face) e o comprimento "
+                 "além da face pela ancoragem além do contorno C'' (a + lb, para cima a 5 cm).")
+        g.grande("lote", "Sugerir em todos", lambda: self.sugerir_colapso(todos=True), "A mesma sugestão em todos os "
+                 "pilares do projeto.")
         # ---------------------------------------------------------------- Lote
         a = rb.aba("Lote")
         g = a.grupo("Pilar atual")
@@ -1091,6 +1104,8 @@ class App(tk.Tk):
     def importar_tqs(self):
         """Pilares de uma planta do TQS (DlgImportar): os novos entram no fim; os de mesmo nome são atualizados
         (geometria e origem) ou pulados. Um projeto novo e intocado perde o pilar de exemplo."""
+        if not messagebox.askokcancel(APP, AVISO_IMPORTACAO, icon="warning", parent=self):
+            return
         r = DlgImportar(self, self.pilar, inicial=self.projeto.get("origem_tqs")).mostrar()
         if not r:
             return
@@ -1100,14 +1115,21 @@ class App(tk.Tk):
         if not pilares:
             self.msg("Nada importado: os pilares já estão no projeto.", "aviso")
             return
-        ajustes = {}
-        if r.get("ajustar"):                       # nos novos e nos atualizados, com o d da laje importada
-            importados = {str(q["titulo"]) for q in r["pilares"]} - set(pulados)
-            for k, q in enumerate(pilares):
-                if str(q.get("titulo")) in importados:
-                    pilares[k], mud = imp.ajustar_limites(q)
-                    if mud:
-                        ajustes[q["titulo"]] = mud
+        ajustes, colapsos = {}, {}
+        importados = {str(q["titulo"]) for q in r["pilares"]} - set(pulados)
+        for k, q in enumerate(pilares):
+            if str(q.get("titulo")) not in importados:
+                continue
+            if r.get("ajustar"):                   # nos novos e nos atualizados, com o d da laje importada
+                pilares[k], mud = imp.ajustar_limites(q)
+                if mud:
+                    ajustes[q["titulo"]] = mud
+            if r.get("colapso"):                   # depois do ajuste: C'' depende da última linha
+                res = detalhar(pilares[k])
+                if not res["erros"]:
+                    mud, txt = ncol.sugerir(res)
+                    pilares[k] = {**pilares[k], **mud}
+                    colapsos[q["titulo"]] = txt
         self.projeto["pilares"] = pilares
         self.projeto["origem_tqs"] = r["origem"]
         tit = str(r["pilares"][0]["titulo"])
@@ -1122,7 +1144,33 @@ class App(tk.Tk):
                 self.msg(f"{tit}: {a}", "aviso")
         for tit, mud in ajustes.items():
             self.msg(f"{tit}: ajustado à NBR 6118: {'; '.join(mud)}", "ok")
+        for tit, txt in colapsos.items():
+            self.msg(f"{tit}: colapso sugerido: {'; '.join(txt)}", "ok")
         self.status(resumo, "ok")
+
+    def sugerir_colapso(self, todos=False):
+        """Colapso do pilar atual (ou de todos): nº de barras por face pelas cargas do TQS, com a bitola atual, e
+        comprimento além da face pela ancoragem além de C'' (colapso.sugerir)."""
+        alvo = range(len(self.projeto["pilares"])) if todos else [self.i]
+        linhas, n = [], 0
+        for j in alvo:
+            par = self.projeto["pilares"][j]
+            res = detalhar(par)
+            tit = res["p"]["titulo"]
+            if res["erros"]:
+                linhas.append((tit, "não sugerido: " + "; ".join(res["erros"]), "erro"))
+                continue
+            mud, txt = ncol.sugerir(res)
+            mud = {k: v for k, v in mud.items() if res["p"].get(k) != v}
+            par.update(mud)
+            n += bool(mud)
+            linhas.append((tit, "; ".join(txt) + ("" if mud else " (sem mudança)"), "ok"))
+        if n:
+            self.modificado = True
+        self._carregar_pilar()                     # refaz a prévia e as mensagens; a sugestão vem depois
+        for tit, txt, nivel in linhas:
+            self.msg(f"{tit}: colapso sugerido: {txt}", nivel)
+        self.status(f"Colapso sugerido: {n} pilar(es) alterado(s) de {len(linhas)}.", "ok")
 
     def colar(self):
         try:

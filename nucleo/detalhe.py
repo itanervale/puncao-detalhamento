@@ -41,6 +41,7 @@ def detalhar(par):
         res["verificacoes"] = verificacoes.conectores(p, con)
     col = colapso.detalhar(p)
     res["colapso"] = col
+    res["verificacoes"] += verificacoes.colapso(res)
     for g in col:
         ferros.append(dict(tipo="colapso", direcao=g["direcao"], bitola=p["col_bitola"], quant=g["quant"],
                            comp=g["comp"], descricao=f"colapso progressivo, face inferior, em {g['direcao']}"))

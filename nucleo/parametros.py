@@ -23,6 +23,7 @@ PADROES = {
     "h_laje": 27.0,
     "c_sup": 2.5,             # cobrimento superior: a cabeça do pino ou o trecho de cima da cobrinha vão até ele
     "c_inf": 2.5,
+    "fck": 25.0,              # concreto da laje (MPa): lb da ancoragem do colapso além de C'' (9.4.2.4)
     "solucao": "cobrinha",
     "escala": 15.0,
     # Armadura negativa existente (só para a altura útil e o aviso dos vértices da cobrinha)
@@ -131,6 +132,8 @@ def _validar(p):
               "cob_bitola", "mont_bitola", "neg_bitola_ext", "neg_bitola_int"):
         if not p[k] or p[k] <= 0:
             erros.append(f"{k} deve ser maior que zero")
+    if not p["fck"] or not 0 < p["fck"] <= 90:
+        erros.append("fck deve ficar entre 0 e 90 MPa")
     for k in ("c_sup", "c_inf", "mont_ext"):
         if p[k] is None or p[k] < 0:
             erros.append(f"{k} não pode ser negativo")

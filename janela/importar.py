@@ -68,6 +68,7 @@ class DlgImportar(Dialogo):
         self.v_atualizar = tk.BooleanVar(value=True)
         self.v_solucao = tk.StringVar(value=SOLUCOES[0])
         self.v_ajustar = tk.BooleanVar(value=True)
+        self.v_colapso = tk.BooleanVar(value=True)
         self._montar()
         self.ajuda.configure(wraplength=760)
         self._job = self.after(100, self._fila)
@@ -141,7 +142,12 @@ class DlgImportar(Dialogo):
                    "Com o d de cada pilar importado (h e cobrimentos da laje do TQS): s0 e os espaçamentos da "
                    "cobrinha e dos conectores que passam do limite descem até ele, arredondados para baixo ao cm. "
                    "O número de linhas não muda. Vale também para os pilares do projeto que forem atualizados.")
-        self.combo(fr, 2, "Solução dos pilares novos", self.v_solucao, SOLUCOES, largura=18,
+        self.check(fr, 2, "Sugerir o colapso progressivo: barras pelas cargas (bitola atual) e comprimento pela "
+                          "ancoragem além de C''", self.v_colapso,
+                   "NBR 6118, 19.5.4: As·fyd >= 1,5·FSd, com FSd = 1,2 x a maior força Z de ELU do pilar e As a soma "
+                   "das barras que cruzam cada face; o comprimento além da face é a distância a C'' (2d além da "
+                   "última linha da armadura de punção) mais o lb, para cima a 5 cm.")
+        self.combo(fr, 3, "Solução dos pilares novos", self.v_solucao, SOLUCOES, largura=18,
                    ajuda="Os demais parâmetros de detalhamento vêm do pilar atual da janela.")
 
     # ------------------------------------------------------------------ leitura (thread + processo à parte)
@@ -320,6 +326,7 @@ class DlgImportar(Dialogo):
                 par["solucao"] = sol
             pilares.append(par)
         return dict(pilares=pilares, atualizar=self.v_atualizar.get(), ajustar=self.v_ajustar.get(),
+                    colapso=self.v_colapso.get(),
                     origem=dict(edificio=self.dados.get("edificio"), planta=self.dados.get("planta"),
                                 data=self.dados.get("data")),
                     avisos={ln["titulo"]: ln["avisos"] for ln in sel if ln["avisos"]})

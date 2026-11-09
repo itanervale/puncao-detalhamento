@@ -177,6 +177,11 @@ class TesteAnalise(unittest.TestCase):
         self.assertEqual((q["cob_s0"], q["cob_s_x"]), (8, 17.0))
         self.assertEqual(mud, ["espaçamento em x 20 -> 17 (0,75d = 17,25)"])
 
+    def test_fck_do_tqs(self):
+        self.assertEqual(self.linhas["P7"]["par"]["fck"], 25.0)
+        sem = {k: v for k, v in self.dados.items() if k != "fck"}
+        self.assertNotIn("fck", {ln["titulo"]: ln for ln in imp.analisar(sem)}["P7"]["par"])   # fica o padrão
+
     def test_mesclar(self):
         atuais = [dict(titulo="P7", bx=30, by=30, cob_s=12.0), dict(titulo="P2")]
         novos = [self.linhas["P7"]["par"], self.linhas["P5"]["par"]]
@@ -214,6 +219,41 @@ class TestePastaDaPlanta(unittest.TestCase):
                       self.edif, self.tmp + "x"):
             with self.subTest(pasta=pasta), self.assertRaises(lt.ErroLeitura):
                 lt.pasta_na_copia(self.edif, pasta, self.copia)
+
+
+class TesteColapso(unittest.TestCase):
+    """Colapso progressivo (NBR 6118:2026, 19.5.4): ancoragem além de C'' e As·fyd >= 1,5·FSd com as cargas do TQS."""
+
+    def test_lb(self):
+        from nucleo import colapso as col
+        self.assertAlmostEqual(col.lb_basico(10, 25), 37.67, places=2)      # fbd = 2,25 x 0,7 x 2,565 / 1,4
+        self.assertAlmostEqual(col.lb_basico(10, 30), 33.36, places=2)
+        self.assertAlmostEqual(col.lb_basico(16, 25), 60.27, places=2)
+        self.assertEqual(col.lb_basico(10, 90), 25.0)                       # o mínimo de 25ø
+
+    def test_ultima_linha_e_c2(self):
+        from nucleo import colapso as col
+        con = detalhar(dict(titulo="P02", bx=50, by=150, h_laje=27, solucao="conectores", col_n_face_bx=3,
+                            col_n_face_by=8, con_n_face_bx=3, con_n_face_by=5))
+        anc = col.ancoragem(con)
+        self.assertEqual((anc["x"]["ult"], anc["x"]["a"]), (45, 90))            # 11 + 2 x 17; + 2d = 45
+        self.assertFalse(anc["x"]["ok"])
+        cob = detalhar(dict(titulo="P", bx=40, by=40, h_laje=27, c_sup=2.0, c_inf=2.0, cob_s_y=15, cob_linhas_y=5))
+        u = col.ultima_linha(cob)
+        self.assertEqual(sorted(u.values()), [62, 71])                       # 11 + 3 x 17 e 11 + 4 x 15
+
+    def test_capacidade_e_sugestao(self):
+        from nucleo import colapso as col
+        par = {ln["titulo"]: ln for ln in imp.analisar(_ler("leitura_planta.json"))}["P7"]["par"]
+        par, _ = imp.ajustar_limites(par)
+        cap = col.capacidade({**detalhar(par)["p"]})
+        self.assertAlmostEqual(cap["as_nec"], 1.5 * 1.2 * 486.8 / (50 / 1.15), places=6)      # 20,15 cm2
+        self.assertFalse(cap["ok"])                                          # 8 + 3 ø10 = 17,28
+        mud, txt = col.sugerir(detalhar(par))
+        self.assertEqual(mud, dict(col_n_face_bx=7, col_n_face_by=6, col_ext=110.0))      # 71 + 37,67 -> 110
+        r = detalhar({**par, **mud})
+        self.assertFalse([v for v in r["verificacoes"] if v[0] == "aviso"])
+        self.assertTrue(any(v[1].startswith("colapso: As = 20,42") for v in r["verificacoes"]))
 
 
 @unittest.skipUnless(TEM_TELA, "sem tela para o Tk")
@@ -274,7 +314,8 @@ class TesteJanela(unittest.TestCase):
         linhas = imp.analisar(self.dados, self.app.pilar)
         r = dict(pilares=[ln["par"] for ln in linhas if imp.selecao_padrao(ln)], atualizar=True,
                  origem=dict(edificio="X", planta="Primeiro", data=""), avisos={})
-        with mock.patch("janela.app.DlgImportar") as dlg:
+        with mock.patch("janela.app.DlgImportar") as dlg, \
+                mock.patch("janela.app.messagebox.askokcancel", return_value=True) as aviso:
             dlg.return_value.mostrar.return_value = r
             self.app.importar_tqs()
         titulos = [p["titulo"] for p in self.app.projeto["pilares"]]
@@ -285,6 +326,33 @@ class TesteJanela(unittest.TestCase):
         self.assertEqual(len(self.app.tv.get_children("tqs")), 4)
         self.app.mais_pilar()
         self.assertNotIn("tqs", self.app.pilar)                         # o pilar novo não herda a origem
+        self.assertIn("Programa em fase de testes, recomenda-se a duplicação do edifício", aviso.call_args[0][1])
+
+    def test_aviso_cancelado_nao_abre_a_importacao(self):
+        with mock.patch("janela.app.DlgImportar") as dlg, \
+                mock.patch("janela.app.messagebox.askokcancel", return_value=False):
+            self.app.importar_tqs()
+        dlg.assert_not_called()
+
+    def test_importar_sugerindo_o_colapso(self):
+        linhas = imp.analisar(self.dados, self.app.pilar)
+        r = dict(pilares=[ln["par"] for ln in linhas if ln["titulo"] == "P7"], atualizar=True, ajustar=True,
+                 colapso=True, origem=dict(edificio="X", planta="Primeiro", data=""), avisos={})
+        with mock.patch("janela.app.DlgImportar") as dlg, \
+                mock.patch("janela.app.messagebox.askokcancel", return_value=True):
+            dlg.return_value.mostrar.return_value = r
+            self.app.importar_tqs()
+        p7 = self.app.pilar
+        self.assertEqual((p7["col_n_face_bx"], p7["col_n_face_by"], p7["col_ext"], p7["fck"]), (7, 6, 110.0, 25.0))
+        self.assertFalse([v for v in self.app.res["verificacoes"] if v[0] == "aviso" and "colapso" in v[1]])
+        self.assertIn("P7: colapso sugerido", self.app.txm.get("1.0", "end"))
+
+    def test_botao_sugerir_no_pilar(self):
+        self.app.abrir(os.path.join(RAIZ, "exemplos", "P02_conectores.json"))
+        self.app.sugerir_colapso()                                      # sem cargas: só o comprimento
+        self.assertEqual(self.app.pilar["col_ext"], 130.0)              # C'' a 90 + lb 37,67 -> 130
+        self.assertEqual(self.app.pilar["col_n_face_by"], 8)
+        self.assertIn("sem cargas do TQS", self.app.txm.get("1.0", "end"))
 
     def test_importar_ajustando_aos_limites(self):
         self.app.projeto["pilares"] = [dict(titulo="P7", bx=30, by=30, cob_s=15.0, cob_linhas=5)]
@@ -292,7 +360,8 @@ class TesteJanela(unittest.TestCase):
         linhas = imp.analisar(self.dados, self.app.pilar)
         r = dict(pilares=[ln["par"] for ln in linhas if ln["titulo"] in ("P5", "P7")], atualizar=True, ajustar=True,
                  origem=dict(edificio="X", planta="Primeiro", data=""), avisos={})
-        with mock.patch("janela.app.DlgImportar") as dlg:
+        with mock.patch("janela.app.DlgImportar") as dlg, \
+                mock.patch("janela.app.messagebox.askokcancel", return_value=True) as aviso:
             dlg.return_value.mostrar.return_value = r
             self.app.importar_tqs()
         p7, p5 = self.app.projeto["pilares"]
@@ -322,7 +391,7 @@ class TesteLeitorTQS(unittest.TestCase):
         with open(saida, encoding="utf-8") as f:
             lido = json.load(f)
         gravado = _ler("leitura_planta.json")
-        for k in ("pilares", "lajes", "bordas", "cobrimentos", "grelha", "repeticao", "projeto"):
+        for k in ("pilares", "lajes", "bordas", "cobrimentos", "concreto", "fck", "grelha", "repeticao", "projeto"):
             self.assertEqual(lido[k], gravado[k], k)
         with open(proj, encoding="utf-8") as f:
             p = json.load(f)

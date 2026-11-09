@@ -12,6 +12,8 @@
   "protendida_sup": 3.5,
   "protendida_inf": 3.5
  },
+ "concreto": "C25",
+ "fck": 25.0,
  "pilares": [
   {
    "titulo": "P1",

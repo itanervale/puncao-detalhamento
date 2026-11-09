@@ -86,8 +86,9 @@ class TesteModeloP02(unittest.TestCase):
     def test_verificacoes(self):
         r = detalhar(P02)
         avisos = [t for tipo, t, _ in r["verificacoes"] if tipo == "aviso"]
-        self.assertEqual(len(avisos), 1)                      # sr = 17 passa de 0,75d = 16,875 por 1 mm
-        self.assertIn("sr = 17", avisos[0])
+        self.assertEqual(len(avisos), 2)
+        self.assertIn("sr = 17", avisos[0])                   # passa de 0,75d = 16,875 por 1 mm
+        self.assertIn("C'' a 90 cm da face", avisos[1])       # colapso: 45 + 2d, e as barras saem 85 da face
 
 
 class TesteVariantes(unittest.TestCase):

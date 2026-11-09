@@ -10,6 +10,7 @@ os pilares do projeto.
   o app detalha, não dimensiona;
 - posição do pilar na laje: interno quando nenhuma borda livre, viga ou contorno fica a menos de 2d da face (o
   contorno C' não é cortado); borda com um lado, canto com dois lados vizinhos. O app só detalha os internos;
+- fck: o concreto das lajes da planta (ou o de vigas e lajes do edifício), para o lb do colapso;
 - repetições: as da planta no TQS (pavimento tipo repetido 5 vezes = 5X);
 - seção: só a retangular entra; girada de 0° ou 90°, bx e by saem da poligonal; em outro ângulo, nos eixos do pilar;
 - abertura (furo) a menos de 8d da face (NBR 6118:2026, 19.5.2.3 e Figura 19.6) e capitel no pilar: avisos, porque o
@@ -23,7 +24,7 @@ from collections import Counter
 
 from .parametros import PADROES, altura_util, normalizar
 
-GEOMETRIA = ("titulo", "bx", "by", "h_laje", "c_sup", "c_inf", "repeticoes")   # o que a importação escreve
+GEOMETRIA = ("titulo", "bx", "by", "h_laje", "c_sup", "c_inf", "repeticoes", "fck")   # o que a importação escreve
 TIPOS_SECAO = {0: "retangular", 1: "L", 2: "U", 3: "circular", 4: "poligonal", 5: "não padrão"}
 LADOS = ("esquerda", "baixo", "direita", "cima")
 TOL = 0.05                                                           # cm
@@ -237,6 +238,8 @@ def analisar(dados, base=None):
             par["c_sup"] = c_sup
         if c_inf is not None:
             par["c_inf"] = c_inf
+        if dados.get("fck"):
+            par["fck"] = float(dados["fck"])
         p, erros = normalizar(par)
         d = altura_util(p) if not erros else None
         linha["d"] = d
