@@ -13,7 +13,8 @@ from .parametros import altura_util, ler_projeto, normalizar
 DESCRICAO_COBRINHA = {"extremidade": "cobrinha da face para fora",
                       "extremidade_borda": "cobrinha da face até a borda livre",
                       "continua": "cobrinha inteira, ao lado do pilar",
-                      "continua_borda": "cobrinha inteira, ao lado do pilar, até a borda livre"}
+                      "continua_borda": "cobrinha inteira, ao lado do pilar, do lado livre ao da borda",
+                      "recuada": "cobrinha diante da face recuada, entre os prolongamentos das faces"}
 
 
 def detalhar(par):
@@ -53,7 +54,7 @@ def detalhar(par):
     if "conectores" in res:
         # Montagem opcional depois do colapso: o N1 e o N2 do colapso ficam como no modelo.
         for g in res["conectores"]["mont_posicoes"]:
-            faces = "esquerda e direita" if g["grupo"] == "by" else "de baixo e de cima"
+            faces = "esquerda e direita" if g["grupo"].startswith("by") else "de baixo e de cima"
             ferros.append(dict(tipo="montagem", subtipo=g["grupo"], bitola=p["mont_bitola"], quant=g["quant"],
                                comp=round(g["comp"]), descricao=f"montagem positiva nos pentes, faces {faces}"))
     for i, f in enumerate(ferros, 1):
@@ -80,7 +81,7 @@ def relatorio(res):
     if "conectores" in res:
         c = res["conectores"]
         faces = ", ".join(f"{k} {v:g}" for k, v in c["espacamento_faces"].items() if v)
-        linhas.append(f"   {c['n_pentes']} pentes {c['nome_bloco']} ({c['inclinados']} inclinado(s) por canto), "
+        linhas.append(f"   {c['texto_pentes']} ({c['inclinados']} inclinado(s) por canto), "
                       f"contornos a {', '.join(f'{v:g}' for v in c['contornos'])}, entre pentes: {faces}; "
                       f"cantos {c['esp_canto_max']:.1f}")
         for q in c["quadro"][1:]:

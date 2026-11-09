@@ -64,7 +64,7 @@ def _armadura(res):
     if "conectores" in res:
         c = res["conectores"]
         incl = "em cruz" if c["inclinados"] == 0 else f"{c['inclinados']} inclinado(s) por canto"
-        return (f"{c['n_pentes']} pentes {c['nome_bloco']} ({incl}); pino ø{_b(c['pino']['bitola'])} x "
+        return (f"{c['texto_pentes']} ({incl}); pino ø{_b(c['pino']['bitola'])} x "
                 f"{_b(c['pino']['comprimento_mm'])} mm, cabeça {c['pino']['cabeca_mm']} mm; "
                 f"{c['trilhos']['quant']} trilhos ø{_b(c['trilhos']['bitola'])}")
     c = res["cobrinha"]
@@ -101,12 +101,13 @@ def montar(itens, projeto="", arquivo=None, data=None):
             s[1] += kg * rep
         if "conectores" in res:
             c = res["conectores"]
-            chave = (c["nome_bloco"], c["pino"]["bitola"], c["pino"]["comprimento_mm"], c["pino"]["cabeca_mm"],
-                     c["trilhos"]["quant"], c["trilhos"]["bitola"], c["pino"]["no_catalogo"])
-            g = pentes.setdefault(chave, dict(pentes=0, pinos=0, pilares=[]))
-            g["pentes"] += c["n_pentes"] * rep
-            g["pinos"] += c["n_pentes"] * len(c["pentes"][0]["pinos"]) * rep
-            g["pilares"].append(p["titulo"])
+            for t in c["tipos"]:                          # um por nº de pinos (pilar de borda: pentes curtos)
+                chave = (t["nome_bloco"], c["pino"]["bitola"], c["pino"]["comprimento_mm"], c["pino"]["cabeca_mm"],
+                         c["trilhos"]["quant"], c["trilhos"]["bitola"], c["pino"]["no_catalogo"])
+                g = pentes.setdefault(chave, dict(pentes=0, pinos=0, pilares=[]))
+                g["pentes"] += t["quant"] * rep
+                g["pinos"] += t["quant"] * t["n_pinos"] * rep
+                g["pilares"].append(p["titulo"])
         vs = [v for v in res["verificacoes"] if v[0] == "aviso"]
         avisos += [(p["titulo"], txt, ref) for _, txt, ref in vs]
         conf = ""

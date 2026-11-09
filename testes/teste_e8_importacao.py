@@ -163,11 +163,12 @@ class TesteAnalise(unittest.TestCase):
         self.assertFalse(imp.selecao_padrao(p2))
         self.assertFalse(any(k in p2["par"] for k in imp.BORDAS))
 
-    def test_conectores_de_borda_viram_cobrinha(self):
+    def test_conectores_de_borda(self):
+        # E9: os conectores também detalham pilares de borda e de canto
         linhas = {ln["titulo"]: ln for ln in imp.analisar(self.dados, dict(solucao="conectores"))}
-        self.assertEqual(linhas["P2"]["par"]["solucao"], "cobrinha")
-        self.assertIn("ainda não implementados", linhas["P2"]["avisos"][-1])
-        self.assertEqual(linhas["P7"]["par"]["solucao"], "conectores")
+        for t in ("P1", "P2", "P7"):
+            self.assertEqual(linhas[t]["par"]["solucao"], "conectores")
+            self.assertEqual(detalhar(linhas[t]["par"])["erros"], [], t)
 
     def test_pilar_do_projeto(self):
         par = self.linhas["P7"]["par"]
@@ -336,8 +337,7 @@ class TesteJanela(unittest.TestCase):
                 r = dlg.aplicar()
             pergunta.assert_not_called()                                    # borda: sem confirmação (E9)
             sol = {p["titulo"]: p.get("solucao", "cobrinha") for p in r["pilares"]}
-            self.assertEqual(sol, dict(P2="cobrinha", P7="conectores", P11="conectores"))
-            self.assertIn("ainda não implementados", r["avisos"]["P2"][-1])
+            self.assertEqual(sol, dict(P2="conectores", P7="conectores", P11="conectores"))
             self.assertEqual(r["origem"]["planta"], "Primeiro")
         finally:
             dlg.destroy()

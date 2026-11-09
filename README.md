@@ -16,7 +16,7 @@ Cada pilar vira uma prancha (`PUN_<pilar>.DWG`) no padrão dos desenhos do escri
 
 Os comprimentos dos ferros são os que o próprio TQS calcula. O app os confere com os do núcleo.
 
-> **Situação:** etapas E0 a E8 feitas (base, cobrinha, conectores, janela, relatório do lote, fechamento do repositório e importação do TQS) e a E9 na cobrinha: **pilares internos, de borda e de canto**, retangulares. Os conectores ainda só detalham pilares internos. O plano, com as decisões e as próximas etapas, está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md); o padrão gráfico, em [PADRAO_desenho.md](PADRAO_desenho.md).
+> **Situação:** etapas E0 a E8 feitas (base, cobrinha, conectores, janela, relatório do lote, fechamento do repositório e importação do TQS) e a E9 (cobrinha e conectores): **pilares internos, de borda e de canto**, retangulares. O plano, com as decisões e as próximas etapas, está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md); o padrão gráfico, em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Requisitos
 
@@ -77,19 +77,30 @@ Um projeto tem vários pilares. Na aba Lote:
 
 ### Pilar de borda e de canto
 
-Na aba Pilar, o grupo **Borda livre** diz de que lado do pilar a laje termina: **Em x** (esquerda ou direita) e **Em y** (baixo ou cima), cada um com a distância da face do pilar à borda (0 = pilar faceando a borda). Uma borda faz o pilar de borda; uma em x e outra em y, de canto. Por enquanto, só a cobrinha.
+Na aba Pilar, o grupo **Borda livre** diz de que lado do pilar a laje termina: **Em x** (esquerda ou direita) e **Em y** (baixo ou cima), cada um com a distância da face do pilar à borda (0 = pilar faceando a borda). Uma borda faz o pilar de borda; uma em x e outra em y, de canto. Vale para as duas soluções.
 
 As regras são as do pilar interno, cortadas pela borda:
 - nada passa da borda: as cobrinhas, a montagem e as barras de colapso param no cobrimento da laje (o maior entre c sup. e c inf.);
-- diante da face voltada para a borda, as peças só existem se couberem (pilar recuado), com uma perna a s0 e a ponta no cobrimento;
-- as cobrinhas que correm na direção da borda vão até ela, com uma perna junto da borda (5 cm antes da ponta) se ela ficar a mais de 3 cm da última perna regular;
-- ao lado do pilar, a peça inteira começa na ponta do lado livre, pelo trecho de baixo, e termina na borda. Cada forma de peça é uma posição;
+- **pilar recuado da borda:** sem opção, a armadura de punção não passa da linha da face voltada para a borda (como se o pilar faceasse a borda). Duas opções, desligadas por padrão, no grupo Borda livre das abas Cobrinha e Conectores, por região:
+  - **Pinos na face recuada:** a armadura diante dessa face, até a borda;
+  - **Linhas construtivas:** além dos cantos, junto da borda;
+- **cobrinha:** diante da face voltada para a borda, as peças vão até o cobrimento, com uma perna a s0 (se couber) e uma junto da borda (5 cm antes da ponta) se ela ficar a mais de 3 cm da última perna regular; com as linhas construtivas, as peças inteiras ao lado do pilar seguem até a borda. Com a borda ao longo das linhas, a linha além da face voltada para a borda vira a peça inteira (as duas opções), as duas peças das faces para fora (só as construtivas) ou uma peça entre os prolongamentos das faces, com as pernas de 5 cm a L − 5 cm (só a face recuada);
+- ao lado do pilar, a peça inteira começa na ponta do lado livre, pelo trecho de baixo. Cada forma de peça é uma posição;
+- a montagem de cada fileira vai só nas linhas que têm perna nela, `mont_ext` além da última;
 - **borda curta:** a montagem entre a face do pilar e a borda não é desenhada quando ficaria com menos de `mont_min_borda` (30 cm); os vértices de baixo dessas linhas ficam na armadura positiva da laje, e as mensagens dizem isso;
-- **colapso:** as barras paralelas à borda como no interno; as perpendiculares terminam no cobrimento da borda e cruzam uma face só. **Gancho na borda** (aba Colapso, desligado por padrão) põe um gancho de 90° com ponta de 8ø (NBR 6118, 9.4.2.3) na ponta da borda; o app confere se ele cabe entre os cobrimentos;
+- **colapso:** as barras paralelas à borda como no interno; as perpendiculares terminam no cobrimento da borda. No As só contam as faces voltadas para a laje: 3 no pilar de borda e 2 no de canto, faceando ou recuado (a face voltada para a borda não conta). **Gancho na borda** (aba Colapso, desligado por padrão) põe um gancho de 90° com ponta de 8ø (NBR 6118, 9.4.2.3) na ponta da borda; o app confere se ele cabe entre os cobrimentos;
 - as verificações de 2d e de C'' e a ancoragem do colapso valem só nos lados livres; com a borda a 2d ou mais da face, o app avisa que o pilar pode ser tratado como interno;
 - uma viga a menos de 2d da face é tratada como borda: a armadura para no cobrimento da face da viga.
 
-Na prancha: a linha da borda com o texto "BORDA LIVRE" na planta e no colapso, as seções com a laje terminando reta na borda, a distância da face à borda numa fila de cotas própria, os detalhes de cada forma de peça e o gabarito com a linha do pente mestre só nos lados que a têm.
+Na prancha: a linha da borda com o texto "BORDA LIVRE" na planta e no colapso, as seções com a laje terminando reta na borda, a distância da face à borda numa fila de cotas própria e os detalhes de cada forma de peça. O pente mestre e as cotas de s0 ficam num lado livre, nunca na borda curta, e o gabarito dos pentes mestres mostra o pilar de borda ou de canto desprezando a borda curta (do lado da borda, sem pente mestre e com a borda na face). Quando a montagem da borda curta é omitida, a NOTA 5 manda usar a armadura positiva da laje como montagem.
+
+**Conectores** (como no LPUNC; plano, respostas Q10 a Q12):
+- **face voltada para a borda:** pentes só com **Pinos na face recuada** e só com os pinos que cabem: o último pino, mais a ponta do pente (meia cabeça e o gancho do trilho), até o cobrimento da borda. Pode sair um pente mais curto ("PUN 1P 17 cm", "PUN 2P 17 cm"), que vira outro tipo no quadro; sem pino que caiba, a face fica sem pentes;
+- **faces perpendiculares à borda:** os pentes da face, com o pente da ponta a `con_dist_canto` do canto ou afastado o bastante para o trilho ficar no cobrimento da borda;
+- **inclinados:** só nos cantos internos (as duas faces voltadas para a laje);
+- **linhas construtivas** (`con_construtivas`, aba Conectores > Borda livre, desligada por padrão): no pilar recuado, um pente a mais em cada face perpendicular, além do canto, junto da borda (como o PuncV1);
+- os pinos de fora vizinhos através de um canto do lado da borda não entram na verificação de 2d, porque ali o contorno termina na borda;
+- na prancha: os contornos das linhas de pinos recortados na borda, a NOTA 1 do lado que tem pentes, o "TOPO LAJE" do lado livre (ou fora da laje, além da borda) e as cotas só dos lados com pentes.
 
 ### Importar do TQS
 
@@ -98,7 +109,7 @@ Na prancha: a linha da borda com o texto "BORDA LIVRE" na planta e no colapso, a
 1. Escolha a pasta do edifício (a que tem o `EDIFICIO.BDE`) e a planta, e clique em **Ler a planta**.
 2. A leitura é feita numa cópia temporária (a raiz do edifício e a pasta da planta), num processo à parte. O edifício não é alterado, e o TQS pode estar aberto.
 3. A tabela mostra todos os pilares da planta, com seção, posição, h da laje e os esforços. Marque os que vão para o projeto:
-   - **marcados de saída:** os internos, os de borda e os de canto retangulares, sem abertura a menos de 8d nem capitel. Nos de borda e de canto, as bordas da laje (ou as vigas) a menos de 2d da face vão para o grupo Borda livre do pilar. Com a solução "conectores", esses ficam com a cobrinha, com aviso;
+   - **marcados de saída:** os internos, os de borda e os de canto retangulares, sem abertura a menos de 8d nem capitel. Nos de borda e de canto, as bordas da laje (ou as vigas) a menos de 2d da face vão para o grupo Borda livre do pilar;
    - **bordas ou vigas em lados opostos** e **pilares girados com borda:** podem ser marcados, com confirmação, porque o app os detalharia como internos (ele detalha uma borda por direção, nos eixos da planta);
    - **seção não retangular** (circular, L, U): não podem ser marcados.
 4. **OK** acrescenta os pilares ao projeto. Os que já estão no projeto com o mesmo nome têm atualizadas as dimensões, o h, os cobrimentos e as repetições; o detalhamento escolhido fica. Os demais parâmetros vêm do pilar atual da janela.
@@ -214,6 +225,8 @@ O projeto é uma lista de pilares. Cada pilar guarda só o que difere dos padrõ
 | `col_ext` | 85 | Comprimento além da face |
 | `col_n_face_bx`, `col_n_face_by` | 3, 8 | Barras em cada face de comprimento bx e by (no pilar padrão de 50 × 150: 3 na face de 50 e 8 na de 150, como no P02) |
 | `col_gancho_borda` | false | Gancho de 90° (ponta de 8ø) nas barras que terminam na borda livre |
+| `cob_face_recuada`, `con_face_recuada` | false | Pilar recuado da borda: armadura de punção diante da face voltada para a borda (cobrinha ou conectores) |
+| `cob_construtivas`, `con_construtivas` | false | Pilar recuado da borda: além dos cantos, as cobrinhas ao lado do pilar seguem até a borda; nos conectores, um pente a mais junto da borda |
 
 **Cobrinha** (malha ortogonal)
 
@@ -255,11 +268,12 @@ As verificações (s0 ≤ 0,5d, espaçamentos ≤ 0,75d, pinos ou pernas vizinho
 | `exemplos/lote_cobrinha.json` | Cinco pilares: o P2, um quadrado com 2X, outra direção, cobrimento de 2,5 e um em x |
 | `exemplos/P02_conectores.json` | O P02 do desenho de referência dos conectores (50 × 150, 20 pentes de 3 pinos) |
 | `exemplos/lote_conectores.json` | Cinco pilares: o P02, um quadrado, 5 pinos por pente, montagem ligada e arranjo em cruz |
-| `exemplos/lote_bordas.json` | Seis pilares de borda e de canto com a cobrinha: borda faceando, a 20 cm, ao longo das linhas, canto com gancho e dois com as cobrinhas em y |
+| `exemplos/lote_bordas.json` | Seis pilares de borda e de canto com a cobrinha: borda faceando, a 20 cm com as duas opções, a 15 cm ao longo das linhas sem elas, canto com gancho e dois com o pilar deitado (um com as linhas construtivas) |
+| `exemplos/lote_bordas_conectores.json` | Cinco pilares de borda e de canto com os conectores: borda faceando, a 20 cm com as duas opções (pentes de 1 pino), canto faceando com gancho, canto recuado com as duas opções e a montagem (pentes de 2 pinos) e o pilar deitado |
 
 ## Limitações desta versão
 
-- Só pilares retangulares. Os de borda e de canto só com a cobrinha (os conectores vêm depois); faltam os circulares e as aberturas na laje.
+- Só pilares retangulares. Faltam os circulares e as aberturas na laje.
 - Uma borda livre por direção: lados opostos (laje mais estreita que o pilar + 4d, ou borda de um lado e viga do outro) não são tratados.
 - Conectores só no arranjo "antes da armadura" (pentes com trilhos); falta o "posterior à armadura".
 - A importação do TQS ajusta s0 e os espaçamentos e sugere o colapso (opções). O número de linhas e as bitolas continuam com o projetista; as verificações mostram o que passa dos limites.
@@ -297,6 +311,12 @@ python ferramentas/comparar.py <a>.json <b>.json
 ```
 
 Compara dois despejos por nível, tipo, posição e texto.
+
+```bash
+python -m ferramentas.sobreposicoes exemplos/lote_bordas.json
+```
+
+Procura sobreposições nas pranchas, sem o TQS: textos sobre textos (inclusive os das cotas, onde o TQS os escreve) e textos cruzados pelas linhas de chamada e pelas marcas dos cortes. Um teste passa todos os exemplos por ela.
 
 ```bash
 python ferramentas/capturar_janela.py exemplos/P2_cobrinha.json

@@ -1,0 +1,12 @@
+{
+ "formato": "puncao-detalhamento",
+ "versao": 1,
+ "descricao": "Lote de exemplo de conectores em pilares de borda e de canto (E9), com o P02 do modelo: borda faceando a face (P31), borda a 20 cm com as duas opções da borda recuada (P32: pentes de 1 pino na face recuada e linhas construtivas), canto faceando com gancho no colapso (P33), canto recuado com as duas opções e a montagem (P34: pentes de 2 pinos) e o pilar deitado com a borda à direita (P35).",
+ "pilares": [
+  {"titulo": "P31", "bx": 50, "by": 150, "h_laje": 27, "c_sup": 2.0, "c_inf": 2.0, "solucao": "conectores", "borda_x": "esquerda"},
+  {"titulo": "P32", "bx": 50, "by": 150, "h_laje": 27, "c_sup": 2.0, "c_inf": 2.0, "solucao": "conectores", "borda_x": "esquerda", "dist_borda_x": 20, "con_construtivas": true, "con_face_recuada": true},
+  {"titulo": "P33", "bx": 50, "by": 150, "h_laje": 27, "c_sup": 2.0, "c_inf": 2.0, "solucao": "conectores", "borda_x": "esquerda", "borda_y": "baixo", "col_gancho_borda": true},
+  {"titulo": "P34", "bx": 50, "by": 150, "h_laje": 27, "c_sup": 2.0, "c_inf": 2.0, "solucao": "conectores", "borda_x": "direita", "dist_borda_x": 40, "borda_y": "cima", "dist_borda_y": 10, "con_construtivas": true, "con_face_recuada": true, "con_montagem": true},
+  {"titulo": "P35", "bx": 150, "by": 50, "h_laje": 27, "c_sup": 2.0, "c_inf": 2.0, "solucao": "conectores", "borda_x": "direita", "con_n_face_bx": 5, "con_n_face_by": 3}
+ ]
+}

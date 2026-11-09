@@ -64,9 +64,12 @@ def detalhar(p):
         ganchos = (b_ini and p["col_gancho_borda"], b_fim and p["col_gancho_borda"])
         reto = math.ceil(round(fim - ini, 6))             # o trecho reto, pelas faces externas dos ganchos
         comp = reto + sum(ganchos) * gancho_90(p["col_bitola"])
+        # faces que a barra cruza e que contam no As (19.5.4): a face voltada para uma borda livre não conta, nem
+        # com o pilar recuado (regra do usuário em 09/11/2026: borda = 3 faces, canto = 2)
+        faces = int(ini < 0 and not b_ini) + int(fim > L and not b_fim)
         out.append(dict(direcao=direcao, quant=quant, pos=[round((i + 0.5) * Lt / quant, 4) for i in range(quant)],
                         ini=ini, fim=fim, comp=comp, reto=reto, borda_ini=b_ini, borda_fim=b_fim, ganchos=ganchos,
-                        faces=int(ini < 0) + int(fim > L)))
+                        faces=faces))
     return out
 
 
@@ -127,7 +130,7 @@ def capacidade(p):
     fk = g["fz"] * TF_KN
     fsd = GAMA_F_CCP * fk
     as_nec = 1.5 * fsd / FYD
-    # cada barra conta uma vez por face que cruza: duas no interno; uma na perpendicular à borda faceando
+    # cada barra conta uma vez por face que cruza: duas no interno; uma na perpendicular à borda (faceando ou recuada)
     as_ef = sum(b["quant"] * b["faces"] for b in detalhar(p)) * area(p["col_bitola"])
     return dict(n=g["n"], titulo=g["titulo"], fk=fk, fsd=fsd, as_nec=as_nec, as_ef=as_ef, ok=as_ef >= as_nec - 1e-9)
 

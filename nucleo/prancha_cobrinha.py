@@ -33,6 +33,10 @@ NOTAS = [
     "ESTA REPRESENTAÇÃO DO FERRO MOSTRA COMPRIMENTOS ENTRE EIXOS DAS BARRAS.",
     "ESTA REPRESENTAÇÃO DO FERRO MOSTRA COMPRIMENTOS DE DOBRAS ENTRE FACES DAS BARRAS.",
 ]
+# Pilar de borda (E9): com a montagem omitida entre a face e a borda curta (mont_min_borda; pedido do usuário em
+# 09/11/2026)
+NOTA_BORDA_CURTA = ("NA BORDA CURTA, ENTRE A FACE DO PILAR E A BORDA LIVRE, NÃO HÁ BARRA DE MONTAGEM: UTILIZAR A "
+                    "ARMADURA POSITIVA DA LAJE COMO MONTAGEM DOS VÉRTICES DE BAIXO DA ARMADURA DE PUNÇÃO.")
 
 
 def _ganchos(barra):
@@ -97,7 +101,11 @@ class Prancha:
             self.t_lado = min(direita)
         self.cb = cobrimento_borda(p)                     # cobrimento na borda livre (Q15)
         # linha dos títulos (em x, refeita depois da planta, pela extensão dela)
-        self.y_tit = max(self.u1 + 3.6 * self.E, self.by + p["col_ext"] + 2.2 * self.E)
+        # além da borda livre (E9): as cotas, as marcas dos cortes e o pente mestre ficam fora da laje
+        bu_mais, bu_menos = self.bd["u+"], self.bd["u-"]
+        self.u_top = max(self.u1, self.L + bu_mais["a"]) if bu_mais else self.u1
+        self.u_bot = min(self.u0, -bu_menos["a"]) if bu_menos else self.u0
+        self.y_tit = max(self.u_top + 3.6 * self.E, self.by + p["col_ext"] + 2.2 * self.E)
 
     # ------------------------------------------------------------------ coordenadas locais
     def Pl(self, t, u):
@@ -252,6 +260,8 @@ class Prancha:
                                  self.ci + alt), T(u, self.ci + alt), T(u, self.ci)])
         # "TOPO LAJE" do lado livre: além da face u = L ou, com a borda desse lado, antes da face u = 0
         u_txt = L + (self.u1 - L) * 0.25 if bb is None else self.u0 * 0.75
+        if nota1:                                         # fora das chamadas da NOTA 1 e do pilar
+            u_txt = self._topo_livre(u_txt, sup, ua, ub)
         f.texto(221, *T(u_txt, h + 0.35 * E), H_CHAMADA, "TOPO LAJE", a=self.a_u)
         if self.vert:
             tx, ty = B - h - zp, self.y_tit
@@ -273,6 +283,26 @@ class Prancha:
             for uc, zc in sup:
                 f.linha(210, T(meio, z1), T(uc, zc + r1 * 0.7))
         return (B - h - zp, B + zp) if self.vert else (B - zp, B + h + zp)
+
+    def _topo_livre(self, u_pref, sup, ua, ub):
+        """Posição (u) do "TOPO LAJE" na seção A-A: o trecho do tamanho do texto, logo acima da face superior, que
+        não cruza as chamadas da NOTA 1 (da caixa sobre o pilar aos vértices de cima) nem o pilar, o mais perto
+        possível de u_pref. Sem trecho livre, u_pref."""
+        E, h, L = self.E, self.h, self.L
+        larg = self._texto_largura("TOPO LAJE", H_CHAMADA)
+        meio, z1 = L / 2, h + 1.3 * E + 0.6 * E           # ponto de onde saem as chamadas (como em corte())
+        za, zb = h + 0.35 * E, h + 0.35 * E + H_CHAMADA * E
+        r1 = self.f1 / 2
+        proib = [(-0.1 * E, L + 0.1 * E)]                 # o pilar cortado, acima da laje
+        for uc, zc in sup:
+            zt = zc + r1 * 0.7
+            us = [meio + (uc - meio) * (z1 - z) / (z1 - zt) for z in (za, zb) if min(z1, zt) <= z <= max(z1, zt)]
+            if us:
+                proib.append((min(us) - 0.15 * E, max(us) + 0.15 * E))
+        lo, hi = ua + 0.2 * E, ub - 0.2 * E - larg
+        livres = [u for u in (lo + i for i in range(int(max(0.0, hi - lo)) + 1))
+                  if all(u + larg < a or u > b for a, b in proib)]
+        return min(livres, key=lambda u: abs(u - u_pref)) if livres else u_pref
 
     # ------------------------------------------------------------------ detalhes das cobrinhas
     def detalhe_eixos(self, B, pc, fe):
@@ -335,7 +365,7 @@ class Prancha:
         espelhada, como a peça da face direita do pilar interno."""
         f, fc = self.f, self.fc
         nomes = {}
-        for tipo in ("extremidade", "extremidade_borda", "continua", "continua_borda"):
+        for tipo in ("extremidade", "extremidade_borda", "continua", "continua_borda", "recuada"):
             pc = self.modelos.get(tipo)
             if pc is None:
                 continue
@@ -393,7 +423,12 @@ class Prancha:
         yc = alem("u+", L, 1, self.u1) + 0.9 * E
         for a, b in zip(lin, lin[1:]):
             f.cota(Pl(a, self.u1), Pl(b, self.u1), Pl(a, yc), modo=mt)
-        fil = sorted({u for pc in c["pecas"] if pc["tipo"].startswith("extremidade") for u in pc["pernas"]} | {0.0, L})
+        # peças diante da face recuada (E9): as pernas delas na cadeia do lado em que ficam
+        rec = set(self.modelos["recuada"]["pernas"]) if "recuada" in self.modelos else set()
+        rec_neg = any(pc["tipo"] == "recuada" and pc["linha"] < 0 for pc in c["pecas"])
+        rec_pos = any(pc["tipo"] == "recuada" and pc["linha"] > Lt for pc in c["pecas"])
+        fil = sorted({u for pc in c["pecas"] if pc["tipo"].startswith("extremidade") for u in pc["pernas"]} | {0.0, L}
+                     | (rec if rec_pos else set()))
         xc = alem("t+", Lt, 1, lin[-1]) + 0.9 * E
         for a, b in zip(fil, fil[1:]):
             f.cota(Pl(lin[-1], a), Pl(lin[-1], b), Pl(xc, a), modo=mu)
@@ -407,40 +442,65 @@ class Prancha:
             if bd[k] is not None and bd[k]["a"] > 0.5:
                 a, b = sorted((base, base + sinal * bd[k]["a"]))
                 f.cota(Pl(Lt, a), Pl(Lt, b), Pl(xc + 0.6 * E, a), modo=mu)
-        if self.cont:
-            lado = [u for u in self.cont["pernas"] if -s0 - 1e-6 <= u <= L + s0 + 1e-6]
+        if self.cont or rec_neg:
+            if rec_neg:
+                lado = sorted(rec | {0.0, L})
+            else:
+                lado = [u for u in self.cont["pernas"] if -s0 - 1e-6 <= u <= L + s0 + 1e-6]
             xl = alem("t-", 0.0, -1, lin[0]) - 0.9 * E
             for a, b in zip(lado, lado[1:]):
                 f.cota(Pl(lin[0], a), Pl(lin[0], b), Pl(xl, a), modo=mu)
-        # s0 nas duas direções, num lado que tem a linha (ou a perna) de s0
-        tem = lambda lista, v: any(abs(x - v) < 1e-6 for x in lista)          # noqa: E731
-        if tem(lin, -s0):
+        # s0 nas duas direções, num lado que tem a linha (ou a perna) de s0, de preferência livre (na borda curta, o
+        # pente mestre não serve para locar: E9), e sem as duas cotas no mesmo canto
+        lado_t = self._lado_s0(lin, -s0, Lt + s0, "t-", "t+", ("-", "+"))
+        lado_u = self._lado_s0(fil, -s0, L + s0, "u-", "u+", ("+", "-"))
+        if lado_t == "-":
             f.cota(Pl(-s0, L), Pl(0, L), Pl(-s0, L + s0 / 2), modo=mt)
-        elif tem(lin, Lt + s0):
+        elif lado_t == "+" and lado_u == "+":                     # o canto (Lt, L) é da cota em u: a de t desce
+            f.cota(Pl(Lt, 0.0), Pl(Lt + s0, 0.0), Pl(Lt, -s0 / 2), modo=mt)
+        elif lado_t == "+":
             f.cota(Pl(Lt, L), Pl(Lt + s0, L), Pl(Lt, L + s0 / 2), modo=mt)
-        if tem(fil, L + s0):
+        if lado_u == "+":
             f.cota(Pl(Lt, L), Pl(Lt, L + s0), Pl(Lt + s0 / 2, L), modo=mu)
-        elif tem(fil, -s0):
+        elif lado_u == "-":
             f.cota(Pl(Lt, -s0), Pl(Lt, 0.0), Pl(Lt + s0 / 2, -s0), modo=mu)
-        # pente mestre (além da cadeia de cotas) e marcas dos cortes (além das cotas)
-        t_pm = -s0 if tem(lin, -s0) else Lt + s0
-        tx, ty = Pl(self.t0 + 0.2 * E, self.u1 + 2.3 * E)
+        # pente mestre (além da cadeia de cotas, do lado da linha que ele aponta, sem passar sobre as marcas dos
+        # cortes) e marcas dos cortes (além das cotas e da borda livre)
+        t_pm = -s0 if lado_t == "-" else Lt + s0
+        larg = self._texto_largura("PENTE MESTRE", H_CHAMADA)
+        marcas = (self.t_frente, self.t_lado)
+        alvo = Pl(t_pm, self.u1 + 0.05 * E)
+        if t_pm < 0 or not self.vert:
+            if t_pm < 0:
+                t_txt = self.t0 + 0.2 * E
+                if self.vert:
+                    t_txt = min(t_txt, min(marcas) - 1.4 * E - larg - 0.3 * E)
+            else:                                         # em x, o texto fica em cima, do lado da linha
+                t_txt = self.t1 - 0.2 * E - H_CHAMADA * E
+            tx, ty = Pl(t_txt, self.u_top + 2.3 * E)
+            pts = [(tx, ty - 0.1 * E), (tx + larg + 0.3 * E, ty - 0.1 * E), alvo]
+            if not self.vert:                             # em x, dobra antes das cotas e cruza a cadeia no tique
+                pts.insert(2, Pl(t_pm, self.u_top + 1.2 * E))
+        else:                                             # em y, à direita das marcas, com a chamada para a esquerda
+            tx, ty = Pl(max(marcas) + 0.5 * E, self.u_top + 2.3 * E)
+            pts = [(tx + larg, ty - 0.1 * E), (tx - 0.3 * E, ty - 0.1 * E), Pl(t_pm, self.u_top + 1.2 * E), alvo]
         f.texto(253, tx, ty, H_CHAMADA, "PENTE MESTRE")
         f.texto(253, tx + 0.5 * E, ty - 0.45 * E, H_CHAMADA, "P/ LOCAÇÃO")
-        larg = self._texto_largura("PENTE MESTRE", H_CHAMADA)
-        self._chamada(253, [(tx, ty - 0.1 * E), (tx + larg + 0.3 * E, ty - 0.1 * E), Pl(t_pm, self.u1 + 0.05 * E)])
+        self._chamada(253, pts)
         for t, letra in ((self.t_frente, "A"), (self.t_lado, "B")):
-            self._marca_corte(t, self.u1 + 1.6 * E, 1, letra)
-            self._marca_corte(t, self.u0 - 0.4 * E, -1, letra)
+            self._marca_corte(t, self.u_top + 1.6 * E, 1, letra)
+            self._marca_corte(t, self.u_bot - 0.4 * E, -1, letra)
         if self.vert:                                     # em x, o título vai depois, pela extensão da planta
             f.texto(226, self.t0, self.y_tit, H_VISTA, "VISTA EM PLANTA (ARM. PUNÇÃO)")
             f.texto(0, self.t0 + 0.1 * E, self.y_tit - 0.45 * E, H_ESCALA, f"ESCALA 1:{E:g}")
         # barras de montagem identificadas, antes do início das cobrinhas (abaixo das marcas dos cortes); com borda,
         # pode haver duas posições de barra lateral (uma de cada lado do pilar)
-        y = self.u0 - 2.9 * E
+        y = self.u_bot - 2.9 * E
         for fe in [x for x in self.r["ferros"] if x["tipo"] == "montagem"]:
             if fe["subtipo"] == "continua":
-                ini, marcos = self.t0, [self.t0, lin[0], lin[-1], self.t1]
+                b = next(b for b in c["montagem"] if b["tipo"] == "continua" and abs(b["comp"] - fe["comp"]) < 0.5)
+                ini = b["ini"]
+                marcos = [b["ini"]] + [x for x in (lin[0], lin[-1]) if b["ini"] < x < b["fim"]] + [b["fim"]]
             else:
                 b = next(b for b in c["montagem"] if b["tipo"] == "lateral" and abs(b["comp"] - fe["comp"]) < 0.5)
                 ini = b["ini"]
@@ -456,8 +516,18 @@ class Prancha:
             y -= 2.2 * E
         self.y_min_planta = y
 
+    def _lado_s0(self, lista, v_neg, v_pos, k_neg, k_pos, ordem):
+        """Lado ("-" ou "+") da linha ou da perna de s0 para a cota e o pente mestre: um lado que a tem, livre de
+        preferência (na ordem dada), ou None."""
+        tem = {"-": any(abs(x - v_neg) < 1e-6 for x in lista), "+": any(abs(x - v_pos) < 1e-6 for x in lista)}
+        livre = {"-": self.bd[k_neg] is None, "+": self.bd[k_pos] is None}
+        for lado in ordem:
+            if tem[lado] and livre[lado]:
+                return lado
+        return next((lado for lado in ordem if tem[lado]), None)
+
     def _bordas_planta(self):
-        """Borda livre na planta (E9): a linha da borda (nível 240, o do contorno da laje nos cortes do modelo), o
+        """Borda livre na planta (E9): a linha da borda (nível 0, o do contorno da laje nos cortes do modelo), o
         texto "BORDA LIVRE" (221, como o "TOPO LAJE") e, com o pilar recuado, a cota da face até a borda."""
         f, E, Pl, bd = self.f, self.E, self.Pl, self.bd
         if not any(bd.values()):
@@ -481,11 +551,11 @@ class Prancha:
             self._linha_borda(Pl(*p1), Pl(*p2), sinal)
 
     def _linha_borda(self, p1, p2, sinal):
-        """Linha da borda livre (240) de p1 a p2 (na prancha, horizontal ou vertical) e o texto "BORDA LIVRE"
+        """Linha da borda livre (nível 0; o 240 é a hachura de 25 % e não sai na plotagem) de p1 a p2 (na prancha, horizontal ou vertical) e o texto "BORDA LIVRE"
         paralelo a ela, do lado de fora da laje (sinal +1: x ou y maior), perto do fim da linha."""
         f, E = self.f, self.E
         (x1, y1), (x2, y2) = p1, p2
-        f.linha(240, (x1, y1), (x2, y2))
+        f.linha(0, (x1, y1), (x2, y2))
         larg = self._texto_largura("BORDA LIVRE", H_CHAMADA)
         if abs(y2 - y1) < 1e-9:
             xb = max(x1, x2)
@@ -568,12 +638,12 @@ class Prancha:
     # ------------------------------------------------------------------ gabarito, notas, título
     def _lados_prancha(self):
         """Lados do pilar na prancha ("x-", "x+", "y-", "y+") -> (tem a linha do pente mestre a s0?, distância da
-        borda livre ou None)."""
+        borda livre ou None). O gabarito mostra o pilar de borda ou de canto desprezando a borda curta (pedido do
+        usuário em 09/11/2026): do lado de uma borda, sem pente mestre e com a borda na face (0)."""
         mapa = ({"x-": "t-", "x+": "t+", "y-": "u-", "y+": "u+"} if self.vert
                 else {"x-": "u-", "x+": "u+", "y-": "t-", "y+": "t+"})
         s0, cont = self.p["cob_s0"], self.c["contorno"]
-        return {k: (abs(cont[loc] - s0) < 1e-6, self.bd[loc]["a"] if self.bd[loc] else None)
-                for k, loc in mapa.items()}
+        return {k: ((False, 0.0) if self.bd[loc] else (abs(cont[loc] - s0) < 1e-6, None)) for k, loc in mapa.items()}
 
     def _afastamentos_gabarito(self):
         """Quanto o gabarito vai além de cada face (cm reais): s0 ou a borda, o maior."""
@@ -598,9 +668,9 @@ class Prancha:
         for a, b in ((y0 - s0, y0), (y0, y0 + L), (y0 + L, y0 + L + s0)):
             f.cota((x0 + Lt + s0, a), (x0 + Lt + s0, b), (xc, a), modo="v", fator=1 / k)
         tx = xc + 1.0 * E
-        f.texto(253, tx, y0 + L * 0.5 + 0.3 * E, H_CHAMADA, "NOTA 2")
-        self._chamada(253, [(tx + 2.0 * E, y0 + L * 0.5 + 0.15 * E), (tx - 0.1 * E, y0 + L * 0.5 + 0.15 * E),
-                            (x0 + Lt + s0, y0 + L * 0.5)])
+        ym = y0 + L * 0.75                              # longe do texto da cota do lado maior, que fica no meio
+        f.texto(253, tx, ym + 0.3 * E, H_CHAMADA, "NOTA 2")
+        self._chamada(253, [(tx + 2.0 * E, ym + 0.15 * E), (tx - 0.1 * E, ym + 0.15 * E), (x0 + Lt + s0, ym)])
         f.texto(220, X + 0.3 * E, Y - 0.6 * E, H_VISTA, "DET. PLANTA")
         f.texto(220, X + 0.3 * E, Y - 1.05 * E, 0.20, "GABARITO PENTES MESTRES")
         f.texto(0, X + 0.3 * E, Y - 1.4 * E, H_ESCALA, "ESCALA 1:25")
@@ -610,7 +680,7 @@ class Prancha:
         return x1, y1
 
     def _gabarito_bordas(self, X, Y):
-        """O gabarito com borda livre (E9): a linha do pente mestre (233) só nos lados que a têm, a borda (240) nos
+        """O gabarito com borda livre (E9): a linha do pente mestre (233) só nos lados que a têm, a borda (0) nos
         outros e as cotas até a borda."""
         f, E = self.f, self.E
         k = E / 25.0
@@ -649,10 +719,10 @@ class Prancha:
                 continue
             if n[0] == "x":
                 x = x0 - a * k if n == "x-" else x0 + Lx + a * k
-                f.linha(240, (x, yB - 0.3 * E), (x, yT + 0.3 * E))
+                f.linha(0, (x, yB - 0.3 * E), (x, yT + 0.3 * E))
             else:
                 y = y0 - a * k if n == "y-" else y0 + Ly + a * k
-                f.linha(240, (xL - 0.3 * E, y), (xR + 0.3 * E, y))
+                f.linha(0, (xL - 0.3 * E, y), (xR + 0.3 * E, y))
         # cotas: em cima (x) e à direita (y), com o pente mestre e a borda
         def marcos(lo, hi, neg, posit):
             v = {lo, hi}
@@ -676,13 +746,15 @@ class Prancha:
         for a, b in zip(my, my[1:]):
             f.cota((xR, a), (xR, b), (xc, a), modo="v", fator=1 / k)
         tx = xc + 1.0 * E
-        ym = y0 + Ly * 0.5
+        ym = y0 + Ly * 0.75                             # longe do texto da cota do lado maior, que fica no meio
         if lados["x+"][0]:
-            alvo = (x0 + Lx + s0, ym)
-        else:
-            alvo = (x0 + Lx * 0.75, y0 + Ly + s0 if lados["y+"][0] else y0 - s0)
-        f.texto(253, tx, ym + 0.3 * E, H_CHAMADA, "NOTA 2")
-        self._chamada(253, [(tx + 2.0 * E, ym + 0.15 * E), (tx - 0.1 * E, ym + 0.15 * E), alvo])
+            alvo, yl = (x0 + Lx + s0, ym), ym + 0.15 * E
+        elif lados["y-"][0]:                            # sem pente mestre à direita: a linha de baixo, por fora
+            alvo, yl = (x0 + Lx * 0.8, y0 - s0), yB - 0.35 * E     # das cotas (abaixo da última)
+        else:                                           # ou a de cima, entre ela e a cadeia de cima
+            alvo, yl = (x0 + Lx * 0.8, y0 + Ly + s0), yT + 0.3 * E
+        f.texto(253, tx, yl + 0.15 * E, H_CHAMADA, "NOTA 2")
+        self._chamada(253, [(tx + 2.0 * E, yl), (tx - 0.1 * E, yl), alvo])
         f.texto(220, X + 0.3 * E, Y - 0.6 * E, H_VISTA, "DET. PLANTA")
         f.texto(220, X + 0.3 * E, Y - 1.05 * E, 0.20, "GABARITO PENTES MESTRES")
         f.texto(0, X + 0.3 * E, Y - 1.4 * E, H_ESCALA, "ESCALA 1:25")
@@ -696,7 +768,8 @@ class Prancha:
         dy = 0.5 * E
         largura = 52                                   # caracteres por linha (o 1º traz 8 espaços para o "NOTA n:")
         linhas = []
-        for i, nota in enumerate(NOTAS, 1):
+        notas = NOTAS + ([NOTA_BORDA_CURTA] if self.c.get("mont_omitidas") else [])
+        for i, nota in enumerate(notas, 1):
             resto = nota
             primeira = _quebrar(resto, largura - 8)[0]
             linhas.append((i, "        " + primeira))
@@ -729,7 +802,7 @@ class Prancha:
         as seções B-B e A-A. Cada função recebe a posição B e devolve a extensão na direção do empilhamento."""
         itens = []
         # peças inteiras primeiro, depois as da face; com borda livre, também as que terminam nela (E9)
-        for tipo in ("continua", "continua_borda", "extremidade", "extremidade_borda"):
+        for tipo in ("continua", "continua_borda", "extremidade", "extremidade_borda", "recuada"):
             pc, fe = self.modelos.get(tipo), self.pos.get(("cobrinha", tipo))
             if not pc:
                 continue

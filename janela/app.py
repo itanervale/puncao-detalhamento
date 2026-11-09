@@ -382,6 +382,16 @@ class App(tk.Tk):
                     "baixo (mm). Também a dos conectores, se ligada.")
         self._campo(c, "mont_ext", "Além (cm)", lr=9, dica="Comprimento além da última linha (cm).")
         self._campo(c, "mont_arred", "Arred. (cm)", lr=9, dica="Comprimento arredondado para cima (cm).")
+        g = a.grupo("Borda livre")
+        c = g.coluna()
+        c.check("Linhas construtivas", self._V("cob_construtivas", "bool"),
+                ao_mudar=lambda: self._mudou("cob_construtivas"),
+                dica="Pilar recuado da borda: além dos cantos, as cobrinhas ao lado do pilar seguem até a borda. Sem "
+                     "ela, param na linha da face voltada para a borda. Opcional, desligada por padrão.")
+        c.check("Pinos na face recuada", self._V("cob_face_recuada", "bool"),
+                ao_mudar=lambda: self._mudou("cob_face_recuada"),
+                dica="Pilar recuado da borda: cobrinhas diante da face voltada para a borda, até ela. Opcional, "
+                     "desligada por padrão.")
         c = g.coluna()
         self._campo(c, "mont_min_borda", "Mín. borda", lr=9, dica="Pilar de borda: a montagem ao lado do pilar, da "
                     "face até a borda livre, com menos que isso não é desenhada (borda curta: os vértices ficam na "
@@ -428,6 +438,16 @@ class App(tk.Tk):
                 dica="Opcional e desligada por padrão: o escritório aproveita as barras de flexão da laje (nota 1). "
                      "Ligada: uma barra por linha de pinos em cada face, sobre os trilhos (bitola e comprimento da aba "
                      "Cobrinha > Montagem).")
+        g = a.grupo("Borda livre")
+        c = g.coluna()
+        c.check("Linhas construtivas", self._V("con_construtivas", "bool"),
+                ao_mudar=lambda: self._mudou("con_construtivas"),
+                dica="Pilar recuado da borda: um pente a mais em cada face perpendicular à borda, além do canto, junto "
+                     "da borda (como o PuncV1). Opcional, desligada por padrão.")
+        c.check("Pinos na face recuada", self._V("con_face_recuada", "bool"),
+                ao_mudar=lambda: self._mudou("con_face_recuada"),
+                dica="Pilar recuado da borda: pentes na face voltada para a borda, só com os pinos que cabem até o "
+                     "cobrimento dela (pode sair um pente mais curto). Opcional, desligada por padrão.")
         # ---------------------------------------------------------------- Colapso
         a = rb.aba("Colapso")
         g = a.grupo("Colapso progressivo (face inferior)")
@@ -879,7 +899,8 @@ class App(tk.Tk):
                           f"C={f['comp']} - {f['descricao']}")
             if "conectores" in r:
                 c = r["conectores"]
-                tv.insert(no, "end", "pecas", text=f"Pentes: {r['p']['repeticoes']} x {c['n_pentes']} {c['nome_bloco']}"
+                pentes = " + ".join(f"{t['quant']} {t['nome_bloco']}" for t in c["tipos"])
+                tv.insert(no, "end", "pecas", text=f"Pentes: {r['p']['repeticoes']} x {pentes}"
                           f" ({c['inclinados']} inclinado(s) por canto); pino {fmt(c['pino']['comprimento_mm'])} mm",
                           image=ic.foto("pente", 16))
             elif "cobrinha" in r:
@@ -952,7 +973,7 @@ class App(tk.Tk):
             itens.append(("Aço dos ferros", f"{_br(aco)} kg por pilar"))
             if "conectores" in r:
                 c = r["conectores"]
-                itens += [("Pentes", f"{c['n_pentes']} {c['nome_bloco']}"), ("Inclinados", f"{c['inclinados']} por canto"),
+                itens += [("Pentes", c["texto_pentes"].replace(" pentes ", " ")), ("Inclinados", f"{c['inclinados']} por canto"),
                           ("Pino", f"ø{fmt(c['pino']['bitola'])} x {fmt(c['pino']['comprimento_mm'])} mm, "
                                    f"cabeça {c['pino']['cabeca_mm']} mm"),
                           ("Cantos (2d)", f"{_br(c['esp_canto_max'])} / {_br(2 * r['d'])} cm")]
@@ -1027,7 +1048,7 @@ class App(tk.Tk):
                     continue
                 if "conectores" in rr:
                     c = rr["conectores"]
-                    arm = f"{c['n_pentes']} pentes {c['nome_bloco']}, pino {fmt(c['pino']['comprimento_mm'])} mm"
+                    arm = f"{c['texto_pentes']}, pino {fmt(c['pino']['comprimento_mm'])} mm"
                 else:
                     c = rr["cobrinha"]
                     arm = f"{c['n_pecas']} cobrinhas ø{fmt(float(p['cob_bitola']))}"

@@ -264,10 +264,6 @@ def analisar(dados, base=None):
                     linha["bordas"] = True
                     linha["avisos"].append(f"pilar de {classe}: {lista}, a menos de 2d = {2 * d:.0f} cm da face; "
                                            "passado ao pilar como borda livre")
-                    if par.get("solucao", PADROES["solucao"]) == "conectores":
-                        par["solucao"] = "cobrinha"
-                        linha["avisos"].append("conectores em pilar de borda ou de canto ainda não implementados: "
-                                               "cobrinha")
             for f in furos:
                 df = dist_poligonos(pil["polig"], f["polig"])
                 if df < 8 * d - TOL:

@@ -114,7 +114,7 @@ def _lado_de_baixo(peca):
 TOL_BORDA = 3.0            # cm: a perna junto da borda só entra se ficar a mais disso da última perna regular
 PONTA_BORDA = 5.0          # cm: ponta da peça além da perna junto da borda, até o cobrimento (como as do LPUNC);
                            # assim toda perna tem trecho horizontal dos dois lados (vértices de cima e de baixo)
-ORDEM_TIPOS = ("extremidade", "extremidade_borda", "continua", "continua_borda")
+ORDEM_TIPOS = ("extremidade", "extremidade_borda", "continua", "continua_borda", "recuada")
 
 
 def limites_borda(p, ax=None):
@@ -188,8 +188,16 @@ def _pernas_entre(a, b, s, impar):
 
 def detalhar(p):
     """Geometria e quantidades das cobrinhas e da montagem (ver as chaves no fim). Com borda livre (E9), cada lado
-    é livre (como no pilar interno) ou de borda: as pernas e as linhas param a cobrimento da borda; na direção das
-    cobrinhas, a última perna fica junto da borda e a peça termina nela, sem ponta (Q11)."""
+    é livre (como no pilar interno) ou de borda, e o lado da borda segue as opções (pedido do usuário em 09/11/2026,
+    por região, como nos conectores):
+    - sem opção: nada passa da linha da face voltada para a borda (as peças ao lado do pilar param nela, como com a
+      borda faceando);
+    - cob_face_recuada: as peças diante dessa face, até a borda (no cobrimento), com a última perna junto dela (Q11);
+    - cob_construtivas: além dos cantos, as peças ao lado do pilar seguem até a borda.
+    Com a borda ao longo das linhas, a linha além da face voltada para a borda vira, conforme as opções, a peça inteira
+    (as duas), as duas peças das faces para fora (só as construtivas) ou a peça entre os prolongamentos das faces (só
+    a face recuada: "recuada", com as pernas de PONTA_BORDA a L - PONTA_BORDA, como os pentes de con_dist_canto)."""
+    from .parametros import cobrimento_borda
     ax = direcao_cobrinhas(p)                     # as cobrinhas correm ao longo de ax (u)
     tr = "y" if ax == "x" else "x"                # e ficam em linhas ao longo de tr (t)
     Ld = {"x": p["bx"], "y": p["by"]}
@@ -197,24 +205,21 @@ def detalhar(p):
     n = {"x": p["cob_linhas_x"], "y": p["cob_linhas_y"]}
     L, Lt, s0 = Ld[ax], Ld[tr], p["cob_s0"]
     bd = limites_borda(p, ax)
-    pernas, esp_pernas = _malha(L, s0, s[ax], n[ax], bd["u-"], bd["u+"], junto=True)
-    linhas, esp_linhas = _malha(Lt, s0, s[tr], n[tr], bd["t-"], bd["t+"], junto=False)
+    recuada, construtivas = bool(p.get("cob_face_recuada")), bool(p.get("cob_construtivas"))
+    c_b, fc = cobrimento_borda(p), p["cob_bitola"] / 10.0
+    # o lado de borda como se ela estivesse na linha da face: nada passa da face
+    rente = lambda k: None if bd[k] is None else dict(a=0.0, lim=-c_b - fc / 2)        # noqa: E731
+    bdc = {k: (bd[k] if construtivas else rente(k)) for k in ("u-", "u+")}             # peças inteiras
+    bdl = {k: (bd[k] if (construtivas or recuada) else rente(k)) for k in ("t-", "t+")}  # linhas
+    pernas, esp_pernas = _malha(L, s0, s[ax], n[ax], bdc["u-"], bdc["u+"], junto=True)
+    linhas, esp_linhas = _malha(Lt, s0, s[tr], n[tr], bdl["t-"], bdl["t+"], junto=False)
     H = altura_eixo_cobrinha(p)
     ponta = s[ax]
 
-    # Pernas além das faces (u < 0 e u > L), da face para fora, e o contorno de cada lado (-bn e L + bp).
+    # Peças da face para fora (diante das faces), com a borda verdadeira: pernas além das faces (u < 0 e u > L).
     (bn, an), (bp, ap) = (_lado(s0, s[ax], n[ax], bd["u-"], True), _lado(s0, s[ax], n[ax], bd["u+"], True))
     antes = [-x for x in [bn] + an] if bn == s0 else []                # da face u = 0 para fora
     depois = [L + x for x in [bp] + ap] if bp == s0 else []            # da face u = L para fora
-    contorno_a, contorno_d = -bn, L + bp
-    if bd["u-"] is None and bd["u+"] is None:
-        meio = pernas_ao_lado(L, s0, s[ax])                             # ao lado do pilar, entre as linhas de s0
-    else:
-        meio = _pernas_entre(contorno_a, contorno_d, s[ax], impar=bn == s0 and bp == s0)
-    lado_a = antes if antes else [contorno_a]
-    lado_d = depois if depois else [contorno_d]
-    todas = list(reversed(lado_a)) + meio + lado_d
-
     # Fim das peças do lado da borda: no cobrimento (u = -lim ou L + lim), com a ponta de PONTA_BORDA.
     fim_a = -bd["u-"]["lim"] if bd["u-"] is not None else None
     fim_d = L + bd["u+"]["lim"] if bd["u+"] is not None else None
@@ -227,23 +232,54 @@ def detalhar(p):
         fim = depois[-1] + ponta if bd["u+"] is None else fim_d
         pecas_tipo["d"] = dict(_peca(L, depois, fim, H), tipo="extremidade" if bd["u+"] is None else
                                "extremidade_borda")
-    if bd["u-"] is not None:                       # borda do lado u < 0: começa na ponta do lado livre, por baixo
-        cont = _peca(todas[-1] + ponta, list(reversed(todas)), fim_a, H)
-    elif bd["u+"] is not None:
-        cont = _peca(todas[0] - ponta, todas, fim_d, H)
+
+    # Peça inteira ao lado do pilar: do lado de uma borda, até ela só com as linhas construtivas.
+    (bnc, anc), (bpc, apc) = (_lado(s0, s[ax], n[ax], bdc["u-"], True), _lado(s0, s[ax], n[ax], bdc["u+"], True))
+    antes_c = [-x for x in [bnc] + anc] if bnc == s0 else []
+    depois_c = [L + x for x in [bpc] + apc] if bpc == s0 else []
+    contorno_a, contorno_d = -bnc, L + bpc
+    if bdc["u-"] is None and bdc["u+"] is None:
+        meio = pernas_ao_lado(L, s0, s[ax])                             # ao lado do pilar, entre as linhas de s0
+    else:
+        meio = _pernas_entre(contorno_a, contorno_d, s[ax], impar=bnc == s0 and bpc == s0)
+    lado_a = antes_c if antes_c else [contorno_a]
+    lado_d = depois_c if depois_c else [contorno_d]
+    todas = list(reversed(lado_a)) + meio + lado_d
+    fim_ac = -bdc["u-"]["lim"] if bdc["u-"] is not None else None
+    fim_dc = L + bdc["u+"]["lim"] if bdc["u+"] is not None else None
+    if bdc["u-"] is not None:                      # borda do lado u < 0: começa na ponta do lado livre, por baixo
+        cont = _peca(todas[-1] + ponta, list(reversed(todas)), fim_ac, H)
+    elif bdc["u+"] is not None:
+        cont = _peca(todas[0] - ponta, todas, fim_dc, H)
     else:
         cont = _peca(todas[0] - ponta, todas, todas[-1] + ponta, H)      # começa na ponta de fora, por baixo
-    cont["tipo"] = "continua" if bd["u-"] is None and bd["u+"] is None else "continua_borda"
+    cont["tipo"] = "continua" if bdc["u-"] is None and bdc["u+"] is None else "continua_borda"
     esp_lado = [round(b - a, 4) for a, b in zip(todas, todas[1:])]
+
+    # Peça diante da face recuada, entre os prolongamentos das faces (linhas além da face voltada para a borda).
+    rec = None
+    if recuada and (bd["t-"] is not None or bd["t+"] is not None):
+        e = PONTA_BORDA
+        pr = [e] + _pernas_entre(e, L - e, s[ax], impar=False) + [L - e] if L - 2 * e >= 1.0 else [L / 2.0]
+        rec = dict(_peca(0.0, pr, L, H), tipo="recuada")
 
     pecas = []
     for t in linhas:
-        if 0 < t < Lt:                                                 # diante das faces: cortada no pilar
-            for k in ("a", "d"):
-                if k in pecas_tipo:
+        if 0 < t < Lt:             # diante das faces: da face para fora; do lado de uma borda, com a face recuada
+            for k, lado in (("a", "u-"), ("d", "u+")):
+                if k in pecas_tipo and (bd[lado] is None or recuada):
                     pecas.append(dict(pecas_tipo[k], linha=t))
-        else:                                                          # ao lado do pilar: inteira
-            pecas.append(dict(cont, linha=t))
+        else:
+            lado_t = "t-" if t < 0 else "t+"
+            if bd[lado_t] is None or (recuada and construtivas):
+                pecas.append(dict(cont, linha=t))                      # ao lado do pilar: inteira
+            else:                                                      # além da face voltada para a borda
+                if construtivas:                                       # além dos cantos: das faces para fora
+                    for k in ("a", "d"):
+                        if k in pecas_tipo:
+                            pecas.append(dict(pecas_tipo[k], linha=t))
+                if rec:                                                # diante da face recuada
+                    pecas.append(dict(rec, linha=t))
 
     # Posições: peças iguais (mesma forma a partir da face) formam uma posição.
     grupos = {}
@@ -253,27 +289,41 @@ def detalhar(p):
         g["quant"] += 1
     posicoes = sorted(grupos.values(), key=lambda g: (ORDEM_TIPOS.index(g["tipo"]) // 2, -g["comp"]))
 
-    # Montagem: uma barra por fileira de pernas, na dobra de baixo, a cobrimento da borda nas pontas.
-    from .parametros import cobrimento_borda
-    fc, fm = p["cob_bitola"] / 10.0, p["mont_bitola"] / 10.0
+    # Montagem: uma barra por fileira de pernas, na dobra de baixo, só nas linhas que têm perna nela, mont_ext além
+    # da última e a cobrimento da borda nas pontas. Ao lado do pilar, interrompida nas faces.
+    fm = p["mont_bitola"] / 10.0
     afast = (fc + fm) / 2
-    t0, t1 = linhas[0] - p["mont_ext"], linhas[-1] + p["mont_ext"]
-    if bd["t-"] is not None:
-        t0 = max(t0, -bd["t-"]["a"] + cobrimento_borda(p))
-    if bd["t+"] is not None:
-        t1 = min(t1, Lt + bd["t+"]["a"] - cobrimento_borda(p))
+    ext = p["mont_ext"]
+    lim0 = -bd["t-"]["a"] + c_b if bd["t-"] is not None else None
+    lim1 = Lt + bd["t+"]["a"] - c_b if bd["t+"] is not None else None
+    t0, t1 = linhas[0] - ext, linhas[-1] + ext
+    if lim0 is not None:
+        t0 = max(t0, lim0)
+    if lim1 is not None:
+        t1 = min(t1, lim1)
     lados = {}
-    for pc in [cont, *pecas_tipo.values()]:      # nas fileiras de fora valem as peças da face (como no interno)
+    for pc in [cont, *([rec] if rec else []), *pecas_tipo.values()]:   # nas fileiras de fora valem as peças da face
         lados.update(_lado_de_baixo(pc))
-    fileiras_a = sorted((u for u in todas if u < 0), reverse=True)
-    fileiras_d = sorted(u for u in todas if u > L)
-    fileiras_m = sorted(u for u in todas if 0 <= u <= L)
+    nas_linhas = {}                                                    # fileira -> linhas que têm perna nela
+    for pc in pecas:
+        for u in pc["pernas"]:
+            nas_linhas.setdefault(u, set()).add(pc["linha"])
+    fileiras_a = sorted((u for u in nas_linhas if u < 0), reverse=True)
+    fileiras_d = sorted(u for u in nas_linhas if u > L)
+    fileiras_m = sorted(u for u in nas_linhas if 0 <= u <= L)
     barras, omitidas = [], {}
     for fileira in (fileiras_a, fileiras_d, fileiras_m):
         for u in fileira:
             pos = round(u + lados[u] * afast, 4)
+            ts = sorted(nas_linhas[u])
             if fileira is fileiras_m:                                 # ao lado do pilar: interrompida nas faces
-                for ini, fim, lado in ((t0, 0.0, "t-"), (Lt, t1, "t+")):
+                neg, pos_t = [t for t in ts if t < 0], [t for t in ts if t > Lt]
+                lados_m = []
+                if neg:
+                    lados_m.append((max(neg[0] - ext, lim0) if lim0 is not None else neg[0] - ext, 0.0, "t-"))
+                if pos_t:
+                    lados_m.append((Lt, min(pos_t[-1] + ext, lim1) if lim1 is not None else pos_t[-1] + ext, "t+"))
+                for ini, fim, lado in lados_m:
                     if fim - ini <= 1e-6:
                         continue
                     if bd[lado] is not None and fim - ini < p["mont_min_borda"] - 1e-9:
@@ -282,7 +332,9 @@ def detalhar(p):
                         continue
                     barras.append(dict(fileira=u, pos=pos, ini=ini, fim=fim, tipo="lateral"))
             else:
-                barras.append(dict(fileira=u, pos=pos, ini=t0, fim=t1, tipo="continua"))
+                ini = max(ts[0] - ext, lim0) if lim0 is not None else ts[0] - ext
+                fim = min(ts[-1] + ext, lim1) if lim1 is not None else ts[-1] + ext
+                barras.append(dict(fileira=u, pos=pos, ini=ini, fim=fim, tipo="continua"))
     for b in barras:
         b["comp"] = arred_cima(b["fim"] - b["ini"], p["mont_arred"])
     grupos_m = {}
@@ -296,10 +348,15 @@ def detalhar(p):
     # Alcance da armadura além de cada face livre (para o C''); nos lados de borda, None.
     alcance = {"u-": -min(todas), "u+": max(todas) - L, "t-": -min(linhas), "t+": max(linhas) - Lt}
     alcance = {k: (None if bd[k] is not None else round(v, 4)) for k, v in alcance.items()}
-    # Distância da face à linha (ou perna) de contorno de cada lado: s0 (pente mestre) ou, com a borda a menos de
-    # s0, a da borda (pode ser negativa: pilar faceando a borda).
-    (btn, _), (btp, _) = _lado(s0, s[tr], n[tr], bd["t-"], False), _lado(s0, s[tr], n[tr], bd["t+"], False)
-    contorno = {"u-": bn, "u+": bp, "t-": btn, "t+": btp}
+    # Distância da face à linha (ou perna) de contorno de cada lado: s0 (pente mestre) ou, sem ela do lado da borda,
+    # a da borda verdadeira ou a da linha da face (pode ser negativa).
+    (btn, _), (btp, _) = _lado(s0, s[tr], n[tr], bdl["t-"], False), _lado(s0, s[tr], n[tr], bdl["t+"], False)
+
+    def contorno_u(k, b_face, b_cont):
+        if bd[k] is None or (recuada and b_face == s0):
+            return b_face
+        return b_cont
+    contorno = {"u-": contorno_u("u-", bn, bnc), "u+": contorno_u("u+", bp, bpc), "t-": btn, "t+": btp}
     return dict(
         direcao=ax, transversal=tr,
         pernas=pernas, esp_pernas=esp_pernas, linhas=linhas, esp_linhas=esp_linhas,
@@ -310,5 +367,6 @@ def detalhar(p):
         montagem=barras, mont_posicoes=mont_posicoes, mont_afast=afast,
         esp_tangencial_max=tang,
         bordas=bd, alcance=alcance, t_mont=(t0, t1), contorno=contorno, mont_omitidas=omitidas,
+        opcoes=dict(face_recuada=recuada, construtivas=construtivas),
         gabarito=(-p["cob_s0"], -p["cob_s0"], p["bx"] + p["cob_s0"], p["by"] + p["cob_s0"]),
     )

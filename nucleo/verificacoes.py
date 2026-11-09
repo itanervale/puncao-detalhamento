@@ -70,8 +70,15 @@ def _bordas(p, d):
         if a >= 2 * d - 1e-9:
             out.append(("aviso", f"borda livre {lado} a {_f(a)} cm da face, 2d = {_f(2 * d)} ou mais: o contorno C' não "
                         f"é cortado, e o pilar pode ser tratado como interno", f"{ORDEM_ITEM}, 19.5.2.3"))
-    out.insert(0, ("ok", f"pilar de {pos}: borda livre {' e '.join(lados)}; armadura de punção, montagem e colapso até "
-                   f"o cobrimento da borda ({_f(cobrimento_borda(p))} cm)", f"{ORDEM_ITEM}, 19.5.2.3 e 19.5.2.4"))
+    # do lado da borda, a armadura de punção segue as opções (pedido do usuário em 09/11/2026, por região)
+    pre = "cob" if p["solucao"] == "cobrinha" else "con"
+    ligadas = [nome for chave, nome in ((f"{pre}_face_recuada", "diante da face recuada"),
+                                        (f"{pre}_construtivas", "além dos cantos (linhas construtivas)")) if p[chave]]
+    punc = ("armadura de punção do lado da borda: " + " e ".join(ligadas) if ligadas else
+            "armadura de punção só até a linha da face voltada para a borda")
+    out.insert(0, ("ok", f"pilar de {pos}: borda livre {' e '.join(lados)}; {punc}; colapso até o cobrimento da borda "
+                   f"({_f(cobrimento_borda(p))} cm), contando só as faces voltadas para a laje",
+                   f"{ORDEM_ITEM}, 19.5.2.3, 19.5.2.4 e 19.5.4"))
     return out
 
 
@@ -111,6 +118,23 @@ def conectores(p, con):
     if p["con_montagem"]:
         out.append(("ok", "montagem positiva nos conectores ligada (opcional; o padrão do escritório aproveita as "
                     "barras de flexão da laje, nota 1)", "PLANO, P7 e Q7"))
+    out += _bordas(p, d)
+    for face, a in (con.get("bordas") or {}).items():          # face voltada para a borda (E9)
+        if a <= 0:
+            continue
+        m = max((pt["n_pinos"] for pt in con["pentes"] if pt["face"] == face), default=0)
+        if not p["con_face_recuada"]:
+            out.append(("ok", f"face {face} (recuada {_f(a)} cm da borda): sem pentes; a opção \"pinos na face "
+                        f"recuada\" está desligada", "PLANO, E9"))
+        elif m == 0:
+            out.append(("ok", f"face {face}: a borda a {_f(a)} cm não deixa espaço para o 1º pino (s0, a ponta do "
+                        f"pente e o cobrimento); a face fica sem pentes", "PLANO, E9, Q10"))
+        elif m < n:
+            out.append(("ok", f"face {face}: pentes de {m} pino{'s' if m > 1 else ''}, os que cabem até o cobrimento da borda a "
+                        f"{_f(a)} cm", "PLANO, E9, Q10"))
+    if any(pt["tipo"] == "construtiva" for pt in con["pentes"]):
+        out.append(("ok", "linhas construtivas: um pente junto da borda livre, além do canto do pilar",
+                    "PLANO, E9, Q12"))
     out.append(("ok", f"d = {_f(d)} cm (negativa abaixo da cabeça do pino de {_f(p['con_cabeca_esp'])} cm)",
                 f"{ORDEM_ITEM}, 19.5.2.1"))
     return out

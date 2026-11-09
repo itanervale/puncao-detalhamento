@@ -324,10 +324,7 @@ class DlgImportar(Dialogo):
         sol = self.v_solucao.get()
         for ln in sel:
             par = dict(ln["par"])
-            if sol == "conectores" and ln.get("bordas"):
-                avisos.setdefault(ln["titulo"], []).append("conectores em pilar de borda ou de canto ainda não "
-                                                           "implementados: cobrinha")
-            elif sol in ("cobrinha", "conectores"):
+            if sol in ("cobrinha", "conectores"):
                 par["solucao"] = sol
             pilares.append(par)
         return dict(pilares=pilares, atualizar=self.v_atualizar.get(), ajustar=self.v_ajustar.get(),

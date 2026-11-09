@@ -13,6 +13,8 @@ import math
 FORMATO, VERSAO = "puncao-detalhamento", 1
 SOLUCOES = ("cobrinha", "conectores")
 DIRECOES = ("menor", "maior", "x", "y")
+OPCOES = ("con_montagem", "con_construtivas", "con_face_recuada", "col_gancho_borda", "cob_face_recuada",
+          "cob_construtivas")
 BORDAS_X = ("", "esquerda", "direita")
 BORDAS_Y = ("", "baixo", "cima")
 
@@ -45,6 +47,10 @@ PADROES = {
     "dist_borda_x": 0.0,      # distância da face do pilar à borda (cm); 0 = faceando
     "dist_borda_y": 0.0,
     "col_gancho_borda": False,  # gancho nas barras de colapso que terminam na borda (Q13: opção, sem por padrão)
+    # Pilar de borda recuado, cobrinha (pedido do usuário em 09/11/2026, por região, como nos conectores): sem as
+    # opções, nada passa da linha da face voltada para a borda
+    "cob_face_recuada": False,  # peças diante da face voltada para a borda, até ela
+    "cob_construtivas": False,  # além dos cantos: as peças ao lado do pilar seguem até a borda
     # Armadura negativa existente (só para a altura útil e o aviso dos vértices da cobrinha)
     "neg_bitola_ext": 10.0,   # camada externa (mm)
     "neg_bitola_int": 10.0,   # camada interna (mm)
@@ -84,6 +90,8 @@ PADROES = {
     "con_trilhos": 2,         # vergalhões que ligam os pinos
     "con_trilho_bitola": 8.0,
     "con_montagem": False,    # montagem positiva nos conectores: opcional, desligada (P7)
+    "con_construtivas": False,  # pilar de borda recuado: pente a mais junto da borda, além do pilar (Q12: opção)
+    "con_face_recuada": False,  # pilar de borda recuado: pentes na face voltada para a borda, com os pinos que cabem
 }
 
 
@@ -122,8 +130,7 @@ def normalizar(par):
     inteiros = ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas", "cob_linhas_x", "cob_linhas_y",
                 "con_pinos", "con_n_face_bx", "con_n_face_by", "con_trilhos")
     for k in PADROES:
-        if k in ("titulo", "solucao", "cob_direcao", "con_inclinados", "con_montagem", "borda_x", "borda_y",
-                 "col_gancho_borda"):
+        if k in ("titulo", "solucao", "cob_direcao", "con_inclinados", "borda_x", "borda_y") + OPCOES:
             continue
         if p.get(k) is None and PADROES[k] is None:
             continue
@@ -143,9 +150,8 @@ def normalizar(par):
     else:
         n = _num(inc, "con_inclinados", erros, inteiro=True)
         p["con_inclinados"] = n if n is not None else "auto"
-    p["con_montagem"] = bool(p["con_montagem"]) and str(p["con_montagem"]).lower() not in ("0", "false", "nao")
-    p["col_gancho_borda"] = bool(p["col_gancho_borda"]) and str(p["col_gancho_borda"]).lower() not in ("0", "false",
-                                                                                                         "nao")
+    for k in OPCOES:                                  # liga/desliga: aceita true/false, 1/0 e "nao"
+        p[k] = bool(p[k]) and str(p[k]).lower() not in ("0", "false", "nao")
     for k, validos in (("borda_x", BORDAS_X), ("borda_y", BORDAS_Y)):
         v = str(p[k] or "").strip().lower()
         if v in ("nenhuma", "-"):                       # como a janela mostra o lado sem borda
@@ -169,8 +175,6 @@ def _validar(p):
     for k in ("c_sup", "c_inf", "mont_ext", "mont_min_borda", "dist_borda_x", "dist_borda_y"):
         if p[k] is None or p[k] < 0:
             erros.append(f"{k} não pode ser negativo")
-    if (p["borda_x"] or p["borda_y"]) and p["solucao"] == "conectores":
-        erros.append("conectores em pilar de borda ou de canto: ainda não implementado (E9: a cobrinha primeiro)")
     for k in ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas_x", "cob_linhas_y"):
         if p[k] is None or p[k] < 1:
             erros.append(f"{k} deve ser 1 ou mais")

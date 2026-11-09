@@ -644,16 +644,16 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Colapso** (`nucleo\colapso.py`): do lado da borda, a barra termina no cobrimento e cruza uma face só (`faces`, usada na capacidade e na sugestão). Gancho de 90° opcional na ponta da borda (`gancho_90`, `altura_gancho`; a verificação confere se ele cabe entre os cobrimentos).
 - **Gancho de 90° no TQS** (medido em 09/11/2026, `ICP090` numa ponta de um ferro reto de 100): o TQS soma 8, 10, 12, 16 e 21 cm de ø8 a ø20, por gancho. Isso é 8ø + (π/2 − 1)·R, com R o raio da dobra pelo eixo (pino de 5ø, ou 8ø a partir de ø20, NBR 6118, Tabela 9.1), arredondado ao centímetro. O `straightBarMainLength` é o trecho reto, sem o gancho: na primeira gravação, o C (com o gancho) foi passado ali e o TQS somou o gancho outra vez (263 contra 253). A folha passa `reto` ao gravador.
 - **Prancha** (`nucleo\prancha_cobrinha.py`):
-  - planta: linha da borda no 240 e "BORDA LIVRE" no 221, do lado de fora da laje; cadeias de cotas além da borda; a distância da face à borda numa fila própria (dentro da cadeia, o trecho da última linha à borda é só o cobrimento, e o TQS empurrava o texto para cima do vizinho);
+  - planta: linha da borda no 0 (o 240 é a hachura de 25 %, que não sai como linha na plotagem: corrigido na E9 dos conectores) e "BORDA LIVRE" no 221, do lado de fora da laje; cadeias de cotas além da borda; a distância da face à borda numa fila própria (dentro da cadeia, o trecho da última linha à borda é só o cobrimento, e o TQS empurrava o texto para cima do vizinho);
   - seções: a laje termina reta na borda (quebra só do lado livre), barras de referência até o cobrimento, "TOPO LAJE" do lado livre e a seção B-B numa linha do lado livre; gancho do colapso no corte;
   - detalhes: um par (pelas faces e entre eixos) por forma de peça presente;
-  - gabarito: a linha do pente mestre só nos lados que a têm (aberta no lado da borda faceando), a borda no 240 e as cotas até a borda;
+  - gabarito: a linha do pente mestre só nos lados que a têm (aberta no lado da borda faceando), a borda no 0 e as cotas até a borda;
   - colapso: pontas da borda, cotas no lado livre e da face à ponta da borda, linhas de borda.
 
   Sem borda, as 15 folhas dos exemplos ficaram idênticas às de antes, primitiva por primitiva.
 - **Verificações:** uma linha "ok" com a posição e o cobrimento da borda; aviso com a borda a 2d ou mais da face (o pilar pode ser tratado como interno); o gancho.
 - **Janela:** grupo Borda livre na aba Pilar ("nenhuma", esquerda/direita, baixo/cima e as distâncias), "Gancho na borda" na aba Colapso e a posição nas propriedades.
-- **Importação:** os de borda e de canto vêm marcados, com o lado e a distância passados ao pilar (uma viga a menos de 2d conta como borda). Os de lados opostos e os girados com borda pedem confirmação e entram como internos. Com conectores, os de borda ficam com a cobrinha, com aviso. Na reimportação, quem deixou de ser de borda volta a interno.
+- **Importação:** os de borda e de canto vêm marcados, com o lado e a distância passados ao pilar (uma viga a menos de 2d conta como borda). Os de lados opostos e os girados com borda pedem confirmação e entram como internos. (Com conectores, os de borda ficavam com a cobrinha, com aviso, até a E9 dos conectores.) Na reimportação, quem deixou de ser de borda volta a interno.
 - **Conferido:** os seis pilares de `exemplos\lote_bordas.json` (borda faceando, a 20 cm, ao longo das linhas, canto com gancho e dois com as cobrinhas em y) gravados pelo TQS, com os comprimentos iguais aos do núcleo. 147 testes, 19 da E9 (`testes\teste_e9_bordas.py`).
 - **Respostas do usuário à conferência (09/11/2026):**
   - **NOTA 1 sobre o título da SEÇÃO A-A** (PUN_P21 e PUN_P24, cobrinhas em x com a borda faceando a face u = 0): o título começa na face do pilar, embaixo da caixa da NOTA 1. Quando os dois se cruzam, o título sobe acima da caixa;
@@ -661,8 +661,32 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - **montagem curta:** a sugestão foi aceita. A montagem ao lado do pilar, da face até a borda, não é desenhada quando ficaria com menos de `mont_min_borda` (30 cm, o mesmo da montagem além da última linha); a verificação diz que os vértices de baixo ficam na armadura positiva da laje. P23 e P26 perderam as barras de 15 e 10 cm;
   - **viga como borda:** confirmada (a armadura para no cobrimento da face da viga, como nos D04 DET. 1 e 10).
 
+**E9 nos conectores, feita em 09/11/2026** (regras do plano e respostas Q10 a Q12; referências: LPUNC R04 P2 e as "linhas construtivas" do PuncV1):
+- **Núcleo** (`nucleo\conectores.py`):
+  - `bordas_faces`: as faces voltadas para uma borda livre, com a distância; `extensoes`: o que o pente ocupa além dos pinos (para os lados, a cabeça ou o trilho; além das pontas, meia cabeça e o gancho do trilho, como o bloco da prancha);
+  - face voltada para a borda: pentes só com os pinos que cabem até o cobrimento (`pinos_na_face`); no exemplo P32 (borda a 20 cm), 1 pino; no P34 (40 cm), 2; a 10 cm, nenhum;
+  - faces perpendiculares: o pente da ponta a `con_dist_canto` ou afastado até o trilho ficar no cobrimento da borda (`posicoes_face` com as duas pontas);
+  - inclinados só nos cantos internos; `vizinhos_externos` marca `borda` nos pares que atravessam um canto do lado da borda, fora da verificação de 2d e das cotas de canto;
+  - linhas construtivas (`con_construtivas`, Q12, desligada): no pilar recuado, um pente a mais além do canto, junto da borda;
+  - `tipos`, `texto_pentes` e o quadro com um grupo por nº de pinos; montagem até o cobrimento das bordas.
+- **Prancha** (`nucleo\prancha_conectores.py`): um bloco por tipo de pente; contornos recortados na borda (arcos amostrados e acertados por bisseção); linha da borda e "BORDA LIVRE" na planta e no colapso; cotas só das faces com pentes; corte com a laje reta na borda, a NOTA 1 do lado que tem pentes e o "TOPO LAJE" do lado livre (ou fora da laje); colapso com as cotas do lado livre, a ponta da borda e os ganchos; o quadro, mais alto, sobe a folha.
+- **Correções de passagem:**
+  - **linha da borda no nível 0:** o 240 é a hachura de 25 % do pilar e da laje em corte, e uma linha solta nele não sai na plotagem (visto na prancha do P32 gravada pelo TQS). Corrigido também na cobrinha;
+  - **quebra do pilar no corte dos conectores:** a amplitude era bx/2,8 (do modelo, bx = 50); num pilar de 150, o zigue-zague invadia o pente desenhado embaixo. Limitada à do modelo: só o P9 (60 × 60) do lote mudou.
+- **Conferido:** os cinco pilares de `exemplos\lote_bordas_conectores.json` gravados pelo TQS, com os comprimentos iguais aos do núcleo; as folhas dos pilares internos idênticas às de antes, menos o P9 (a quebra). 159 testes.
+- **Respostas do usuário à conferência (09/11/2026):**
+  - **pinos na face recuada** passam a ser opção, desligada por padrão, nas duas soluções (`con_face_recuada`, `cob_face_recuada`); com ela, os pentes de 1 pino ficam (P32);
+  - **linhas construtivas** também na cobrinha (`cob_construtivas`), desligada. Leitura escolhida pelo usuário: **por região, como nos conectores**. Sem opção, nada passa da linha da face voltada para a borda (as peças ao lado do pilar param nela, como com a borda faceando). A face recuada liga o que fica diante da face; as construtivas, o que fica além dos cantos (as peças ao lado do pilar seguem até a borda). Com a borda ao longo das linhas, a linha além da face vira a peça inteira, as duas peças das faces para fora ou a peça entre os prolongamentos das faces (tipo "recuada", pernas de 5 a L − 5, como os pentes a 5 cm do canto). Com as duas opções, as pranchas são as de antes;
+  - **colapso:** a face voltada para a borda não conta no As, nem com o pilar recuado (antes, a barra que passava da face até a borda contava 2 faces): borda = 3 faces, canto = 2.
+- **De passagem:** a montagem de cada fileira da cobrinha passou a ir só nas linhas que têm perna nela (sem pilar de borda, igual a antes; no P26, a barra entre a face e a borda deixou de atravessar a frente da face, onde não há perna).
+- **Conferência do usuário (09/11/2026, 3ª):**
+  - **NOTA 5** quando a montagem da borda curta é omitida: "NA BORDA CURTA, ENTRE A FACE DO PILAR E A BORDA LIVRE, NÃO HÁ BARRA DE MONTAGEM: UTILIZAR A ARMADURA POSITIVA DA LAJE COMO MONTAGEM DOS VÉRTICES DE BAIXO DA ARMADURA DE PUNÇÃO.";
+  - **pente mestre fora da borda curta:** a linha de s0 do pente mestre e as cotas de s0 ficam num lado livre (antes, a primeira que existia, mesmo na faixa entre a face e a borda); as duas cotas de s0 nunca no mesmo canto. Com a linha à direita (borda à esquerda), o texto "PENTE MESTRE" vai à direita das marcas dos cortes, com a chamada para a esquerda;
+  - **gabarito dos pentes mestres** como pilar de borda ou de canto, desprezando a borda curta: do lado da borda, sem pente mestre e com a borda na face;
+  - **NOTA 2 do gabarito:** a chamada cruzava o texto da cota do lado maior (no meio da altura, em todas as pranchas da cobrinha). Agora mira 3/4 da altura; sem pente mestre à direita, vai à linha de baixo (ou de cima) por fora da cadeia de cotas;
+  - **outras sobreposições achadas** com uma ferramenta nova (`ferramentas\sobreposicoes.py`): o "TOPO LAJE" da seção A-A sob as chamadas da NOTA 1 (em todas as pranchas: agora num trecho livre da face superior), o "PENTE MESTRE" sobre a marca do corte A e as duas cotas de s0 no mesmo canto (borda faceando à esquerda), as marcas dos cortes sobre a cadeia de cotas (borda em cima: agora além da borda e da cadeia) e, nas cobrinhas em x, a chamada do pente mestre sobre um texto da cadeia (agora dobra antes das cotas e cruza a cadeia no tique). Os conectores não tinham nenhuma. Um teste passa todos os exemplos e os casos de borda pela ferramenta.
+
 **Depois desta rodada:**
-- pilares de borda e de canto com conectores (E9: a cobrinha está feita);
 - pilares circulares;
 - aberturas;
 - conectores "posterior à armadura";
