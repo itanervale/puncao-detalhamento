@@ -1100,15 +1100,29 @@ class App(tk.Tk):
         if not pilares:
             self.msg("Nada importado: os pilares já estão no projeto.", "aviso")
             return
+        ajustes = {}
+        if r.get("ajustar"):                       # nos novos e nos atualizados, com o d da laje importada
+            importados = {str(q["titulo"]) for q in r["pilares"]} - set(pulados)
+            for k, q in enumerate(pilares):
+                if str(q.get("titulo")) in importados:
+                    pilares[k], mud = imp.ajustar_limites(q)
+                    if mud:
+                        ajustes[q["titulo"]] = mud
         self.projeto["pilares"] = pilares
         self.projeto["origem_tqs"] = r["origem"]
-        self._editado(f"Importados do TQS ({r['origem']['planta']}): {n_novos} novo(s), {n_atual} atualizado(s)" +
-                      (f"; pulados (já no projeto): {', '.join(pulados)}" if pulados else "") + ".")
+        tit = str(r["pilares"][0]["titulo"])
+        # Primeiro o pilar (a atualização refaz as mensagens com as verificações dele); depois o resumo da importação.
+        self.ir(next((k for k, q in enumerate(pilares) if str(q.get("titulo")) == tit), 0))
+        resumo = (f"Importados do TQS ({r['origem']['planta']}): {n_novos} novo(s), {n_atual} atualizado(s)" +
+                  (f"; pulados (já no projeto): {', '.join(pulados)}" if pulados else "") +
+                  (f"; {len(ajustes)} ajustado(s) aos limites da NBR 6118" if ajustes else "") + ".")
+        self._editado(resumo)
         for tit, avs in r["avisos"].items():
             for a in avs:
                 self.msg(f"{tit}: {a}", "aviso")
-        tit = str(r["pilares"][0]["titulo"])
-        self.ir(next((k for k, q in enumerate(pilares) if str(q.get("titulo")) == tit), 0))
+        for tit, mud in ajustes.items():
+            self.msg(f"{tit}: ajustado à NBR 6118: {'; '.join(mud)}", "ok")
+        self.status(resumo, "ok")
 
     def colar(self):
         try:

@@ -245,6 +245,7 @@ def main(argv=None):
     ap.add_argument("--projeto", help="grava um projeto com os pilares importados")
     ap.add_argument("--pilares", help="títulos separados por vírgula (padrão: os internos retangulares)")
     ap.add_argument("--todos", action="store_true", help="todos os retangulares, inclusive borda e canto")
+    ap.add_argument("--ajustar", action="store_true", help="s0 e espaçamentos nos limites da NBR 6118 (0,5d e 0,75d)")
     a = ap.parse_args(argv)
     tmp = a.tmp or tempfile.mkdtemp(prefix="pun_tqs_")
     try:
@@ -269,7 +270,8 @@ def main(argv=None):
             nomes = {n.strip() for n in a.pilares.split(",")} if a.pilares else None
             sel = [ln for ln in linhas if ln["suportado"] and
                    (ln["titulo"] in nomes if nomes else (a.todos or importacao.selecao_padrao(ln)))]
-            proj = dict(formato="puncao-detalhamento", versao=1, pilares=[ln["par"] for ln in sel],
+            pars = [importacao.ajustar_limites(ln["par"])[0] if a.ajustar else ln["par"] for ln in sel]
+            proj = dict(formato="puncao-detalhamento", versao=1, pilares=pars,
                         origem_tqs=dict(edificio=dados["edificio"], planta=dados["planta"], data=dados["data"]))
             pathlib.Path(a.projeto).write_text(json.dumps(proj, ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"Projeto: {a.projeto} ({len(sel)} pilar(es): {', '.join(ln['titulo'] for ln in sel)})",

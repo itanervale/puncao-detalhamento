@@ -555,7 +555,13 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - **demais parâmetros:** os do pilar atual, como no "Colar do Excel"; a solução dos pilares novos pode ser escolhida no diálogo;
   - **pilar já no projeto (mesmo nome):** atualiza dimensões, h, cobrimentos, repetições e a origem, e mantém o detalhamento; ou é pulado (opção);
   - **esforços:** guardados no pilar (`tqs.esforcos`), na árvore, nas propriedades e na tabela do lote, só para conferência;
-  - **detalhamento:** a importação não ajusta s0 e espaçamentos ao d da laje importada; as verificações mostram o que passa dos limites.
+  - **detalhamento:** opção "Ajustar s0 e os espaçamentos aos limites da NBR 6118" (pedido do usuário em 09/11/2026; ligada por padrão; `importacao.ajustar_limites`, `--ajustar` na linha de comando). Com o d de cada pilar, s0 <= 0,5d e sr <= 0,75d, arredondados para baixo ao cm (o TQS arredonda cada trecho do ferro genérico; no modelo, d = 23 dá 11 e 17). Só diminui; o número de linhas não muda. Vale para as duas soluções e também para os pilares atualizados.
+- **Regras confirmadas pelo usuário em 09/11/2026:** todas as acima.
+- **Correção:** a troca de pilar no fim da importação refazia as mensagens e apagava o resumo, os avisos e os ajustes; agora o resumo vem depois (e também na barra de status).
+- **Licença do TQS (09/11/2026):** o usuário trocou a licença do TQS para a pessoal e pediu a reemissão dos DWG-TQS deste app, sem nenhuma referência ao licenciado anterior, também nas propriedades dos arquivos.
+  - **Onde ficava a referência:** no cabeçalho do DWG-TQS (número e nome da licença) e no carimbo que o TQS desenha na margem esquerda do PDF.
+  - **Reemissão:** as saídas de exemplo (`P2_cobrinha`, `P2x_cobrinha`, `P02_conectores`, `lote_cobrinha`, `lote_conectores`) foram regeradas pelo `detalhar.py`, e as réplicas da E0 pelo `teste_gravacao.py`. Os históricos com a licença anterior (`anteriores\`, `.BAK`, cópias com hora no nome, listagens `TABFER` e o autossalvamento do `PUN_P02` em `DesenhosReferencia\`) saíram da pasta do app.
+  - **Conferência:** nenhum arquivo da pasta do app tem mais a licença anterior. O cabeçalho e o carimbo do PDF trazem a licença nova, e as réplicas continuam iguais aos modelos.
 - **Edifício de desenvolvimento** (planta "Primeiro", laje lisa L1 de 20 cm, 12 pilares):
   - internos: P5 (25 × 80), P7 (40 × 40) e P11 (40 × 100); P6 é circular (ø50), e os demais são de borda ou de canto;
   - d = 15,5 cm; combinações de ELU 9, 10, 12 e 13;

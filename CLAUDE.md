@@ -89,6 +89,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - **`TQSJan`:** se o `TQSJan.py` da instalação não importar, entra um módulo vazio no lugar antes do `TQSModel` (`leitor_tqs._tqs`).
 - **Esforços da grelha:** o `FGREANA.EXE` lê o `GREANA.TMP` (nome da grelha `FOR<nnnn>M` e nº da combinação) e escreve a listagem na saída padrão, em cp1252. Precisa do `FOR<nnnn>M.GRE` e do `.RSX`; as listagens `GREANA*.LST` não são necessárias.
 - **Títulos:** use `formattedTitle` da seção do pilar ou da laje; o `objectTitle` vem vazio.
+- **Licença no arquivo:** o TQS grava no cabeçalho de cada DWG-TQS o número e o nome do licenciado (as "propriedades" do arquivo) e desenha o mesmo nome no carimbo da margem esquerda do PDF. Os `.BAK` e as cópias em `anteriores\` guardam o licenciado de quando foram gravados. Para reemitir com outra licença, regere as saídas pelo app e tire os históricos da pasta.
 - **Dados de teste públicos:** o cabeçalho das listagens do TQS traz o nome e o endereço do licenciado. Corte-o antes de gravar em `testes\dados\`, e não ponha caminhos de edifícios do usuário no repositório (o teste do leitor usa a variável `PUN_EDIFICIO_TESTE`).
 
 ## Lições do Tk (janela)

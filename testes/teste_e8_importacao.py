@@ -157,6 +157,26 @@ class TesteAnalise(unittest.TestCase):
         self.assertFalse(imp.selecao_padrao(linhas["P7"]))
         self.assertTrue(imp.selecao_padrao(linhas["P5"]))
 
+    def test_ajustar_limites(self):
+        par = self.linhas["P7"]["par"]                                   # laje de 20: d = 15,5
+        avisos = lambda q: [v[1] for v in detalhar(q)["verificacoes"] if v[0] == "aviso"]    # noqa: E731
+        self.assertTrue(any("passa de" in a for a in avisos(par)))
+        novo, mud = imp.ajustar_limites(par)
+        self.assertEqual((novo["cob_s0"], novo["cob_s"], novo["con_s0"], novo["con_sr"]), (7.0, 11.0, 7.0, 11.0))
+        self.assertEqual(len(mud), 4)
+        self.assertIn("s0 da cobrinha 11 -> 7 (0,5d = 7,75)", mud)
+        self.assertNotIn("cob_s_x", novo)                                # vazio segue o cob_s
+        self.assertFalse(any("passa de" in a for a in avisos(novo)))
+        self.assertFalse(any("passa de" in a for a in avisos(dict(novo, solucao="conectores"))))
+        self.assertEqual(imp.ajustar_limites(novo)[1], [])                # já dentro: nada muda
+
+    def test_ajustar_respeita_o_modelo_e_valores_menores(self):
+        p2 = dict(titulo="P2", bx=150, by=50, h_laje=27, c_sup=2.0, c_inf=2.0)     # d = 23: 11 e 17 já no limite
+        self.assertEqual(imp.ajustar_limites(p2)[1], [])
+        q, mud = imp.ajustar_limites(dict(p2, cob_s0=8, cob_s_x=20))
+        self.assertEqual((q["cob_s0"], q["cob_s_x"]), (8, 17.0))
+        self.assertEqual(mud, ["espaçamento em x 20 -> 17 (0,75d = 17,25)"])
+
     def test_mesclar(self):
         atuais = [dict(titulo="P7", bx=30, by=30, cob_s=12.0), dict(titulo="P2")]
         novos = [self.linhas["P7"]["par"], self.linhas["P5"]["par"]]
@@ -265,6 +285,21 @@ class TesteJanela(unittest.TestCase):
         self.assertEqual(len(self.app.tv.get_children("tqs")), 4)
         self.app.mais_pilar()
         self.assertNotIn("tqs", self.app.pilar)                         # o pilar novo não herda a origem
+
+    def test_importar_ajustando_aos_limites(self):
+        self.app.projeto["pilares"] = [dict(titulo="P7", bx=30, by=30, cob_s=15.0, cob_linhas=5)]
+        self.app.modificado = True
+        linhas = imp.analisar(self.dados, self.app.pilar)
+        r = dict(pilares=[ln["par"] for ln in linhas if ln["titulo"] in ("P5", "P7")], atualizar=True, ajustar=True,
+                 origem=dict(edificio="X", planta="Primeiro", data=""), avisos={})
+        with mock.patch("janela.app.DlgImportar") as dlg:
+            dlg.return_value.mostrar.return_value = r
+            self.app.importar_tqs()
+        p7, p5 = self.app.projeto["pilares"]
+        self.assertEqual((p7["bx"], p7["cob_s"], p7["cob_s0"], p7["cob_linhas"]), (40.0, 11.0, 7.0, 5))
+        self.assertEqual(p5["cob_s0"], 7.0)
+        texto = self.app.txm.get("1.0", "end")
+        self.assertIn("P7: ajustado à NBR 6118", texto)
 
 
 @unittest.skipUnless(TEM_TQS and EDIFICIO and os.path.isdir(EDIFICIO), "sem o TQS ou sem PUN_EDIFICIO_TESTE")

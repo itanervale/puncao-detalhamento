@@ -270,6 +270,33 @@ def analisar(dados, base=None):
     return out
 
 
+LIMITES = (("cob_s0", 0.5), ("cob_s", 0.75), ("cob_s_x", 0.75), ("cob_s_y", 0.75), ("con_s0", 0.5), ("con_sr", 0.75))
+ROTULOS = dict(cob_s0="s0 da cobrinha", cob_s="espaçamento da malha", cob_s_x="espaçamento em x",
+               cob_s_y="espaçamento em y", con_s0="s0 dos conectores", con_sr="sr dos conectores")
+
+
+def ajustar_limites(par):
+    """Traz s0 e os espaçamentos para os limites da NBR 6118:2026 (19.5.3.3 e Figura 19.9): s0 <= 0,5d e sr <= 0,75d,
+    arredondados para baixo ao centímetro (o TQS arredonda cada trecho do ferro genérico ao cm; no modelo, d = 23
+    dá 11 e 17). Só diminui o que passa do limite; o número de linhas não muda. Vale para as duas soluções, para a
+    troca de solução depois não voltar a passar. Devolve (pilar, [mudanças em texto])."""
+    p, erros = normalizar(par)
+    if erros:
+        return dict(par), []
+    d = altura_util(p)
+    novo, mud = dict(par), []
+    for k, f in LIMITES:
+        v = p.get(k)
+        if v is None or (k in ("cob_s_x", "cob_s_y") and par.get(k) is None):
+            continue                                       # s_x e s_y vazios seguem o cob_s
+        lim = math.floor(f * d + 1e-9)
+        if v > lim + 1e-9:
+            novo[k] = float(lim)
+            mud.append(f"{ROTULOS[k]} {v:g} -> {lim} ({'0,5' if f == 0.5 else '0,75'}d = "
+                       f"{f * d:.2f})".replace(".", ","))
+    return novo, mud
+
+
 def selecao_padrao(linha):
     """Marcados na abertura do diálogo: os internos sem aviso de abertura ou capitel."""
     return (linha["suportado"] and linha["posicao"] == "interno"

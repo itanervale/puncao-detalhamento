@@ -86,6 +86,7 @@ Um projeto tem vários pilares. Na aba Lote:
    - **borda e canto:** podem ser marcados, com confirmação, porque o app os detalharia como internos;
    - **seção não retangular** (circular, L, U): não podem ser marcados.
 4. **OK** acrescenta os pilares ao projeto. Os que já estão no projeto com o mesmo nome têm atualizadas as dimensões, o h, os cobrimentos e as repetições; o detalhamento escolhido fica. Os demais parâmetros vêm do pilar atual da janela.
+5. **Ajustar s0 e os espaçamentos aos limites da NBR 6118** (opção ligada por padrão): com o d de cada pilar importado, s0 e os espaçamentos da cobrinha e dos conectores que passam de 0,5d e 0,75d descem até o limite, arredondados para baixo ao centímetro (laje de 20, d = 15,5: s0 = 7 e sr = 11). O número de linhas não muda. Vale também para os pilares do projeto que forem atualizados; as mensagens dizem o que mudou.
 
 **O que vem do TQS:**
 - **pilar:** nome e seção. Girado de 0° ou 90°, bx e by saem da poligonal; em outro ângulo, ficam nos eixos do pilar, com aviso;
@@ -106,7 +107,7 @@ python -m dwg_tqs.leitor_tqs plantas "C:\TQS\<edifício>"
 python -m dwg_tqs.leitor_tqs planta "C:\TQS\<edifício>" <planta> --saida leitura.json --projeto projeto.json
 ```
 
-O segundo grava a leitura e um projeto com os pilares internos (ou os de `--pilares P5,P7`; `--todos` inclui os de borda e canto).
+O segundo grava a leitura e um projeto com os pilares internos (ou os de `--pilares P5,P7`; `--todos` inclui os de borda e canto; `--ajustar` traz s0 e os espaçamentos para os limites da norma).
 
 ## Linha de comando
 
@@ -227,7 +228,7 @@ As verificações (s0 ≤ 0,5d, espaçamentos ≤ 0,75d, pinos ou pernas vizinho
 
 - Só pilares internos e retangulares. Faltam os de borda e de canto, os circulares e as aberturas na laje.
 - Conectores só no arranjo "antes da armadura" (pentes com trilhos); falta o "posterior à armadura".
-- A importação do TQS não ajusta o detalhamento (s0, espaçamentos, bitolas) à laje importada: as verificações mostram o que passa dos limites, e o projetista corrige.
+- A importação do TQS ajusta só s0 e os espaçamentos (opção). O número de linhas, as bitolas e o colapso progressivo continuam com o projetista; as verificações mostram o que passa dos limites.
 
 ## Testes
 
