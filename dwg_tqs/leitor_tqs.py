@@ -72,6 +72,26 @@ def _copiar_raiz(edificio, tmp):
     return dest
 
 
+def _dentro(base, alvo):
+    base, alvo = os.path.realpath(base), os.path.realpath(alvo)
+    try:
+        return os.path.commonpath([base, alvo]) == base
+    except ValueError:                                  # discos diferentes
+        return False
+
+
+def pasta_na_copia(edificio, pasta, copia):
+    """Onde a pasta da planta vai na cópia. A pasta vem dos dados do edifício (GetFloorPath): só vale uma subpasta
+    do próprio edifício, para a cópia não sair da pasta temporária (um caminho com ".." passaria num startswith)."""
+    edif, orig = os.path.realpath(edificio), os.path.realpath(pasta)
+    if not _dentro(edif, orig) or orig == edif:
+        raise ErroLeitura(f"a pasta da planta fica fora do edifício: {pasta}")
+    dest = os.path.join(os.path.realpath(copia), os.path.relpath(orig, edif))
+    if not _dentro(copia, dest):
+        raise ErroLeitura(f"pasta da planta inválida: {pasta}")
+    return orig, dest
+
+
 def _abrir_edificio(copia):
     TQSBuild, _ = _tqs()
     os.chdir(copia)
@@ -200,10 +220,8 @@ def ler_planta(edificio, planta, tmp=None, com_esforcos=True):
             raise ErroLeitura(f"o edifício não tem a planta {planta!r}")
         if not info["existe"]:
             raise ErroLeitura(f"a pasta da planta não existe: {info['pasta']}")
-        dest = os.path.join(copia, os.path.relpath(info["pasta"], edificio)) \
-            if os.path.normcase(info["pasta"]).startswith(os.path.normcase(os.path.normpath(edificio))) \
-            else os.path.join(copia, planta)
-        shutil.copytree(info["pasta"], dest, dirs_exist_ok=True)
+        orig, dest = pasta_na_copia(edificio, info["pasta"], copia)
+        shutil.copytree(orig, dest, dirs_exist_ok=True)
         dados = dict(formato="puncao-leitura-tqs", versao=1, edificio=os.path.normpath(edificio), planta=planta,
                      projeto=info["projeto"], repeticao=info["repeticao"], data=datetime.now().isoformat(timespec="seconds"),
                      cobrimentos=_cobrimentos(b))

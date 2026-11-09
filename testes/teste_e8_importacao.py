@@ -170,6 +170,32 @@ class TesteAnalise(unittest.TestCase):
         self.assertEqual((n_novos, n_atual, pulados, pil[0]["bx"]), (1, 0, ["P7"], 30))
 
 
+class TestePastaDaPlanta(unittest.TestCase):
+    """A pasta da planta vem dos dados do edifício: a cópia não pode sair da pasta temporária."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="pun_e8p_")
+        self.edif = os.path.join(self.tmp, "Edificio")
+        os.makedirs(os.path.join(self.edif, "Primeiro"))
+        self.copia = os.path.join(self.tmp, "copia", "Edificio")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_subpasta_do_edificio(self):
+        from dwg_tqs import leitor_tqs as lt
+        orig, dest = lt.pasta_na_copia(self.edif, os.path.join(self.edif, "Primeiro"), self.copia)
+        self.assertEqual(os.path.basename(orig), "Primeiro")
+        self.assertEqual(dest, os.path.join(os.path.realpath(self.copia), "Primeiro"))
+
+    def test_recusa_fora_do_edificio(self):
+        from dwg_tqs import leitor_tqs as lt
+        for pasta in (os.path.join(self.edif, "..", "Outro"), os.path.join(self.edif, "Primeiro", "..", ".."),
+                      self.edif, self.tmp + "x"):
+            with self.subTest(pasta=pasta), self.assertRaises(lt.ErroLeitura):
+                lt.pasta_na_copia(self.edif, pasta, self.copia)
+
+
 @unittest.skipUnless(TEM_TELA, "sem tela para o Tk")
 class TesteJanela(unittest.TestCase):
     def setUp(self):
