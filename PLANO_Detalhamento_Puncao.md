@@ -577,8 +577,54 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - leitura completa em 3 s.
 - **Testes:** `testes\teste_e8_importacao.py`, com 19 testes. Usam uma leitura real gravada em `testes\dados\`, sem o cabeçalho do licenciado e com o caminho do edifício trocado. O teste do leitor numa cópia do edifício real usa a variável `PUN_EDIFICIO_TESTE`. A suíte tem 110.
 
+**E9. Pilares de borda e de canto** (avaliação de 09/11/2026, antes de implementar; pedido do usuário)
+
+- **O que a NBR 6118:2026 diz:**
+  - Figuras 19.3 e 19.4: na borda e no canto, o contorno crítico é aberto e termina na borda livre (u* reduzido entra no cálculo, fora deste app);
+  - 19.5.3.3: armadura disposta radialmente a partir do perímetro do pilar;
+  - 19.5.3.4, Figuras 19.8 e 19.9: s0 ≤ 0,5d, sr ≤ 0,75d e C'' a 2d do último contorno; as figuras só mostram pilar interno;
+  - 19.5.4 e Figura 19.10: colapso com As das barras que cruzam cada face e ancoragem além de C' ou C'';
+  - 20.2 e Figura 20.1: bordas livres protegidas por armadura transversal e longitudinal (o U de borda, detalhe da laje).
+
+  A norma não desenha a disposição da armadura na borda: ela depende do padrão do escritório.
+- **Referências:**
+  - **LPUNC (R04 P2, borda):** conectores nas três faces voltadas para a laje. As linhas diante das faces perpendiculares à borda vão até ela, e há pente inclinado só nos cantos internos.
+  - **PuncV1:** o mesmo, mais duas linhas "construtivas" de pentes ao longo da borda livre, além do pilar.
+  - **Desenhos do escritório:** D04 DET. 1 (viga numa face, tratada como borda) tem estribos só nas outras três faces; D04 DET. 10 (vigas em duas faces, tratado como canto), só nas outras duas.
+  - **R04 P2 (comentários do IBRACON):** colapso com 3 ø8 paralelas à borda (cruzam duas faces) e 3 ø10 perpendiculares (cruzam só a face interna).
+  - **Parceiro:** só os modelos do P02 interno (cobrinha e conectores).
+- **O que o app supõe hoje (pilar interno):**
+  - **cobrinha:** malha simétrica, com pernas antes e depois do pilar ao longo da cobrinha e linhas dos dois lados; peças "da face" nos dois lados, inteiras ao lado do pilar; montagem dos dois lados;
+  - **conectores:** pentes nas quatro faces e inclinados nos quatro cantos;
+  - **colapso:** barras nas duas direções, `col_ext` além das duas faces;
+  - **prancha e verificações:** cortes A-A e B-B, gabarito com os pentes mestres nas quatro faces, verificações de 2d e de C'' nos quatro lados;
+  - **importação:** já sabe de que lados fica a borda e a que distância da face.
+- **Modelo de dados proposto:**
+  - `bordas`: os lados com borda livre ("esquerda", "direita", "baixo", "cima", com bx na horizontal da prancha); vazio = interno, um lado = borda, dois vizinhos = canto;
+  - `dist_borda`: distância da face do pilar à borda livre, por lado (0 = faceando);
+  - `c_borda`: cobrimento na borda livre, até onde vão as peças, os pinos e as barras.
+
+  A importação preenche `bordas` e `dist_borda` com o que já mede.
+- **Regras propostas:**
+  - armadura de punção só do lado da laje: nada além da borda; peças, pinos e barras param a `c_borda` dela;
+  - **cobrinha:** sem as peças diante da face da borda; as que correm na direção da borda vão até ela;
+  - **conectores:** pentes só nas faces voltadas para a laje (três na borda, duas no canto), distribuídos pela face inteira; inclinados só nos cantos internos;
+  - **colapso:** as barras paralelas à borda como no interno; as perpendiculares entram pela face interna e terminam na borda (contam uma face);
+  - **verificações:** 2d e C'' só do lado da laje; a ancoragem do colapso além de C'' só do lado da laje;
+  - **prancha:** a borda livre desenhada, os cortes e o gabarito só do lado da laje.
+- **Perguntas ao usuário (09/11/2026):**
+  - **Q9. Referência gráfica:** há desenho do parceiro ou do escritório com pilar de borda e de canto, nas duas soluções, como os modelos do P02? Com ele, reproduzo o padrão como na E0; sem ele, sigo as regras propostas e você ajusta.
+  - **Q10. Pilar recuado da borda** (0 < a < 2d): detalhar como borda, com armadura também entre a face e a borda quando couber (a ≥ s0 + `c_borda`)? Ou só o pilar faceando a borda (a = 0) nesta etapa? Recomendação: aceitar a ≥ 0.
+  - **Q11. Cobrinha na borda:** as cobrinhas que correm na direção da borda vão até ela, terminando a `c_borda`, com uma perna junto da borda? Recomendação: sim, como o LPUNC faz com os pinos.
+  - **Q12. Conectores na borda:** linhas construtivas de pentes ao longo da borda livre, além do pilar (como o PuncV1)? Recomendação: não por padrão, com a opção.
+  - **Q13. Colapso na borda:** as barras perpendiculares à borda entram e terminam na borda com gancho (dobra para cima, a `c_borda`), contando uma face, como no R04 P2? Ou só as paralelas à borda? Recomendação: as duas, com gancho.
+  - **Q14. U de borda** (20.2, Figura 20.1) junto ao pilar: desenhar nesta prancha ou deixar para o desenho da laje, com uma nota? Recomendação: nota.
+  - **Q15. Cobrimento na borda livre:** parâmetro próprio (`c_borda`), com padrão de 2,5 cm? Recomendação: sim.
+  - **Q16. Ordem:** cobrinha primeiro (núcleo e prancha), depois conectores, como nas E1 a E4? Recomendação: sim.
+  - **Q17. Importação:** pilares de borda e de canto passam a vir marcados, sem a confirmação de hoje? Os de dois lados opostos ("verificar") continuam pedindo conferência. Recomendação: sim.
+
 **Depois desta rodada:**
-- pilares de borda e de canto;
+- pilares de borda e de canto (E9, em avaliação);
 - pilares circulares;
 - aberturas;
 - conectores "posterior à armadura";
