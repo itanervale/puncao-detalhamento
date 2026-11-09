@@ -32,7 +32,15 @@ def main():
     ap.add_argument("--so-relatorio", action="store_true", help="só o relatório, sem gravar DWG (sem o TQS)")
     a = ap.parse_args()
     if not a.so_relatorio:
-        from dwg_tqs import prancha                     # só aqui: precisa do TQS
+        try:
+            from dwg_tqs import prancha                 # só aqui: precisa do TQS
+        except ImportError as e:
+            sys.exit(f"A gravação do DWG precisa do TQS V25 com a TQSPythonInterface ({e}).\n"
+                     "Sem o TQS, use --so-relatorio (relatório com os comprimentos do núcleo) ou a prévia da janela.")
+    if a.png and not a.so_relatorio:
+        import importlib.util
+        if importlib.util.find_spec("matplotlib") is None:  # confere antes de gravar o primeiro DWG
+            sys.exit("A imagem de conferência (--png) precisa do matplotlib: pip install -r requirements-dev.txt")
     nome_proj = os.path.splitext(os.path.basename(a.projeto))[0]
     projeto = ler_projeto(a.projeto)
     pasta = a.saida or projeto.get("pasta_saida") or os.path.join(RAIZ, "saidas", nome_proj)

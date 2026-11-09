@@ -19,7 +19,8 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - `detalhar.py` (raiz): linha de comando, um DWG por pilar.
 - `janela\` (E5): `app.py` (a janela), `cena.py` (prévia da folha na área CAD) e os módulos copiados do app de telas (`cad_ribbon`, `cad_vista`, `cad_dialogo`, `cad_icones`, com a origem no cabeçalho). Abertura: `Detalhar Punção.bat` / `janela_puncao.pyw`.
 - `ferramentas\`: leitura e comparação de DWG, imagens, esquema da geometria.
-- `testes\`: os da E1 e da E3 não precisam do TQS; os da E0 e os DWG da E2 e da E4 são pulados sem ele ou sem os modelos.
+- `testes\`: os da E1 e da E3 não precisam do TQS; os da E0 e os DWG da E2 e da E4 são pulados sem ele ou sem os modelos. Os da E7 (`teste_e7_repositorio.py`) guardam a independência do repositório: imports, `sys.path`, exemplos, faltas do TQS e do matplotlib, atalho e `.gitignore`.
+- **Fechamento (E7):** antes de dar uma etapa por pronta, teste num clone limpo do GitHub, numa pasta com espaço e "ç", e num venv sem TQS, Pillow e matplotlib (README, "Do clone ao DWG").
 - **Unidades e convenções:** comprimentos em cm, bitolas em mm. `bx` é a dimensão do pilar na horizontal da prancha e `by` na vertical; as coordenadas são relativas ao canto inferior esquerdo do pilar.
 
 ## Regras
@@ -77,6 +78,8 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - num DWG novo, defina `idmniv`, `idmnic`, `idmnil` e `idmnib`, senão chamadas e ticks saem no 216.
 - **Cota alinhada (`DimAligned`):** o texto segue o sentido do 1º ao 2º ponto; com os pontos da direita para a esquerda, ele sai de cabeça para baixo. Ordene os pontos da esquerda para a direita.
 - **Arquivos:** leia e grave com `with` ou `pathlib`; os testes rodam limpos com `-W error::ResourceWarning`.
+- **Barra invertida em texto gravado por script:** num caminho como `nucleo\relatorio.py`, o "\r" e o "\t" viram caracteres de controle se o texto passar por uma string comum do Python (aconteceu no plano). Use string crua (`r"..."`) ou `chr(92)`.
+- **Faltas de dependência:** a linha de comando e as ferramentas param com uma mensagem dizendo o que falta (TQS, matplotlib), nunca com traceback e nunca depois de gravar parte do lote.
 
 ## Lições do Tk (janela)
 - **Threads:** a gravação pelo TQS roda numa thread e devolve o resultado por uma fila. As variáveis do Tk (`StringVar.get()`) só podem ser lidas na thread principal: leia tudo antes de abrir a thread.

@@ -15,10 +15,13 @@ import os
 import pathlib
 import sys
 
-import matplotlib
+try:
+    import matplotlib
+except ImportError as e:                                # também importado pelo detalhar.py --png
+    raise ImportError("A imagem de conferência precisa do matplotlib: pip install -r requirements-dev.txt") from e
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import Arc, Circle, Polygon
+import matplotlib.pyplot as plt                         # noqa: E402
+from matplotlib.patches import Arc, Circle, Polygon     # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)

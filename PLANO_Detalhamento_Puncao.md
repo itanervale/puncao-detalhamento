@@ -374,7 +374,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
     - as barras de montagem são identificadas na vertical, à esquerda;
     - o colapso e o gabarito usam bx e by da prancha.
   - **Exemplos:** `exemplos\P2x_cobrinha.json`, o P2 girado (os mesmos ferros; o colapso troca de face), e o P8 (40 × 90) no `lote_cobrinha.json`. Os comprimentos do TQS conferem com o núcleo nos dois.
-  - **Testes:** 4 da folha em x e o DWG do P2 em x pelo TQS, em `testes	este_e2_prancha.py`.
+  - **Testes:** 4 da folha em x e o DWG do P2 em x pelo TQS, em `testes\teste_e2_prancha.py`.
 - **Testes:** `testes\teste_e2_prancha.py`, sem o TQS (folha, blocos, ferros, só níveis dos modelos) e com ele (DWG do P2 e comprimentos).
 
 **E3. Núcleo dos conectores (radial)** (feita em 05/11/2026)
@@ -479,7 +479,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
 
 **E6. Lote e saídas** (feita em 09/11/2026)
 - **Feito na E5:** lote na janela, um DWG por pilar (`PUN_<pilar>`), PDF e DXF do TQS, gravação do lote e `detalhar.py` pela linha de comando.
-- **Relatório do lote:** `nucleoelatorio.py`, sem o TQS. Grava três arquivos na pasta de saída:
+- **Relatório do lote:** `nucleo\relatorio.py`, sem o TQS. Grava três arquivos na pasta de saída:
   - `RELATORIO_<projeto>.txt`, legível, com:
     - os pilares: dimensões, h, solução, d, armadura de punção, aço por pilar e com as repetições, avisos, DWG e a conferência do TQS;
     - os ferros de cada pilar;
@@ -494,17 +494,44 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - `detalhar.py`: no fim de todo lote; `--so-relatorio` grava só o relatório, sem o TQS e sem DWG, com os comprimentos do núcleo. O `detalhar.py` também passou a respeitar a `pasta_saida` gravada pela janela no projeto.
   - Janela: no fim de "Gerar o lote" e pelo botão "Relatório do lote" (abas Lote e Saídas, menu Saídas), que não precisa do TQS; "Abrir o relatório" abre o TXT.
 - **Conferido:** lote da cobrinha gravado pelo TQS, com os 5 pilares conferindo e 431,9 kg no total (ø10: 260,7; ø12,5: 171,2).
-- **Testes:** `testes	este_e6_relatorio.py`, com 11 testes, inclusive a linha de comando sem o TQS e o "Gerar o lote" da janela pelo TQS. A suíte tem 82.
+- **Testes:** `testes\teste_e6_relatorio.py`, com 11 testes, inclusive a linha de comando sem o TQS e o "Gerar o lote" da janela pelo TQS. A suíte tem 82.
 
-**E7. Fechamento do repositório**
-- README de uso, exemplos e teste num clone limpo (sem os modelos), do clone ao DWG.
+**E7. Fechamento do repositório** (feita em 09/11/2026)
+- **Clone limpo:** `git clone` do GitHub numa pasta com espaço e "ç" no nome, sem os modelos.
+  - Com o Python do usuário: 83 testes, 1 pulado (a réplica, sem `DesenhosReferencia\`).
+  - Do clone ao DWG: `detalhar.py` com o P2 da cobrinha (`--png`) e o lote de conectores, todos os comprimentos do TQS conferindo, e o relatório do lote.
+  - A janela abre pelo atalho a partir do clone.
+- **Python isolado (venv) sem TQS, Pillow e matplotlib:** 77 testes passam, e os 6 que gravam pelo TQS são pulados.
+  - `nucleo.detalhe` e `--so-relatorio` funcionam.
+  - A janela abre com os ícones vazios.
+- **Correções:**
+  - sem o TQS, o `detalhar.py` dava traceback; agora diz o que falta e sugere o `--so-relatorio`. Com `--png` sem o matplotlib, para antes de gravar o primeiro DWG;
+  - `ferramentas\esquema.py` e `imagem.py` sem o matplotlib: mensagem com o `pip install -r requirements-dev.txt`;
+  - o atalho `Detalhar Punção.bat` procura o Python 3.13 também em `Program Files` e pelo lançador `pyw -3.13`, antes do `pythonw` do PATH, que numa máquina sem Python do usuário pode ser o atalho da Microsoft Store. Testado com a instalação do usuário e, sem ela, pelo lançador;
+  - dois caminhos do plano (`nucleo\relatorio.py` e `testes\teste_e6_relatorio.py`) tinham o "\r" e o "\t" virados em caracteres de controle por um script de gravação.
+- **Testes:** `testes\teste_e7_repositorio.py`, com 8 testes:
+  - os módulos só importam a biblioteca padrão, o próprio repositório, o TQS, o Pillow e o matplotlib;
+  - nenhum `sys.path` aponta acima da raiz;
+  - os exemplos citados no README existem, e todos os exemplos detalham sem erro;
+  - as faltas do TQS e do matplotlib dão mensagem, sem gravar nada;
+  - o atalho tem fim de linha do Windows, e o `.gitignore` deixa de fora `saidas\` e `DesenhosReferencia\`.
+  
+  A suíte tem 91.
+- **README** reescrito para quem acabou de clonar: requisitos, do clone ao DWG, janela, linha de comando, saídas, formato do projeto com a tabela de parâmetros, exemplos, limitações, testes, ferramentas e problemas comuns.
+
+**Decisão do usuário (09/11/2026), importação do TQS:**
+- **Esforços:** pelas combinações ELU da grelha, geradas pelo `FGREANA.EXE` numa cópia da planta (`CLAUDE.md` da raiz da pasta TQS-PYTHON, "Reações da grelha por pilar").
+- **Arquivo `.lpc` do LPUNC:** descartado. Pelo que o usuário viu, não é gerado sem a licença do LPUNC.
+- **Seleção de pilares:** a importação deixa o usuário escolher quais pilares trazer.
+- **Neste app:** o detalhamento não usa esforços. Daqui vêm só as dimensões dos pilares (modelo do TQS); os esforços servem ao app de cálculo (`_apps\Punção`, E9).
 
 **Depois desta rodada:**
 - pilares de borda e de canto;
 - pilares circulares;
 - aberturas;
 - conectores "posterior à armadura";
-- troca de dados, por JSON, com o app de punção e com o modelo do TQS.
+- importação dos pilares do TQS (dimensões pelo modelo), com a escolha dos pilares;
+- troca de dados, por JSON, com o app de punção.
 
 ---
 

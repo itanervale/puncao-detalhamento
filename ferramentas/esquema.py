@@ -15,10 +15,13 @@ import math
 import os
 import sys
 
-import matplotlib
+try:
+    import matplotlib
+except ImportError:
+    sys.exit("O esquema precisa do matplotlib: pip install -r requirements-dev.txt")
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import Arc, Circle, Rectangle
+import matplotlib.pyplot as plt                         # noqa: E402
+from matplotlib.patches import Arc, Circle, Rectangle   # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
