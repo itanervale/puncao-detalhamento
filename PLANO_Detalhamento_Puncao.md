@@ -273,7 +273,7 @@ A fórmula antiga do plano (h − c_sup − ø) deixava d 1 cm maior, contra a s
 
 Cada etapa termina com a aprovação do usuário e um commit.
 
-**E0. Base e padrão do desenho** (feita em 03/11/2026; falta a conferência do usuário no TQS)
+**E0. Base e padrão do desenho** (feita e conferida pelo usuário no TQS em 03/11/2026)
 - Pasta como repositório: `README.md`, `CLAUDE.md`, `.gitignore`, `.gitattributes`, `git init`.
 - `ferramentas\ler_modelo.py`, `comparar.py`, `imagem.py` e `extrair_penas.py`.
 - `PADRAO_desenho.md`, com o inventário dos modelos e o que a gravação precisa (seção 10).
@@ -286,8 +286,8 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - Cores diferentes na réplica (relatos do usuário), duas causas:
     - o objeto dos ferros caía no nível atual (221, 222); agora vai no 220;
     - a tabela de níveis de tela dos modelos (34 níveis próprios), que o `File.Open` da interface escondia; agora é gravada em todo desenho.
-  - As cotas continuam com as cores padrão (3 e 7) guardadas em cada uma; falta o usuário conferir no editor.
-- **Aceite:** o usuário abre `saidas\e0\REPLICA_PUN_P02.DWG` e `REPLICA_PUN_P02_R01.DWG` no TQS (editor e tabela de ferros).
+  - As cotas continuam com as cores padrão (3 e 7) guardadas em cada uma.
+- **Aceite (feito):** o usuário abriu `saidas\e0\REPLICA_PUN_P02.DWG` e `REPLICA_PUN_P02_R01.DWG` no TQS em 03/11/2026, achou a causa das cores (a tabela de níveis dos modelos) e, depois da correção, respondeu "Iguais, siga para E1".
 
 **E1. Núcleo da cobrinha (pilar interno)** (feita em 03/11/2026)
 - **Parâmetros e altura útil:** `nucleo\parametros.py`, com padrões, validação e d pela seção 6.1. O projeto é um `.json` com o formato `puncao-detalhamento` 1 e uma lista de pilares.
@@ -524,13 +524,50 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Arquivo `.lpc` do LPUNC:** descartado. Pelo que o usuário viu, não é gerado sem a licença do LPUNC.
 - **Seleção de pilares:** a importação deixa o usuário escolher quais pilares trazer.
 - **Neste app:** o detalhamento não usa esforços. Daqui vêm só as dimensões dos pilares (modelo do TQS); os esforços servem ao app de cálculo (`_apps\Punção`, E9).
+- **Pedido de 09/11/2026:** importar as dimensões dos pilares e das lajes; as cargas ficam só para conferência.
+
+**E8. Importação do TQS** (feita em 09/11/2026)
+- **Estudo** (numa cópia do edifício de desenvolvimento do usuário; o original não foi tocado):
+  - **Esforços sem as listagens:** o `FGREANA.EXE` não precisa das `GREANA*.LST`. Precisa do modelo da grelha (`FOR<nnnn>M.GRE`) e dos resultados do processamento (`FOR<nnnn>M.RSX`), com nnnn = nº do projeto da planta. Sem o `.RSX`, sai só o cabeçalho.
+    - O nome no `GREANA.TMP` pode ser `FOR0003M` ou `FOR0003MSE` (o do gerenciador); `FOR0003` não serve.
+    - Apagar `FOR0003MSE.GRE`, `.GRX`, `FOR0003MSEE1p01.RSX`, `FOR0003.ESF` ou os `GREELS*` não muda nada.
+  - **Cópia mínima:**
+    - só com a raiz do edifício, o TQS abre o edifício (`TQSBuild`: `floorsplan` com nome, nº do projeto, repetição e pasta de cada planta) e o modelo;
+    - ler os objetos de uma planta sem a pasta dela derruba o processo (violação de acesso). Por isso o leitor copia a raiz e a pasta da planta (0,4 s neste edifício) e roda num processo à parte;
+    - o pórtico (`ESPACIAL`) e os desenhos de pilares não são copiados.
+  - **Modelo (`TQSModel`):**
+    - pilares pelas seções da planta (`TYPE_SECPIL`): `formattedTitle` ("P7"; o `objectTitle` vem vazio), tipo de seção (0 retangular, 3 circular...), b, h, ângulo e poligonal em coordenadas absolutas;
+    - lajes: `thickness`, tipo, rebaixo, `slabDetailing.cover` (0 neste edifício) e `prestressed`. A interface não dá o contorno de cada laje;
+    - bordas: os contornos (`TYPE_CTRAUX`, `SlabContour` com início e fim) e os eixos das vigas (`GetBeamNode(i)`, com `nodeX` e `nodeY`; meia largura descontada);
+    - furos (`slabOpeningPolygon`) e capitéis (`dropPanelPolygon`, `dropPanelThickness`);
+    - cobrimentos do edifício: `covers.slabUpperCover`/`slabLowerCover` (2,5/2,5) e os de laje protendida.
+- **Módulos:**
+  - `nucleo\importacao.py` (sem TQS): combinações de ELU do `.GRE`, reações da listagem, posição do pilar, seção, espessura, aberturas e capitéis, pilares do projeto e a mescla com o projeto;
+  - `dwg_tqs\leitor_tqs.py`: a leitura em cópia, pela linha de comando (`plantas` e `planta`, com `--projeto`) ou chamada pela janela num processo à parte;
+  - `janela\importar.py`: o diálogo "Importar pilares do TQS" (edifício, planta, tabela com marcação, esforços do pilar selecionado e opções); botão na aba Lote e no menu Pilar.
+- **Regras adotadas (a confirmar com o usuário):**
+  - **posição:** interno quando nenhuma borda da laje nem viga fica a menos de 2d da face do pilar (o contorno C' não é cortado); borda com um lado, canto com dois vizinhos; dois lados opostos pedem conferência;
+  - **seleção:** marcados de saída os internos retangulares sem abertura a menos de 8d e sem capitel. Borda e canto podem ser marcados, com confirmação; seção não retangular, não;
+  - **seção:** girada de 0° ou 90°, bx e by pela poligonal; em outro ângulo, nos eixos do pilar, com aviso;
+  - **h da laje:** a única da planta ou, com espessuras diferentes, a mais comum, com aviso para conferir;
+  - **cobrimentos:** os de laje do edifício (os de laje protendida, se alguma laje da planta for protendida);
+  - **repetições:** as da planta no TQS;
+  - **demais parâmetros:** os do pilar atual, como no "Colar do Excel"; a solução dos pilares novos pode ser escolhida no diálogo;
+  - **pilar já no projeto (mesmo nome):** atualiza dimensões, h, cobrimentos, repetições e a origem, e mantém o detalhamento; ou é pulado (opção);
+  - **esforços:** guardados no pilar (`tqs.esforcos`), na árvore, nas propriedades e na tabela do lote, só para conferência;
+  - **detalhamento:** a importação não ajusta s0 e espaçamentos ao d da laje importada; as verificações mostram o que passa dos limites.
+- **Edifício de desenvolvimento** (planta "Primeiro", laje lisa L1 de 20 cm, 12 pilares):
+  - internos: P5 (25 × 80), P7 (40 × 40) e P11 (40 × 100); P6 é circular (ø50), e os demais são de borda ou de canto;
+  - d = 15,5 cm; combinações de ELU 9, 10, 12 e 13;
+  - P7 na combinação 10 com Fz = 48,68 tf, igual à listagem gerada no TQS pelo usuário;
+  - leitura completa em 3 s.
+- **Testes:** `testes\teste_e8_importacao.py`, com 19 testes. Usam uma leitura real gravada em `testes\dados\`, sem o cabeçalho do licenciado e com o caminho do edifício trocado. O teste do leitor numa cópia do edifício real usa a variável `PUN_EDIFICIO_TESTE`. A suíte tem 110.
 
 **Depois desta rodada:**
 - pilares de borda e de canto;
 - pilares circulares;
 - aberturas;
 - conectores "posterior à armadura";
-- importação dos pilares do TQS (dimensões pelo modelo), com a escolha dos pilares;
 - troca de dados, por JSON, com o app de punção.
 
 ---

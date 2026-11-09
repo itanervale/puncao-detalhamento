@@ -365,6 +365,17 @@ def i_colar(d):
     d.linha([(15, 10), (15, 26)], VERDE, 0.9)
 
 
+def i_importar_tqs(d):
+    """Importar do TQS: o edifício e uma seta para dentro do projeto."""
+    d.ret(3, 5, 16, 29, PRETO, "#d8dde6", 1.3)
+    for y in (9, 14, 19):
+        for x in (6, 11):
+            d.ret(x, y, x + 2.6, y + 2.6, "#173f7a", "#9fb7d9", 0.6)
+    d.ret(8, 24, 11, 29, PRETO, "#8a5a2b", 0.8)
+    d.linha([(17, 17), (26, 17)], VERDE, 2.6)
+    d.poli([(24, 12), (30, 17), (24, 22)], VERDE, VERDE, 1.0)
+
+
 def i_lote(d):
     for k, cor in ((0, "#e8e8e8"), (3, "#f3f3f3"), (6, "white")):
         d.ret(4 + k, 2 + k, 22 + k, 24 + k, PRETO, cor, 1.2)

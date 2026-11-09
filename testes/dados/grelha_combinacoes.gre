@@ -1,0 +1,28 @@
+COMBIN             9                                       0                 .00       .00         0          
+    2   ELU1/PERM/PP+PERM                                                       
+    2         1.0000
+    3         1.0000
+COMBIN            10                                       0                 .00       .00         0          
+    3   ELU1/PERMACID/PP+PERM+ACID                                              
+    2         1.0000
+    3         1.0000
+    4         1.0000
+COMBIN            11                                       0                 .00       .00         0          
+    3   COMBFLU/COMBFLU/PP+PERM+0.6ACID                                         
+    2         1.0000
+    3         1.0000
+    4          .6000
+COMBIN            12                                       0                 .00       .00         0          
+    2   ELU1/PERM/PP_V+PERM_V                                                   
+    6         1.0000
+    7         1.0000
+COMBIN            13                                       0                 .00       .00         0          
+    3   ELU1/PERMACID/PP_V+PERM_V+ACID_V                                        
+    6         1.0000
+    7         1.0000
+    8         1.0000
+COMBIN            14                                       0                 .00       .00         0          
+    3   COMBFLU/COMBFLU/PP_V+PERM_V+0.6ACID_V                                   
+    6         1.0000
+    7         1.0000
+    8          .6000

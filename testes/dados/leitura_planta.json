@@ -1,0 +1,856 @@
+{
+ "formato": "puncao-leitura-tqs",
+ "versao": 1,
+ "edificio": "C:\\TQS\\Exemplo Puncao",
+ "planta": "Primeiro",
+ "projeto": 3,
+ "repeticao": 1,
+ "data": "2026-11-09T10:00:00",
+ "cobrimentos": {
+  "sup": 2.5,
+  "inf": 2.5,
+  "protendida_sup": 3.5,
+  "protendida_inf": 3.5
+ },
+ "pilares": [
+  {
+   "titulo": "P1",
+   "numero": 1,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 40.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     40.0,
+     0.0
+    ],
+    [
+     40.0,
+     40.0
+    ],
+    [
+     0.0,
+     40.0
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P2",
+   "numero": 2,
+   "tipo": 0,
+   "b1": 20.0,
+   "h1": 100.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     660.0,
+     0.0
+    ],
+    [
+     680.0,
+     0.0
+    ],
+    [
+     680.0,
+     100.0
+    ],
+    [
+     660.0,
+     100.0
+    ],
+    [
+     660.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P3",
+   "numero": 3,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 100.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     1300.0,
+     0.0
+    ],
+    [
+     1340.0,
+     0.0
+    ],
+    [
+     1340.0,
+     100.0
+    ],
+    [
+     1300.0,
+     100.0
+    ],
+    [
+     1300.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P4",
+   "numero": 4,
+   "tipo": 0,
+   "b1": 20.0,
+   "h1": 100.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     0.0,
+     620.0
+    ],
+    [
+     20.0,
+     620.0
+    ],
+    [
+     20.0,
+     720.0
+    ],
+    [
+     0.0,
+     720.0
+    ],
+    [
+     0.0,
+     620.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P6",
+   "numero": 6,
+   "tipo": 3,
+   "b1": 50.0,
+   "h1": 100.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     695.0,
+     670.0
+    ],
+    [
+     693.097,
+     679.567
+    ],
+    [
+     687.678,
+     687.678
+    ],
+    [
+     679.567,
+     693.097
+    ],
+    [
+     670.0,
+     695.0
+    ],
+    [
+     660.433,
+     693.097
+    ],
+    [
+     652.322,
+     687.678
+    ],
+    [
+     646.903,
+     679.567
+    ],
+    [
+     645.0,
+     670.0
+    ],
+    [
+     646.903,
+     660.433
+    ],
+    [
+     652.322,
+     652.322
+    ],
+    [
+     660.433,
+     646.903
+    ],
+    [
+     670.0,
+     645.0
+    ],
+    [
+     679.567,
+     646.903
+    ],
+    [
+     687.678,
+     652.322
+    ],
+    [
+     693.097,
+     660.433
+    ],
+    [
+     695.0,
+     670.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P5",
+   "numero": 5,
+   "tipo": 0,
+   "b1": 25.0,
+   "h1": 80.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     657.5,
+     1280.0
+    ],
+    [
+     682.5,
+     1280.0
+    ],
+    [
+     682.5,
+     1360.0
+    ],
+    [
+     657.5,
+     1360.0
+    ],
+    [
+     657.5,
+     1280.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P7",
+   "numero": 7,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 40.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     1300.0,
+     650.0
+    ],
+    [
+     1340.0,
+     650.0
+    ],
+    [
+     1340.0,
+     690.0
+    ],
+    [
+     1300.0,
+     690.0
+    ],
+    [
+     1300.0,
+     650.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P8",
+   "numero": 8,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 100.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     1940.0,
+     0.0
+    ],
+    [
+     1980.0,
+     0.0
+    ],
+    [
+     1980.0,
+     100.0
+    ],
+    [
+     1940.0,
+     100.0
+    ],
+    [
+     1940.0,
+     0.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P9",
+   "numero": 9,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 40.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     1940.0,
+     650.0
+    ],
+    [
+     1980.0,
+     650.0
+    ],
+    [
+     1980.0,
+     690.0
+    ],
+    [
+     1940.0,
+     690.0
+    ],
+    [
+     1940.0,
+     650.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P10",
+   "numero": 10,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 100.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     1940.0,
+     1260.0
+    ],
+    [
+     1980.0,
+     1260.0
+    ],
+    [
+     1980.0,
+     1360.0
+    ],
+    [
+     1940.0,
+     1360.0
+    ],
+    [
+     1940.0,
+     1260.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P11",
+   "numero": 11,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 100.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     1300.0,
+     1260.0
+    ],
+    [
+     1340.0,
+     1260.0
+    ],
+    [
+     1340.0,
+     1360.0
+    ],
+    [
+     1300.0,
+     1360.0
+    ],
+    [
+     1300.0,
+     1260.0
+    ]
+   ]
+  },
+  {
+   "titulo": "P12",
+   "numero": 12,
+   "tipo": 0,
+   "b1": 40.0,
+   "h1": 40.0,
+   "ang": 0.0,
+   "polig": [
+    [
+     0.0,
+     1320.0
+    ],
+    [
+     40.0,
+     1320.0
+    ],
+    [
+     40.0,
+     1360.0
+    ],
+    [
+     0.0,
+     1360.0
+    ],
+    [
+     0.0,
+     1320.0
+    ]
+   ]
+  }
+ ],
+ "lajes": [
+  {
+   "titulo": "L1",
+   "h": 20.0,
+   "tipo": 0,
+   "rebaixo": 0.0,
+   "cobrimento": 0.0,
+   "protendida": false
+  }
+ ],
+ "bordas": [
+  [
+   1980.0,
+   0.0,
+   1980.0,
+   1510.0,
+   0.0,
+   "borda da laje"
+  ],
+  [
+   0.0,
+   1510.0,
+   -0.0,
+   0.0,
+   0.0,
+   "borda da laje"
+  ],
+  [
+   1980.0,
+   1510.0,
+   0.0,
+   1510.0,
+   0.0,
+   "borda da laje"
+  ],
+  [
+   0.0,
+   0.0,
+   1980.0,
+   0.0,
+   0.0,
+   "borda da laje"
+  ]
+ ],
+ "furos": [],
+ "capiteis": [],
+ "grelha": {
+  "nome": "FOR0003M",
+  "processada": true,
+  "combinacoes": [
+   {
+    "n": 9,
+    "titulo": "ELU1/PERM/PP+PERM"
+   },
+   {
+    "n": 10,
+    "titulo": "ELU1/PERMACID/PP+PERM+ACID"
+   },
+   {
+    "n": 12,
+    "titulo": "ELU1/PERM/PP_V+PERM_V"
+   },
+   {
+    "n": 13,
+    "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V"
+   }
+  ],
+  "esforcos": {
+   "P1": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": -3.01,
+     "my": 2.74,
+     "fz": 6.9
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": -4.14,
+     "my": 3.76,
+     "fz": 9.49
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": -3.01,
+     "my": 2.74,
+     "fz": 6.9
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": -4.14,
+     "my": 3.77,
+     "fz": 9.49
+    }
+   ],
+   "P2": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": -12.73,
+     "my": -1.0,
+     "fz": 18.52
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": -17.51,
+     "my": -1.38,
+     "fz": 25.47
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": -12.73,
+     "my": -1.0,
+     "fz": 18.52
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": -17.52,
+     "my": -1.38,
+     "fz": 25.48
+    }
+   ],
+   "P3": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": -11.92,
+     "my": 1.84,
+     "fz": 18.02
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": -16.4,
+     "my": 2.53,
+     "fz": 24.8
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": -11.93,
+     "my": 1.84,
+     "fz": 18.03
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": -16.42,
+     "my": 2.53,
+     "fz": 24.81
+    }
+   ],
+   "P4": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 0.2,
+     "my": 4.25,
+     "fz": 15.3
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 0.28,
+     "my": 5.85,
+     "fz": 21.05
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 0.2,
+     "my": 4.26,
+     "fz": 15.3
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 0.28,
+     "my": 5.86,
+     "fz": 21.06
+    }
+   ],
+   "P5": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 7.86,
+     "my": -1.6,
+     "fz": 28.82
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 10.81,
+     "my": -2.21,
+     "fz": 39.65
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 7.86,
+     "my": -1.6,
+     "fz": 28.82
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 10.82,
+     "my": -2.21,
+     "fz": 39.65
+    }
+   ],
+   "P6": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 0.36,
+     "my": -3.73,
+     "fz": 38.61
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 0.5,
+     "my": -5.13,
+     "fz": 53.12
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 0.36,
+     "my": -3.73,
+     "fz": 38.6
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 0.5,
+     "my": -5.13,
+     "fz": 53.11
+    }
+   ],
+   "P7": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 0.47,
+     "my": 3.13,
+     "fz": 35.38
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 0.64,
+     "my": 4.3,
+     "fz": 48.68
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 0.47,
+     "my": 3.12,
+     "fz": 35.37
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 0.64,
+     "my": 4.3,
+     "fz": 48.67
+    }
+   ],
+   "P8": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": -4.14,
+     "my": -3.34,
+     "fz": 7.54
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": -5.69,
+     "my": -4.59,
+     "fz": 10.37
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": -4.14,
+     "my": -3.34,
+     "fz": 7.54
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": -5.7,
+     "my": -4.59,
+     "fz": 10.37
+    }
+   ],
+   "P9": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 0.18,
+     "my": -7.7,
+     "fz": 15.51
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 0.24,
+     "my": -10.6,
+     "fz": 21.34
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 0.18,
+     "my": -7.7,
+     "fz": 15.51
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 0.24,
+     "my": -10.6,
+     "fz": 21.34
+    }
+   ],
+   "P10": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 3.38,
+     "my": -7.2,
+     "fz": 12.54
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 4.66,
+     "my": -9.91,
+     "fz": 17.25
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 3.39,
+     "my": -7.21,
+     "fz": 12.54
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 4.66,
+     "my": -9.91,
+     "fz": 17.25
+    }
+   ],
+   "P11": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 7.93,
+     "my": 2.5,
+     "fz": 28.86
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 10.91,
+     "my": 3.44,
+     "fz": 39.7
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 7.94,
+     "my": 2.5,
+     "fz": 28.86
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 10.93,
+     "my": 3.44,
+     "fz": 39.71
+    }
+   ],
+   "P12": [
+    {
+     "n": 9,
+     "titulo": "ELU1/PERM/PP+PERM",
+     "mx": 3.29,
+     "my": 6.54,
+     "fz": 12.02
+    },
+    {
+     "n": 10,
+     "titulo": "ELU1/PERMACID/PP+PERM+ACID",
+     "mx": 4.52,
+     "my": 9.0,
+     "fz": 16.53
+    },
+    {
+     "n": 12,
+     "titulo": "ELU1/PERM/PP_V+PERM_V",
+     "mx": 3.29,
+     "my": 6.54,
+     "fz": 12.02
+    },
+    {
+     "n": 13,
+     "titulo": "ELU1/PERMACID/PP_V+PERM_V+ACID_V",
+     "mx": 4.52,
+     "my": 9.0,
+     "fz": 16.54
+    }
+   ]
+  },
+  "aviso": ""
+ }
+}

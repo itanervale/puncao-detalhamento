@@ -16,6 +16,8 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - `arquivo.py`: desenho novo e gravação.
   - `gravar.py`: primitivas para o DWG.
   - `prancha.py`: um pilar, com a conferência dos comprimentos.
+  - `leitor_tqs.py` (E8): leitura de uma planta do TQS em cópia (raiz do edifício + pasta da planta), pela linha de comando ou num processo à parte chamado pela janela.
+- **Importação do TQS (E8):** `nucleo\importacao.py` (sem TQS: grelha, listagem, posição do pilar, pilares do projeto), `dwg_tqs\leitor_tqs.py` e `janela\importar.py` (diálogo com a escolha dos pilares). Os esforços de ELU da grelha ficam no pilar (`tqs`) só para conferência.
 - `detalhar.py` (raiz): linha de comando, um DWG por pilar.
 - `janela\` (E5): `app.py` (a janela), `cena.py` (prévia da folha na área CAD) e os módulos copiados do app de telas (`cad_ribbon`, `cad_vista`, `cad_dialogo`, `cad_icones`, com a origem no cabeçalho). Abertura: `Detalhar Punção.bat` / `janela_puncao.pyw`.
 - `ferramentas\`: leitura e comparação de DWG, imagens, esquema da geometria.
@@ -80,6 +82,14 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - **Arquivos:** leia e grave com `with` ou `pathlib`; os testes rodam limpos com `-W error::ResourceWarning`.
 - **Barra invertida em texto gravado por script:** num caminho como `nucleo\relatorio.py`, o "\r" e o "\t" viram caracteres de controle se o texto passar por uma string comum do Python (aconteceu no plano). Use string crua (`r"..."`) ou `chr(92)`.
 - **Faltas de dependência:** a linha de comando e as ferramentas param com uma mensagem dizendo o que falta (TQS, matplotlib), nunca com traceback e nunca depois de gravar parte do lote.
+
+## Lições da leitura do TQS (E8)
+- **Nunca abra o edifício original:** copie a raiz (só os arquivos) e a pasta da planta para uma pasta temporária com o mesmo nome do edifício. O TQS pode estar aberto.
+- **Processo à parte:** ler os objetos de uma planta cuja pasta não foi copiada derruba o Python (violação de acesso na DLL). A janela chama o `leitor_tqs` por `subprocess`; uma falha não a derruba.
+- **`TQSJan`:** se o `TQSJan.py` da instalação não importar, entra um módulo vazio no lugar antes do `TQSModel` (`leitor_tqs._tqs`).
+- **Esforços da grelha:** o `FGREANA.EXE` lê o `GREANA.TMP` (nome da grelha `FOR<nnnn>M` e nº da combinação) e escreve a listagem na saída padrão, em cp1252. Precisa do `FOR<nnnn>M.GRE` e do `.RSX`; as listagens `GREANA*.LST` não são necessárias.
+- **Títulos:** use `formattedTitle` da seção do pilar ou da laje; o `objectTitle` vem vazio.
+- **Dados de teste públicos:** o cabeçalho das listagens do TQS traz o nome e o endereço do licenciado. Corte-o antes de gravar em `testes\dados\`, e não ponha caminhos de edifícios do usuário no repositório (o teste do leitor usa a variável `PUN_EDIFICIO_TESTE`).
 
 ## Lições do Tk (janela)
 - **Threads:** a gravação pelo TQS roda numa thread e devolve o resultado por uma fila. As variáveis do Tk (`StringVar.get()`) só podem ser lidas na thread principal: leia tudo antes de abrir a thread.

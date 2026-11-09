@@ -16,7 +16,7 @@ Cada pilar vira uma prancha (`PUN_<pilar>.DWG`) no padrão dos desenhos do escri
 
 Os comprimentos dos ferros são os que o próprio TQS calcula. O app os confere com os do núcleo.
 
-> **Situação:** etapas E0 a E7 feitas (base, cobrinha, conectores, janela, relatório do lote e fechamento do repositório). Por enquanto, só **pilares internos e retangulares**. O plano, com as decisões e as próximas etapas, está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md); o padrão gráfico, em [PADRAO_desenho.md](PADRAO_desenho.md).
+> **Situação:** etapas E0 a E8 feitas (base, cobrinha, conectores, janela, relatório do lote, fechamento do repositório e importação do TQS). Por enquanto, só **pilares internos e retangulares**. O plano, com as decisões e as próximas etapas, está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md); o padrão gráfico, em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Requisitos
 
@@ -74,6 +74,39 @@ Um projeto tem vários pilares. Na aba Lote:
 - **Colar do Excel**, com as colunas Título; bx; by; h; repetições; solução, separadas por tabulação ou ponto e vírgula. A linha de cabeçalho é ignorada, e os pilares colados herdam o resto do pilar atual.
 
 **Gerar o lote** (Ctrl+Shift+G) grava um DWG por pilar e o relatório do lote. **Relatório do lote** grava só o relatório, sem o TQS.
+
+### Importar do TQS
+
+**Lote > Importar do TQS** (ou o menu Pilar) traz os pilares de uma planta de um edifício do TQS.
+
+1. Escolha a pasta do edifício (a que tem o `EDIFICIO.BDE`) e a planta, e clique em **Ler a planta**.
+2. A leitura é feita numa cópia temporária (a raiz do edifício e a pasta da planta), num processo à parte. O edifício não é alterado, e o TQS pode estar aberto.
+3. A tabela mostra todos os pilares da planta, com seção, posição, h da laje e os esforços. Marque os que vão para o projeto:
+   - **marcados de saída:** os internos retangulares sem abertura a menos de 8d nem capitel;
+   - **borda e canto:** podem ser marcados, com confirmação, porque o app os detalharia como internos;
+   - **seção não retangular** (circular, L, U): não podem ser marcados.
+4. **OK** acrescenta os pilares ao projeto. Os que já estão no projeto com o mesmo nome têm atualizadas as dimensões, o h, os cobrimentos e as repetições; o detalhamento escolhido fica. Os demais parâmetros vêm do pilar atual da janela.
+
+**O que vem do TQS:**
+- **pilar:** nome e seção. Girado de 0° ou 90°, bx e by saem da poligonal; em outro ângulo, ficam nos eixos do pilar, com aviso;
+- **laje:** espessura e cobrimentos (os de laje do edifício, ou os de laje protendida). Com lajes de espessuras diferentes na planta, vale a mais comum, com aviso, porque a interface do TQS não dá o contorno de cada laje;
+- **repetições:** as da planta (um pavimento tipo repetido 5 vezes dá "5X");
+- **posição:** interno quando nenhuma borda da laje (contornos) nem viga fica a menos de 2d da face do pilar, ou seja, o contorno C' não é cortado; borda com um lado, canto com dois;
+- **esforços, só para conferência:** as reações da grelha por pilar em cada combinação de ELU (título começando por "ELU"), em tf e tf·m, característicos. Ficam no pilar (árvore e propriedades) e na tabela do lote. O app não dimensiona.
+
+Os esforços precisam da grelha processada no TQS (`FOR<nº>M.GRE` e `.RSX` na pasta da planta). As listagens `GREANA*.LST` não são necessárias: o app roda o `FGREANA.EXE` do TQS para cada combinação.
+
+Pela linha de comando:
+
+```bash
+python -m dwg_tqs.leitor_tqs plantas "C:\TQS\<edifício>"
+```
+
+```bash
+python -m dwg_tqs.leitor_tqs planta "C:\TQS\<edifício>" <planta> --saida leitura.json --projeto projeto.json
+```
+
+O segundo grava a leitura e um projeto com os pilares internos (ou os de `--pilares P5,P7`; `--todos` inclui os de borda e canto).
 
 ## Linha de comando
 
@@ -194,7 +227,7 @@ As verificações (s0 ≤ 0,5d, espaçamentos ≤ 0,75d, pinos ou pernas vizinho
 
 - Só pilares internos e retangulares. Faltam os de borda e de canto, os circulares e as aberturas na laje.
 - Conectores só no arranjo "antes da armadura" (pentes com trilhos); falta o "posterior à armadura".
-- Os dados do pilar são digitados ou colados do Excel. A importação do TQS está prevista: dimensões pelo modelo e esforços pelas combinações ELU da grelha, com a escolha dos pilares a importar.
+- A importação do TQS não ajusta o detalhamento (s0, espaçamentos, bitolas) à laje importada: as verificações mostram o que passa dos limites, e o projetista corrige.
 
 ## Testes
 
@@ -202,7 +235,7 @@ As verificações (s0 ≤ 0,5d, espaçamentos ≤ 0,75d, pinos ou pernas vizinho
 python -m unittest discover -s testes -t . -p "teste_*.py" -v
 ```
 
-Os testes do núcleo, da janela e do relatório não precisam do TQS. Os que gravam DWG são pulados sem ele, e a réplica dos modelos é pulada sem a pasta `DesenhosReferencia\`, que fica fora do repositório.
+Os testes do núcleo, da janela, do relatório e da importação não precisam do TQS. A importação usa uma leitura real gravada em `testes\dados\`. Os testes que gravam DWG são pulados sem o TQS, e a réplica dos modelos é pulada sem a pasta `DesenhosReferencia\`, que fica fora do repositório. O teste do leitor numa cópia de um edifício real usa a pasta da variável `PUN_EDIFICIO_TESTE` e é pulado sem ela ou sem o TQS.
 
 ## Ferramentas de conferência (desenvolvimento)
 
@@ -253,7 +286,7 @@ Regrava `nucleo\niveis.json` a partir da tabela de plotagem do TQS instalado.
 | Pasta | Conteúdo |
 |---|---|
 | `nucleo\` | Python puro (sem TQS): parâmetros, cobrinha, conectores, colapso, verificações, relatório, folha e pranchas em primitivas; níveis e catálogo da Trejor |
-| `dwg_tqs\` | Gravação pelo TQS: DWG-TQS com ferros inteligentes, PDF e DXF |
+| `dwg_tqs\` | Gravação pelo TQS (DWG-TQS com ferros inteligentes, PDF e DXF) e leitura de uma planta do TQS para a importação (`leitor_tqs.py`) |
 | `janela\` | Janela (Tk) no estilo do TQS |
 | `ferramentas\` | Leitura e comparação de DWG-TQS, imagens de conferência, captura da janela, extração das penas |
 | `exemplos\` | Projetos de exemplo |

@@ -10,7 +10,8 @@ Abra pelo "Detalhar Punção.bat" (ou: pythonw janela_puncao.pyw [projeto.json])
 - No centro, a área CAD (fundo preto com as cores de tela do TQS, ou as cores da plotagem), com as abas Planta,
   Corte, Colapso, Prancha e Tabela: roda = zoom, botão do meio ou direito = deslocar, duplo clique no meio =
   enquadrar; a dica sob o mouse mostra o nível e a medida. Embaixo, as mensagens (verificações) e a barra de status.
-- Lote: o projeto tem vários pilares (Lote > Pilar atual, + Pilar, Duplicar, Apagar, Colar do Excel).
+- Lote: o projeto tem vários pilares (Lote > Pilar atual, + Pilar, Duplicar, Apagar, Colar do Excel, Importar do
+  TQS: dimensões dos pilares, h e cobrimentos da laje; os esforços de ELU da grelha ficam para conferência).
 - A prévia é refeita a cada mudança ("Atualizar automaticamente"); a gravação pelo TQS (DWG, PDF e DXF) roda numa
   thread, com o resultado devolvido por uma fila (after() chamado de outra thread quebra o Tk).
 """
@@ -30,6 +31,7 @@ if RAIZ not in sys.path:
     sys.path.insert(0, RAIZ)
 
 from nucleo import conectores as nc                                      # noqa: E402
+from nucleo import importacao as imp                                     # noqa: E402
 from nucleo import prancha_cobrinha, prancha_conectores                  # noqa: E402
 from nucleo import relatorio as rel_lote                                 # noqa: E402
 from nucleo.detalhe import detalhar                                      # noqa: E402
@@ -40,6 +42,7 @@ from . import cena                                                       # noqa:
 from .cad_dialogo import Dialogo, fmt, num                               # noqa: E402
 from .cad_ribbon import COR_CORPO, BarraRapida, Ribbon                   # noqa: E402
 from .cad_vista import Vista                                             # noqa: E402
+from .importar import DlgImportar                                        # noqa: E402
 
 APP = "Armaduras de Punção"
 NIVEL_COR = {"erro": "#b3261e", "aviso": "#9a6400", "ok": "#2e7d32", "info": "#202020", "cinza": "#707070"}
@@ -63,6 +66,11 @@ def _kg(bitola, comp_cm, quant):
 
 def _br(v, casas=1):
     return f"{v:.{casas}f}".replace(".", ",")
+
+
+def _fz_tqs(par):
+    g = imp.governante((par.get("tqs") or {}).get("esforcos"))
+    return f"{_br(g['fz'], 2)} (comb. {g['n']})" if g else ""
 
 
 class DlgColar(Dialogo):
@@ -89,7 +97,7 @@ class DlgColar(Dialogo):
 def mesclar_colagem(base, novos):
     """Pilares colados: os parâmetros do pilar `base` (o atual), menos título, dimensões, h e repetições, com as
     colunas coladas por cima. A solução só muda se a coluna veio preenchida."""
-    fora = ("titulo", "bx", "by", "h_laje", "repeticoes")
+    fora = ("titulo", "bx", "by", "h_laje", "repeticoes", "tqs")         # tqs: origem do pilar atual
     out = []
     for p in novos:
         q = {k: copy.deepcopy(v) for k, v in base.items() if k not in fora}
@@ -238,6 +246,7 @@ class App(tk.Tk):
         p.add_command(label="+ Pilar", command=self.mais_pilar)
         p.add_command(label="Duplicar pilar", command=self.duplicar)
         p.add_command(label="Apagar pilar", command=self.apagar)
+        p.add_command(label="Importar do TQS...", command=self.importar_tqs)
         p.add_command(label="Colar pilares do Excel...", command=self.colar)
         p.add_separator()
         p.add_command(label="Pilar anterior", accelerator="PgUp", command=lambda: self.ir(self.i - 1))
@@ -408,6 +417,9 @@ class App(tk.Tk):
         g.grande("duplicar", "Duplicar", self.duplicar, "Cópia do pilar atual.")
         g.grande("apagar", "Apagar", self.apagar, "Apaga o pilar atual do projeto.")
         g = a.grupo("Importar")
+        g.grande("importar_tqs", "Importar do TQS", self.importar_tqs, "Pilares de uma planta do TQS (lida numa "
+                 "cópia): dimensões, h e cobrimentos da laje, com a escolha dos pilares. Os esforços de ELU da grelha "
+                 "ficam no pilar para conferência.")
         g.grande("colar", "Colar do Excel", self.colar, "Linhas Título; bx; by; h; repetições; solução, uma por "
                  "pilar; os demais parâmetros vêm do pilar atual.")
         g = a.grupo("Lote")
@@ -806,6 +818,14 @@ class App(tk.Tk):
                     tags += ("aviso",)
             no = tv.insert(raiz, "end", f"pilar:{j}", text=rot, open=atual, tags=tags,
                            image=ic.foto("cobrinha" if p["solucao"] == "cobrinha" else "pente", 16))
+            tq = par.get("tqs")
+            if atual and tq:
+                es = tq.get("esforcos") or []
+                nt = tv.insert(no, "end", "tqs", text=f"TQS: {tq.get('planta')}, {tq.get('posicao') or '-'}; "
+                               f"esforços de ELU ({len(es)}) para conferência", image=ic.foto("importar_tqs", 16))
+                for k, e in enumerate(es):
+                    tv.insert(nt, "end", f"esf:{k}", text=f"Comb. {e['n']} {e['titulo']}: Fz {_br(e['fz'], 2)} tf, "
+                              f"Mx {_br(e['mx'], 2)}, My {_br(e['my'], 2)} tf·m", tags=("cinza",))
             if not atual or not self.res or self.res["erros"]:
                 continue
             r = self.res
@@ -862,6 +882,13 @@ class App(tk.Tk):
             self._props([("Situação", "AVISO" if tipo == "aviso" else "ok"), ("Verificação", txt), ("Referência", ref)])
         elif iid == "pecas":
             self.ver_tabela("pecas")
+        elif iid == "tqs":
+            self._props_tqs()
+        elif iid.startswith("esf:"):
+            e = self.pilar["tqs"]["esforcos"][int(iid.split(":")[1])]
+            self._props([("Combinação", f"{e['n']} - {e['titulo']}"), ("Fz", f"{_br(e['fz'], 2)} tf"),
+                         ("Mx", f"{_br(e['mx'], 2)} tf·m"), ("My", f"{_br(e['my'], 2)} tf·m"),
+                         ("Origem", "grelha do TQS, característico (conferência)")])
 
     def _props(self, itens):
         self.tp.delete(*self.tp.get_children())
@@ -890,8 +917,22 @@ class App(tk.Tk):
                 itens += [("Cobrinhas", f"{c['n_pecas']} peças em {c['direcao']}"),
                           ("Altura (eixo)", f"{fmt(c['altura_eixo'])} cm")]
             itens.append(("Avisos", str(sum(1 for v in r["verificacoes"] if v[0] == "aviso"))))
+            tq = self.pilar.get("tqs")
+            if tq:
+                itens += [("Origem", f"TQS: {os.path.basename(str(tq.get('edificio', '')))} / {tq.get('planta', '')}"),
+                          ("Esforços (TQS)", imp.resumo_esforcos(tq.get("esforcos")))]
         else:
             itens.append(("Erros", str(len(r["erros"]))))
+        self._props(itens)
+
+    def _props_tqs(self):
+        tq = self.pilar.get("tqs") or {}
+        itens = [("Edifício", tq.get("edificio", "")), ("Planta", tq.get("planta", "")),
+                 ("Pilar no TQS", f"nº {tq.get('numero', '')}, seção {tq.get('secao', '')}, "
+                                  f"ângulo {tq.get('angulo', 0):g}°"),
+                 ("Centro (cm)", ", ".join(_br(c) for c in tq.get("centro", []))), ("Posição", tq.get("posicao") or "-"),
+                 ("Grelha", tq.get("grelha") or "-"), ("Governante (ELU)", imp.resumo_esforcos(tq.get("esforcos")))]
+        itens += [("Aviso", a) for a in tq.get("avisos", [])]
         self._props(itens)
 
     def _props_ferro(self, f):
@@ -929,7 +970,8 @@ class App(tk.Tk):
         r = self.res
         if k == "lote":
             cols = [("Pilar", 90), ("Solução", 90), ("bx", 50), ("by", 50), ("h", 50), ("Rep.", 50),
-                    ("Armadura de punção", 260), ("Aço (kg)", 80), ("Aço x rep. (kg)", 100), ("Avisos", 60), ("Erros", 50)]
+                    ("Armadura de punção", 260), ("Aço (kg)", 80), ("Aço x rep. (kg)", 100), ("Avisos", 60), ("Erros", 50),
+                    ("TQS: Fz máx ELU (tf)", 130)]
             linhas = []
             for par in self.projeto["pilares"]:
                 rr = detalhar(par)
@@ -937,7 +979,7 @@ class App(tk.Tk):
                 if rr["erros"]:
                     linhas.append((p["titulo"], p["solucao"], fmt(float(p["bx"] or 0)), fmt(float(p["by"] or 0)),
                                    fmt(float(p["h_laje"] or 0)), p["repeticoes"], "; ".join(rr["erros"]), "", "", "",
-                                   len(rr["erros"])))
+                                   len(rr["erros"]), _fz_tqs(par)))
                     continue
                 if "conectores" in rr:
                     c = rr["conectores"]
@@ -948,7 +990,7 @@ class App(tk.Tk):
                 aco = sum(_kg(f["bitola"], f["comp"], f["quant"]) for f in rr["ferros"])
                 linhas.append((p["titulo"], p["solucao"], fmt(float(p["bx"])), fmt(float(p["by"])),
                                fmt(float(p["h_laje"])), p["repeticoes"], arm, _br(aco), _br(aco * p["repeticoes"]),
-                               sum(1 for v in rr["verificacoes"] if v[0] == "aviso"), 0))
+                               sum(1 for v in rr["verificacoes"] if v[0] == "aviso"), 0, _fz_tqs(par)))
             return cols, linhas
         if not r or r["erros"]:
             return [("Mensagem", 600)], [(e,) for e in (r["erros"] if r else ["sem pilar"])]
@@ -1021,6 +1063,7 @@ class App(tk.Tk):
 
     def mais_pilar(self):
         novo = copy.deepcopy(self.pilar)
+        novo.pop("tqs", None)                           # o pilar novo não é o do TQS
         n = len(self.projeto["pilares"]) + 1
         novo["titulo"] = self._titulo_livre(f"P{n}")
         self.projeto["pilares"].insert(self.i + 1, novo)
@@ -1044,6 +1087,28 @@ class App(tk.Tk):
         del self.projeto["pilares"][self.i]
         self._editado(f"Pilar {t} apagado.")
         self.ir(min(self.i, len(self.projeto["pilares"]) - 1))
+
+    def importar_tqs(self):
+        """Pilares de uma planta do TQS (DlgImportar): os novos entram no fim; os de mesmo nome são atualizados
+        (geometria e origem) ou pulados. Um projeto novo e intocado perde o pilar de exemplo."""
+        r = DlgImportar(self, self.pilar, inicial=self.projeto.get("origem_tqs")).mostrar()
+        if not r:
+            return
+        intocado = not self.arq and not self.modificado and self.projeto["pilares"] == [NOVO_PILAR]
+        base = [] if intocado else self.projeto["pilares"]
+        pilares, n_novos, n_atual, pulados = imp.mesclar(base, r["pilares"], r["atualizar"])
+        if not pilares:
+            self.msg("Nada importado: os pilares já estão no projeto.", "aviso")
+            return
+        self.projeto["pilares"] = pilares
+        self.projeto["origem_tqs"] = r["origem"]
+        self._editado(f"Importados do TQS ({r['origem']['planta']}): {n_novos} novo(s), {n_atual} atualizado(s)" +
+                      (f"; pulados (já no projeto): {', '.join(pulados)}" if pulados else "") + ".")
+        for tit, avs in r["avisos"].items():
+            for a in avs:
+                self.msg(f"{tit}: {a}", "aviso")
+        tit = str(r["pilares"][0]["titulo"])
+        self.ir(next((k for k, q in enumerate(pilares) if str(q.get("titulo")) == tit), 0))
 
     def colar(self):
         try:
