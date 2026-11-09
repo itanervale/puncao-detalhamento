@@ -439,6 +439,7 @@ class Prancha:
         f.texto(0, X + 0.3 * E, Y - 1.4 * E, H_ESCALA, "ESCALA 1:25")
         x1, y1 = tx + 3.2 * E, y0 - s0 - 0.6 * E
         f.retangulo(0, X, y1, x1, Y)
+        self.caixa_gabarito = (X, y1, x1, Y)
         return x1, y1
 
     def notas(self, X, Y):
@@ -550,16 +551,24 @@ class Prancha:
         x_esq = f.caixa(0)[0] - 1.6 * E
         return self._fechar(x_esq, x_dir)
 
+    def altura_gabarito(self):
+        """Altura do DET. PLANTA (títulos, cotas, desenho a 1:25 e margem), como em gabarito()."""
+        k = self.E / 25.0
+        return 2.7 * self.E + self.by * k + 2 * self.p["cob_s0"] * k + 0.6 * self.E
+
     def _fechar(self, x_esq, x_dir):
-        """Título, gabarito e notas em cima, moldura e região da prancha."""
+        """Título, gabarito e notas em cima, moldura e região da prancha. A faixa de cima tem 9,0E acima dos títulos
+        das vistas, como no modelo, ou mais, quando o gabarito (desenhado a 1:25 com a altura do pilar) não cabe:
+        com by >= 150 ele descia sobre o título do colapso. O fundo do gabarito fica 0,6E acima dos títulos."""
         f, E = self.f, self.E
         y_top = self.y_tit + 1.2 * E
-        xg, yg = self.gabarito(x_dir - 13.5 * E, y_top + 9.0 * E)
-        self.notas(x_dir - 13.5 * E - 15.0 * E, y_top + 9.0 * E)
-        self.titulo(x_esq + 0.5 * E, y_top + 8.0 * E)
+        Y = max(y_top + 9.0 * E, self.y_tit + H_VISTA * E + 0.6 * E + self.altura_gabarito())
+        xg, yg = self.gabarito(x_dir - 13.5 * E, Y)
+        self.notas(x_dir - 13.5 * E - 15.0 * E, Y)
+        self.titulo(x_esq + 0.5 * E, Y - 1.0 * E)
         x1, y1, x2, y2 = f.extensao()
         m = 0.8 * E
-        f.retangulo(0, x1 - m, y1 - m, max(x2, xg) + m, max(y2, y_top + 9.0 * E) + m)
+        f.retangulo(0, x1 - m, y1 - m, max(x2, xg) + m, max(y2, Y) + m)
         f.regiao("prancha", 0)
         return f
 

@@ -376,6 +376,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - **Exemplos:** `exemplos\P2x_cobrinha.json`, o P2 girado (os mesmos ferros; o colapso troca de face), e o P8 (40 × 90) no `lote_cobrinha.json`. Os comprimentos do TQS conferem com o núcleo nos dois.
   - **Testes:** 4 da folha em x e o DWG do P2 em x pelo TQS, em `testes\teste_e2_prancha.py`.
 - **Testes:** `testes\teste_e2_prancha.py`, sem o TQS (folha, blocos, ferros, só níveis dos modelos) e com ele (DWG do P2 e comprimentos).
+- **Correção de 09/11/2026 (relato do usuário, com captura):** em pilares altos (by >= 150), o DET. PLANTA, desenhado a 1:25 com a altura do pilar, descia sobre o título "VISTA EM PLANTA (COLAPSO PROGRESSIVO)": a faixa de cima tinha altura fixa (9,0E acima dos títulos). Agora ela cresce o necessário para o fundo do gabarito ficar 0,6E acima dos títulos (`Prancha.altura_gabarito`), e o título, as notas e o gabarito sobem juntos. As 12 folhas de exemplo em que o gabarito já cabia ficaram iguais, primitiva por primitiva; mudou o P2x (50 x 150). O teste `TesteGabarito` varre bx e by de 20 a 300 nas duas direções.
 
 **E3. Núcleo dos conectores (radial)** (feita em 05/11/2026)
 - **Aceite:** reproduz o P02: 20 pentes "3P 17 cm", 220 mm, cotas 35, 20 e 39, N1 8 ø10 C=220 e N2 3 ø10 C=320.

@@ -106,6 +106,35 @@ class TesteFolhaX(unittest.TestCase):
         self.assertTrue(usados <= NIVEIS_MODELOS, usados - NIVEIS_MODELOS)
 
 
+class TesteGabarito(unittest.TestCase):
+    """O DET. PLANTA (gabarito a 1:25, com a altura do pilar) não desce sobre os títulos das vistas. Antes, com
+    by >= 150, ele invadia o título "VISTA EM PLANTA (COLAPSO PROGRESSIVO)" (relato do usuário de 09/11/2026)."""
+
+    def _caixa(self, par):
+        pr = prancha_cobrinha.Prancha(detalhar(par))
+        f = pr.montar()
+        return pr, f
+
+    def test_nao_invade_os_titulos(self):
+        from nucleo.folha import H_VISTA
+        for direcao in ("x", "y"):
+            for bx in (20, 40, 80, 150, 200):
+                for by in (20, 50, 100, 150, 200, 300):
+                    with self.subTest(direcao=direcao, bx=bx, by=by):
+                        pr, f = self._caixa(dict(P2, bx=bx, by=by, cob_direcao=direcao, col_n_face_bx=2,
+                                                 col_n_face_by=2))
+                        x0, y0, x1, y1 = pr.caixa_gabarito
+                        topo_titulos = pr.y_tit + H_VISTA * pr.E
+                        self.assertGreaterEqual(y0, topo_titulos + 0.5 * pr.E)
+                        moldura = f.prims[-1]                                    # a moldura cobre o gabarito
+                        ys = [y for _, y in moldura["xy"]] if "xy" in moldura else [moldura["y1"], moldura["y2"]]
+                        self.assertGreaterEqual(max(ys), y1)
+
+    def test_faixa_do_modelo_nao_muda(self):
+        pr, _ = self._caixa(P2)                                             # by = 50: gabarito baixo
+        self.assertAlmostEqual(pr.caixa_gabarito[3], pr.y_tit + 1.2 * pr.E + 9.0 * pr.E)
+
+
 @unittest.skipUnless(TEM_TQS, "sem o TQS")
 class TesteDWG(unittest.TestCase):
     def test_p2_pelo_tqs(self):
