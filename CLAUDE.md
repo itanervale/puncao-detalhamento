@@ -13,6 +13,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - O conjunto (`detalhe.py`, `python -m nucleo.detalhe <projeto.json>`).
   - Folha em primitivas (`folha.py`) e leiaute das pranchas da cobrinha (`prancha_cobrinha.py`) e dos conectores (`prancha_conectores.py`).
   - A prancha da cobrinha desenha em coordenadas locais: `Pl(t, u)` na planta e `T(u, z)` nos cortes. A direção das cobrinhas decide a passagem para a prancha: em y, os cortes ficam à esquerda, girados, como no modelo; em x, embaixo da planta, empilhados por `Folha.caixa` e `Folha.mover`. Ao mexer nela, compare as folhas em y com as de antes, primitiva por primitiva.
+  - **Pilar de borda e de canto (E9, só a cobrinha):** `borda_x`/`borda_y` e `dist_borda_x`/`dist_borda_y`, uma borda por direção. No núcleo, os lados ficam em coordenadas locais (`cobrinha.limites_borda`: "u-", "u+", "t-", "t+"), e tudo para no cobrimento da laje (`parametros.cobrimento_borda`). Na prancha, os desenhos com borda passam por ramos próprios (`_gabarito_bordas`, `_x0_colapso`, os `if bd...`): sem borda, a folha tem de ficar idêntica à de antes. Para comparar, fotografe as primitivas de todos os exemplos antes e depois (as do pilar interno não podem mudar nem na última casa).
 - `dwg_tqs\`: gravação pelo TQS.
   - `arquivo.py`: desenho novo e gravação.
   - `gravar.py`: primitivas para o DWG.
@@ -70,6 +71,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
 - **DWG aberto no TQS:** o `SaveAs` falha sem avisar. O `salvar` confere a data do arquivo e grava `<nome>_HHMMSS.DWG`, com aviso.
 - **Cobrinha (C pela soma dos trechos pelo eixo, como no modelo):** `bendTotalLengthMode` = 2, `bendBendLengthMode` = 2 e `bendRadiusDisplay` = 0.
   - O TQS arredonda cada trecho ao centímetro: com trechos de 14,5, o C sai 2 cm maior. Mantenha as pernas em centímetros inteiros; o núcleo soma os trechos arredondados.
+- **Gancho de 90° (`ICP090`, colapso na borda; medido em 09/11/2026):** o TQS soma, por gancho, 8ø + (π/2 − 1)·R arredondado ao cm, com R o raio da dobra pelo eixo (pino de 5ø; 8ø a partir de ø20): 8, 10, 12, 16 e 21 cm de ø8 a ø20 (`colapso.gancho_90`). O `straightBarMainLength` é só o trecho reto: com o C nele, o TQS soma o gancho duas vezes. A folha passa `reto` e `ganchos` (início, fim) no ferro; `leftHook` é a ponta da inserção.
 - **Texto do ferro reposicionado:** `RebarTextDisplayPosition(x, y, altura em cm plotados, ângulo, 0, ICPCENTR_ESQUERD, ICPQUEBR_SEMQUEBRA)`.
 - **Cotas dos modelos:** `dimblk` "DOT" e `dimtsz` 0,2114; os demais valores em `dwg_tqs\arquivo.py` (`COTA`).
 - **Bloco da biblioteca do TQS:** `BlockLoadFromDwg` com o caminho sem extensão dá ao bloco esse caminho como nome, igual ao do modelo.
@@ -80,6 +82,7 @@ App só de detalhamento (sem cálculo) da armadura de punção de pilares, em DW
   - sem ele, o TQS escreve a medida;
   - num DWG novo, defina `idmniv`, `idmnic`, `idmnil` e `idmnib`, senão chamadas e ticks saem no 216.
 - **Cota alinhada (`DimAligned`):** o texto segue o sentido do 1º ao 2º ponto; com os pontos da direita para a esquerda, ele sai de cabeça para baixo. Ordene os pontos da esquerda para a direita.
+- **Trecho curto numa cadeia de cotas:** o TQS empurra o texto que não cabe para cima da cota vizinha (o trecho de 2,5 cm da última linha à borda livre). Ponha a medida útil (da face à borda) numa fila própria, fora da cadeia.
 - **Arquivos:** leia e grave com `with` ou `pathlib`; os testes rodam limpos com `-W error::ResourceWarning`.
 - **Barra invertida em texto gravado por script:** num caminho como `nucleo\relatorio.py`, o "\r" e o "\t" viram caracteres de controle se o texto passar por uma string comum do Python (aconteceu no plano). Use string crua (`r"..."`) ou `chr(92)`.
 - **Faltas de dependência:** a linha de comando e as ferramentas param com uma mensagem dizendo o que falta (TQS, matplotlib), nunca com traceback e nunca depois de gravar parte do lote.

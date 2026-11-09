@@ -46,7 +46,32 @@ def cobrinha(p, cob):
           f"negativa ø{_f(p['neg_bitola_ext'])} >= ø{_f(p['cob_bitola'])} da cobrinha nos vértices de cima",
           f"negativa ø{_f(p['neg_bitola_ext'])} menor que a cobrinha ø{_f(p['cob_bitola'])}: use barras "
           f"adicionais nos vértices com pelo menos a bitola da cobrinha", f"{ORDEM_ITEM}, 20.4")
+    out += _bordas(p, d)
+    for lado, comp in (cob.get("mont_omitidas") or {}).items():
+        out.append(("ok", f"borda curta: sem montagem entre a face do pilar e a borda ({_f(comp)} cm, menos de "
+                    f"{_f(p['mont_min_borda'])}); os vértices de baixo dessas linhas ficam na armadura positiva da "
+                    f"laje", "decisão do usuário, 09/11/2026"))
     out.append(("ok", f"d = {_f(d)} cm (negativa abaixo do trecho de cima da cobrinha)", f"{ORDEM_ITEM}, 19.5.2.1"))
+    return out
+
+
+def _bordas(p, d):
+    """Pilar de borda ou de canto (E9): onde fica a borda livre e um aviso se ela estiver a 2d ou mais da face."""
+    from .parametros import cobrimento_borda, posicao
+    pos = posicao(p)
+    if pos == "interno":
+        return []
+    out, lados = [], []
+    for eixo in ("x", "y"):
+        lado, a = p[f"borda_{eixo}"], p[f"dist_borda_{eixo}"]
+        if not lado:
+            continue
+        lados.append(f"{lado} ({'faceando' if a == 0 else _f(a) + ' cm da face'})")
+        if a >= 2 * d - 1e-9:
+            out.append(("aviso", f"borda livre {lado} a {_f(a)} cm da face, 2d = {_f(2 * d)} ou mais: o contorno C' não "
+                        f"é cortado, e o pilar pode ser tratado como interno", f"{ORDEM_ITEM}, 19.5.2.3"))
+    out.insert(0, ("ok", f"pilar de {pos}: borda livre {' e '.join(lados)}; armadura de punção, montagem e colapso até "
+                   f"o cobrimento da borda ({_f(cobrimento_borda(p))} cm)", f"{ORDEM_ITEM}, 19.5.2.3 e 19.5.2.4"))
     return out
 
 
@@ -108,6 +133,13 @@ def colapso(res):
             falta = "termina antes de C''" if v["disponivel"] < 0 else f"só {_f(v['disponivel'])} cm além de C''"
             out.append(("aviso", f"colapso em {direcao}: a barra {falta}; {base}; use pelo menos {_f(v['minimo'])} cm "
                         f"além da face (hoje {_f(p['col_ext'])})", f"{ORDEM_ITEM}, 19.5.4 e 9.4.2.4"))
+    if p["col_gancho_borda"] and any(any(b["ganchos"]) for b in res["colapso"]):
+        alt, vao = col.altura_gancho(p["col_bitola"]), p["h_laje"] - p["c_sup"] - p["c_inf"]
+        txt = (f"colapso: gancho de 90° na borda com {_f(alt)} cm de altura (ponta de 8ø e pino de "
+               f"{_f(col.pino(p['col_bitola']))} cm)")
+        out.append(("ok", f"{txt} <= {_f(vao)} cm entre os cobrimentos", f"{ORDEM_ITEM}, 9.4.2.3 e Tabela 9.1")
+                   if alt <= vao + 1e-9 else
+                   ("aviso", f"{txt}: não cabe nos {_f(vao)} cm entre os cobrimentos", f"{ORDEM_ITEM}, 9.4.2.3"))
     cap = col.capacidade(p)
     if cap:
         txt = (f"colapso: As = {_f(cap['as_ef'])} cm2 (barras que cruzam cada face) e 1,5·FSd/fyd = "

@@ -23,6 +23,8 @@ import math
 
 from .folha import (Folha, H_CHAMADA, H_ESCALA, H_LETRA, H_NOTA, H_NOTAS_TIT, H_NX, H_TITULO, H_VISTA,
                     contorno_barra, quebra)
+from . import colapso as col
+from .parametros import cobrimento_borda
 
 NOTAS = [
     "CADA VÉRTICE DA ARM. DE PUNÇÃO DEVERÁ CONTER UMA BARRA SUPERIOR CONFORME ARMADURA NEGATIVA. CASO A ARMADURA "
@@ -31,6 +33,11 @@ NOTAS = [
     "ESTA REPRESENTAÇÃO DO FERRO MOSTRA COMPRIMENTOS ENTRE EIXOS DAS BARRAS.",
     "ESTA REPRESENTAÇÃO DO FERRO MOSTRA COMPRIMENTOS DE DOBRAS ENTRE FACES DAS BARRAS.",
 ]
+
+
+def _ganchos(barra):
+    """Ganchos de 90° do ferro de colapso (só quando há: a folha do pilar interno não muda)."""
+    return dict(ganchos=barra["ganchos"], reto=barra["reto"]) if any(barra["ganchos"]) else {}
 
 
 def _quebrar(txt, n):
@@ -67,16 +74,28 @@ class Prancha:
         for fe in res["ferros"]:
             self.pos[(fe["tipo"], fe.get("subtipo") or fe.get("direcao"))] = fe
         pc = self.c["pecas"]
-        self.ext = next(x for x in pc if x["tipo"] == "extremidade" and x["ini"] == 0)
-        self.cont = next((x for x in pc if x["tipo"] == "continua"), None)
+        # Uma peça-modelo por tipo (posição): as da face, de preferência a do lado u = 0 (a do outro lado é a
+        # espelhada); com borda livre, pode haver peças só de um lado (E9).
+        self.modelos = {}
+        for x in sorted(pc, key=lambda x: x["ini"] != 0):
+            self.modelos.setdefault(x["tipo"], x)
+        self.ext = self.modelos.get("extremidade") or self.modelos.get("extremidade_borda")
+        self.cont = self.modelos.get("continua") or self.modelos.get("continua_borda")
+        self.bd = self.c.get("bordas") or {k: None for k in ("u-", "u+", "t-", "t+")}
         self.u0 = min(u for x in pc for u, _ in x["pontos"])
         self.u1 = max(u for x in pc for u, _ in x["pontos"])
         lin = self.c["linhas"]
-        self.t0 = lin[0] - p["mont_ext"]
-        self.t1 = lin[-1] + p["mont_ext"]
-        # corte A-A na linha diante da face mais perto do meio (afasta as marcas A e B na planta)
+        self.t0, self.t1 = self.c.get("t_mont") or (lin[0] - p["mont_ext"], lin[-1] + p["mont_ext"])
+        # corte A-A na linha diante da face mais perto do meio (afasta as marcas A e B na planta); B-B numa linha ao
+        # lado do pilar, do lado livre
         self.t_frente = min((t for t in lin if 0 < t < self.Lt), key=lambda t: abs(t - self.Lt / 2))
-        self.t_lado = max(t for t in lin if t < 0)
+        lado = [t for t in lin if t < 0]
+        direita = [t for t in lin if t > self.Lt]
+        if lado and not (self.bd["t-"] is not None and direita):
+            self.t_lado = max(lado)
+        else:
+            self.t_lado = min(direita)
+        self.cb = cobrimento_borda(p)                     # cobrimento na borda livre (Q15)
         # linha dos títulos (em x, refeita depois da planta, pela extensão dela)
         self.y_tit = max(self.u1 + 3.6 * self.E, self.by + p["col_ext"] + 2.2 * self.E)
 
@@ -172,26 +191,35 @@ class Prancha:
         f, E, h, L = self.f, self.E, self.h, self.L
         T = self._T(B)
         sobre = 0 < linha < self.Lt
-        ua, ub = self.u0 - 1.2 * E, self.u1 + 1.2 * E
+        # a laje termina reta na borda livre (E9) e, do lado livre, numa linha de quebra
+        ba, bb = self.bd["u-"], self.bd["u+"]
+        ua = -ba["a"] if ba else self.u0 - 1.2 * E
+        ub = L + bb["a"] if bb else self.u1 + 1.2 * E
         zp = 1.3 * E
         amp = 0.67 * E
+        qa = [] if ba else quebra((ua, h), (ua, 0), amp * 0.45)[1:-1]
+        qb = [] if bb else quebra((ub, 0), (ub, h), amp * 0.45)[1:-1]
         if sobre:                                         # pilar cortado
             uz = [(ua, 0), (0, 0), (0, -zp)] + quebra((0, -zp), (L, -zp), amp)[1:-1] + [(L, -zp), (L, 0), (ub, 0)]
-            uz += quebra((ub, 0), (ub, h), amp * 0.45)[1:-1] + [(ub, h), (L, h), (L, h + zp)]
+            uz += qb + [(ub, h), (L, h), (L, h + zp)]
             uz += quebra((L, h + zp), (0, h + zp), amp)[1:-1] + [(0, h + zp), (0, h), (ua, h)]
-            uz += quebra((ua, h), (ua, 0), amp * 0.45)[1:-1]
+            uz += qa
         else:                                             # pilar além do corte, tracejado
-            uz = [(ua, 0), (ub, 0)] + quebra((ub, 0), (ub, h), amp * 0.45)[1:-1] + [(ub, h), (ua, h)]
-            uz += quebra((ua, h), (ua, 0), amp * 0.45)[1:-1]
+            uz = [(ua, 0), (ub, 0)] + qb + [(ub, h), (ua, h)] + qa
             f.poli(203, [T(0, -zp), T(L, -zp), T(L, h + zp), T(0, h + zp)], s=1, fechar=True)
+        if ba or bb:                                      # pilar faceando a borda: pontos repetidos
+            uz = [q for i, q in enumerate(uz) if i == 0 or abs(q[0] - uz[i - 1][0]) + abs(q[1] - uz[i - 1][1]) > 1e-6]
         contorno = [T(u, z) for u, z in uz]
         f.poli(0, contorno, fechar=True)
         f.poli(240, contorno, fechar=True)
-        # barras de flexão de referência (traço-ponto): 2ª camada da negativa e positiva sobre a montagem
+        # barras de flexão de referência (traço-ponto): 2ª camada da negativa e positiva sobre a montagem; na borda,
+        # até o cobrimento
+        ra = ua + (self.cb if ba else 0.3 * E)
+        rb = ub - (self.cb if bb else 0.3 * E)
         for z1, z2 in ((h - self.cs - self.fc - self.f1 - self.f2, h - self.cs - self.fc - self.f1),
                        (self.ci + self.fc + self.fm, self.ci + self.fc + 2 * self.fm)):
             for zz in (z1, z2):
-                f.linha(0, T(ua + 0.3 * E, zz), T(ub - 0.3 * E, zz), s=3)
+                f.linha(0, T(ra, zz), T(rb, zz), s=3)
         pecas = [x for x in self.c["pecas"] if abs(x["linha"] - linha) < 1e-6]
         sup = []
         for pc in pecas:
@@ -217,11 +245,22 @@ class Prancha:
                 if b - a > 0.5:
                     f.linha(245, T(a, self.ci), T(b, self.ci))
                     f.linha(245, T(a, self.ci + self.fcol), T(b, self.ci + self.fcol))
-        f.texto(221, *T(L + (self.u1 - L) * 0.25, h + 0.35 * E), H_CHAMADA, "TOPO LAJE", a=self.a_u)
+            for tem, u, sinal in ((longit["ganchos"][0], longit["ini"], 1), (longit["ganchos"][1], longit["fim"], -1)):
+                if tem:                                   # gancho de 90° para cima na borda livre (E9, Q13)
+                    alt = col.altura_gancho(self.p["col_bitola"])
+                    f.poli(245, [T(u + sinal * self.fcol, self.ci + self.fcol), T(u + sinal * self.fcol,
+                                 self.ci + alt), T(u, self.ci + alt), T(u, self.ci)])
+        # "TOPO LAJE" do lado livre: além da face u = L ou, com a borda desse lado, antes da face u = 0
+        u_txt = L + (self.u1 - L) * 0.25 if bb is None else self.u0 * 0.75
+        f.texto(221, *T(u_txt, h + 0.35 * E), H_CHAMADA, "TOPO LAJE", a=self.a_u)
         if self.vert:
             tx, ty = B - h - zp, self.y_tit
         else:
             tx, ty = ua, B + h + zp + 0.9 * E
+            # com a borda faceando a face u = 0, o título começa no pilar, embaixo da caixa da NOTA 1: sobe acima dela
+            larg = self._texto_largura(f"SEÇÃO {letra}-{letra}", H_VISTA)
+            if nota1 and tx < L / 2 + 1.3 * E and tx + larg > L / 2 - 1.3 * E:
+                ty = B + h + zp + 0.6 * E + 0.63 * E + 0.7 * E
         f.texto(226, tx, ty, H_VISTA, f"SEÇÃO {letra}-{letra}")
         f.texto(0, tx + 0.1 * E, ty - 0.45 * E, H_ESCALA, f"ESCALA 1:{self.E:g}")
         if nota1:
@@ -291,21 +330,26 @@ class Prancha:
 
     # ------------------------------------------------------------------ planta
     def _blocos_cobrinha(self):
+        """Um bloco por tipo de peça (posição), desenhado ao longo do y local. As peças da face ficam na orientação do
+        lado u = 0; a que só existe do lado u = L (borda do outro lado) é levada para ela (v = L - u) e inserida
+        espelhada, como a peça da face direita do pilar interno."""
         f, fc = self.f, self.fc
         nomes = {}
-        for chave, pc in (("ext", self.ext), ("cont", self.cont)):
+        for tipo in ("extremidade", "extremidade_borda", "continua", "continua_borda"):
+            pc = self.modelos.get(tipo)
             if pc is None:
                 continue
-            fe = self.pos[("cobrinha", "extremidade" if chave == "ext" else "continua")]
+            v = (lambda u: self.L - u) if tipo.startswith("extremidade") and pc["ini"] != 0 else (lambda u: u)
+            fe = self.pos[("cobrinha", tipo)]
             nome = f"COBRINHA N{fe['pos']} {_fmt(self.p['cob_bitola'])}"
             b = f.novo_bloco(nome)
             for a, z, nivel in pc["trechos"]:
                 for dx in (-fc / 2, fc / 2):
-                    b.linha(241, (dx, a), (dx, z), s=1 if nivel == "sup" else 0)
+                    b.linha(241, (dx, v(a)), (dx, v(z)), s=1 if nivel == "sup" else 0)
             for u in pc["pernas"]:
-                b.circ(241, 0.0, u, fc / 2)
-                b.circ(233, 0.0, u, fc / 2)
-            nomes[chave] = nome
+                b.circ(241, 0.0, v(u), fc / 2)
+                b.circ(233, 0.0, v(u), fc / 2)
+            nomes[tipo] = nome
         return nomes
 
     def _inserir(self, nome, t, u, espelhar=False):
@@ -328,62 +372,129 @@ class Prancha:
         f.linha(204, (-0.6 * E, by / 2), (bx + 0.6 * E, by / 2), s=3)
         nomes = self._blocos_cobrinha()
         for pc in c["pecas"]:
-            if pc["tipo"] == "extremidade":
+            if pc["tipo"].startswith("extremidade"):
                 if pc["ini"] == 0:
-                    self._inserir(nomes["ext"], pc["linha"], 0.0)
+                    self._inserir(nomes[pc["tipo"]], pc["linha"], 0.0)
                 else:
-                    self._inserir(nomes["ext"], pc["linha"], L, espelhar=True)
+                    self._inserir(nomes[pc["tipo"]], pc["linha"], L, espelhar=True)
             else:
-                self._inserir(nomes["cont"], pc["linha"], 0.0)
+                self._inserir(nomes[pc["tipo"]], pc["linha"], 0.0)
+        self._bordas_planta()
         for b in c["montagem"]:
             f.linha(243, Pl(b["ini"], b["pos"]), Pl(b["fim"], b["pos"]))
         # cotas: linhas de cobrinha (além da ponta u1), fileiras diante das faces (além da última linha) e ao lado
         # do pilar (antes da primeira linha)
         mt, mu = self._modo("t"), self._modo("u")
         lin = c["linhas"]
-        yc = self.u1 + 0.9 * E
+        bd = self.bd
+        # as cadeias ficam além da borda livre, fora da laje
+        alem = lambda k, base, sinal, v: (v if bd[k] is None else                       # noqa: E731
+                                          (max if sinal > 0 else min)(v, base + sinal * bd[k]["a"]))
+        yc = alem("u+", L, 1, self.u1) + 0.9 * E
         for a, b in zip(lin, lin[1:]):
             f.cota(Pl(a, self.u1), Pl(b, self.u1), Pl(a, yc), modo=mt)
-        fil = sorted(set(self.ext["pernas"]) | {L - u for u in self.ext["pernas"]} | {0.0, L})
-        xc = lin[-1] + 0.9 * E
+        fil = sorted({u for pc in c["pecas"] if pc["tipo"].startswith("extremidade") for u in pc["pernas"]} | {0.0, L})
+        xc = alem("t+", Lt, 1, lin[-1]) + 0.9 * E
         for a, b in zip(fil, fil[1:]):
             f.cota(Pl(lin[-1], a), Pl(lin[-1], b), Pl(xc, a), modo=mu)
+        # pilar recuado da borda (E9): a distância da face à borda numa fila própria, além da cadeia (dentro dela,
+        # o trecho da última linha à borda é só o cobrimento, curto demais para o texto)
+        for k, base, sinal in (("t-", 0.0, -1), ("t+", Lt, 1)):
+            if bd[k] is not None and bd[k]["a"] > 0.5:
+                a, b = sorted((base, base + sinal * bd[k]["a"]))
+                f.cota(Pl(a, L), Pl(b, L), Pl(a, yc + 0.6 * E), modo=mt)
+        for k, base, sinal in (("u-", 0.0, -1), ("u+", L, 1)):
+            if bd[k] is not None and bd[k]["a"] > 0.5:
+                a, b = sorted((base, base + sinal * bd[k]["a"]))
+                f.cota(Pl(Lt, a), Pl(Lt, b), Pl(xc + 0.6 * E, a), modo=mu)
         if self.cont:
             lado = [u for u in self.cont["pernas"] if -s0 - 1e-6 <= u <= L + s0 + 1e-6]
-            xl = lin[0] - 0.9 * E
+            xl = alem("t-", 0.0, -1, lin[0]) - 0.9 * E
             for a, b in zip(lado, lado[1:]):
                 f.cota(Pl(lin[0], a), Pl(lin[0], b), Pl(xl, a), modo=mu)
-        f.cota(Pl(-s0, L), Pl(0, L), Pl(-s0, L + s0 / 2), modo=mt)
-        f.cota(Pl(Lt, L), Pl(Lt, L + s0), Pl(Lt + s0 / 2, L), modo=mu)
+        # s0 nas duas direções, num lado que tem a linha (ou a perna) de s0
+        tem = lambda lista, v: any(abs(x - v) < 1e-6 for x in lista)          # noqa: E731
+        if tem(lin, -s0):
+            f.cota(Pl(-s0, L), Pl(0, L), Pl(-s0, L + s0 / 2), modo=mt)
+        elif tem(lin, Lt + s0):
+            f.cota(Pl(Lt, L), Pl(Lt + s0, L), Pl(Lt, L + s0 / 2), modo=mt)
+        if tem(fil, L + s0):
+            f.cota(Pl(Lt, L), Pl(Lt, L + s0), Pl(Lt + s0 / 2, L), modo=mu)
+        elif tem(fil, -s0):
+            f.cota(Pl(Lt, -s0), Pl(Lt, 0.0), Pl(Lt + s0 / 2, -s0), modo=mu)
         # pente mestre (além da cadeia de cotas) e marcas dos cortes (além das cotas)
+        t_pm = -s0 if tem(lin, -s0) else Lt + s0
         tx, ty = Pl(self.t0 + 0.2 * E, self.u1 + 2.3 * E)
         f.texto(253, tx, ty, H_CHAMADA, "PENTE MESTRE")
         f.texto(253, tx + 0.5 * E, ty - 0.45 * E, H_CHAMADA, "P/ LOCAÇÃO")
         larg = self._texto_largura("PENTE MESTRE", H_CHAMADA)
-        self._chamada(253, [(tx, ty - 0.1 * E), (tx + larg + 0.3 * E, ty - 0.1 * E), Pl(-s0, self.u1 + 0.05 * E)])
+        self._chamada(253, [(tx, ty - 0.1 * E), (tx + larg + 0.3 * E, ty - 0.1 * E), Pl(t_pm, self.u1 + 0.05 * E)])
         for t, letra in ((self.t_frente, "A"), (self.t_lado, "B")):
             self._marca_corte(t, self.u1 + 1.6 * E, 1, letra)
             self._marca_corte(t, self.u0 - 0.4 * E, -1, letra)
         if self.vert:                                     # em x, o título vai depois, pela extensão da planta
             f.texto(226, self.t0, self.y_tit, H_VISTA, "VISTA EM PLANTA (ARM. PUNÇÃO)")
             f.texto(0, self.t0 + 0.1 * E, self.y_tit - 0.45 * E, H_ESCALA, f"ESCALA 1:{E:g}")
-        # barras de montagem identificadas, antes do início das cobrinhas (abaixo das marcas dos cortes)
+        # barras de montagem identificadas, antes do início das cobrinhas (abaixo das marcas dos cortes); com borda,
+        # pode haver duas posições de barra lateral (uma de cada lado do pilar)
         y = self.u0 - 2.9 * E
-        for sub in ("continua", "lateral"):
-            fe = self.pos.get(("montagem", sub))
-            if not fe:
-                continue
-            xi, yi = Pl(self.t0, y)
+        for fe in [x for x in self.r["ferros"] if x["tipo"] == "montagem"]:
+            if fe["subtipo"] == "continua":
+                ini, marcos = self.t0, [self.t0, lin[0], lin[-1], self.t1]
+            else:
+                b = next(b for b in c["montagem"] if b["tipo"] == "lateral" and abs(b["comp"] - fe["comp"]) < 0.5)
+                ini = b["ini"]
+                marcos = [b["ini"], lin[0], 0.0] if b["ini"] < 0 else [Lt, lin[-1], b["fim"]]
+            xi, yi = Pl(ini, y)
             f.ferro(dict(tipo="reto", mark=fe["pos"], quant=fe["quant"], bitola=fe["bitola"], comp=fe["comp"],
                          ins=[dict(x=xi, y=yi, ang=0.0 if self.vert else 90.0, nivel=244, ipatas=1)]))
-            if sub == "continua":
-                marcos = [self.t0, lin[0], lin[-1], self.t1]
-            else:
-                marcos = [self.t0, lin[0], 0.0]
+            marcos = sorted(set(round(m, 4) for m in marcos if min(marcos[0], marcos[-1]) - 1e-6 <= m
+                                <= max(marcos[0], marcos[-1]) + 1e-6))
             for a, b in zip(marcos, marcos[1:]):
-                f.cota(Pl(a, y), Pl(b, y), Pl(a, y + 0.6 * E), modo=mt)
+                if b - a > 0.5:
+                    f.cota(Pl(a, y), Pl(b, y), Pl(a, y + 0.6 * E), modo=mt)
             y -= 2.2 * E
         self.y_min_planta = y
+
+    def _bordas_planta(self):
+        """Borda livre na planta (E9): a linha da borda (nível 240, o do contorno da laje nos cortes do modelo), o
+        texto "BORDA LIVRE" (221, como o "TOPO LAJE") e, com o pilar recuado, a cota da face até a borda."""
+        f, E, Pl, bd = self.f, self.E, self.Pl, self.bd
+        if not any(bd.values()):
+            return
+        lin, L, Lt = self.c["linhas"], self.L, self.Lt
+        a = {k: (v["a"] if v else None) for k, v in bd.items()}
+        t_ini = -a["t-"] if a["t-"] is not None else min(self.t0, lin[0]) - 0.6 * E
+        t_fim = Lt + a["t+"] if a["t+"] is not None else max(self.t1, lin[-1]) + 0.6 * E
+        u_ini = -a["u-"] if a["u-"] is not None else self.u0 - 0.6 * E
+        u_fim = L + a["u+"] if a["u+"] is not None else self.u1 + 0.6 * E
+        linhas = []
+        if a["u-"] is not None:
+            linhas.append(((t_ini, -a["u-"]), (t_fim, -a["u-"]), "u", 0.0, -1))
+        if a["u+"] is not None:
+            linhas.append(((t_ini, L + a["u+"]), (t_fim, L + a["u+"]), "u", L, 1))
+        if a["t-"] is not None:
+            linhas.append(((-a["t-"], u_ini), (-a["t-"], u_fim), "t", 0.0, -1))
+        if a["t+"] is not None:
+            linhas.append(((Lt + a["t+"], u_ini), (Lt + a["t+"], u_fim), "t", Lt, 1))
+        for p1, p2, eixo, face, sinal in linhas:
+            self._linha_borda(Pl(*p1), Pl(*p2), sinal)
+
+    def _linha_borda(self, p1, p2, sinal):
+        """Linha da borda livre (240) de p1 a p2 (na prancha, horizontal ou vertical) e o texto "BORDA LIVRE"
+        paralelo a ela, do lado de fora da laje (sinal +1: x ou y maior), perto do fim da linha."""
+        f, E = self.f, self.E
+        (x1, y1), (x2, y2) = p1, p2
+        f.linha(240, (x1, y1), (x2, y2))
+        larg = self._texto_largura("BORDA LIVRE", H_CHAMADA)
+        if abs(y2 - y1) < 1e-9:
+            xb = max(x1, x2)
+            ty = y1 + (0.2 * E if sinal > 0 else -0.2 * E - H_CHAMADA * E)
+            f.texto(221, xb - larg - 0.3 * E, ty, H_CHAMADA, "BORDA LIVRE")
+        else:
+            yb = max(y1, y2)
+            tx = x1 + (0.2 * E + H_CHAMADA * E if sinal > 0 else -0.2 * E)
+            f.texto(221, tx, yb - larg - 0.3 * E, H_CHAMADA, "BORDA LIVRE", a=90.0)
 
     # ------------------------------------------------------------------ colapso
     def colapso(self, X0):
@@ -396,27 +507,83 @@ class Prancha:
             f.linha(245, (X0 + col_x["ini"], v), (X0 + col_x["fim"], v))
         for v in col_y["pos"]:
             f.linha(245, (X0 + v, col_y["ini"]), (X0 + v, col_y["fim"]))
-        f.texto(226, X0 - ext, self.y_tit, H_VISTA, "VISTA EM PLANTA (COLAPSO PROGRESSIVO)")
-        f.texto(0, X0 - ext + 0.1 * E, self.y_tit - 0.45 * E, H_ESCALA, f"ESCALA 1:{E:g}")
+        self._bordas_colapso(X0, col_x, col_y)
+        f.texto(226, X0 + col_x["ini"], self.y_tit, H_VISTA, "VISTA EM PLANTA (COLAPSO PROGRESSIVO)")
+        f.texto(0, X0 + col_x["ini"] + 0.1 * E, self.y_tit - 0.45 * E, H_ESCALA, f"ESCALA 1:{E:g}")
         fx = self.pos[("colapso", "x")]
         fy = self.pos[("colapso", "y")]
-        y5 = -ext - 1.6 * E
+        y5 = col_y["ini"] - 1.6 * E
         f.ferro(dict(tipo="reto", mark=fx["pos"], quant=fx["quant"], bitola=fx["bitola"], comp=fx["comp"],
-                     ins=[dict(x=X0 + col_x["ini"], y=y5, ang=0.0, nivel=246, ipatas=1)]))
-        f.cota((X0 + bx, y5), (X0 + bx + ext, y5), (X0 + bx, y5 + 0.6 * E), modo="h")
+                     ins=[dict(x=X0 + col_x["ini"], y=y5, ang=0.0, nivel=246, ipatas=1)], **_ganchos(col_x)))
+        # comprimento além da face num lado livre e, do lado da borda, da face até a ponta (no cobrimento)
+        if not col_x["borda_fim"]:
+            f.cota((X0 + bx, y5), (X0 + bx + ext, y5), (X0 + bx, y5 + 0.6 * E), modo="h")
+        else:
+            f.cota((X0 - ext, y5), (X0, y5), (X0 - ext, y5 + 0.6 * E), modo="h")
+        for b_ponta, a, b in ((col_x["borda_ini"], col_x["ini"], 0.0), (col_x["borda_fim"], bx, col_x["fim"])):
+            if b_ponta and b - a > 0.5:
+                f.cota((X0 + a, y5), (X0 + b, y5), (X0 + a, y5 + 0.6 * E), modo="h")
         f.texto(0, X0 - 0.2 * E, y5 - 1.0 * E, H_NOTA, "(barras contra colapso progressivo)")
         f.texto(226, X0 + 0.3 * E, y5 - 1.55 * E, H_NOTA, "ARMADURA DA FACE INFERIOR")
-        x6 = X0 + bx + ext + 1.6 * E
+        x6 = X0 + col_x["fim"] + 1.6 * E
         f.ferro(dict(tipo="reto", mark=fy["pos"], quant=fy["quant"], bitola=fy["bitola"], comp=fy["comp"],
-                     ins=[dict(x=x6, y=col_y["ini"], ang=90.0, nivel=246, ipatas=1)]))
-        f.cota((x6, by), (x6, by + ext), (x6 - 0.6 * E, by), modo="v")
+                     ins=[dict(x=x6, y=col_y["ini"], ang=90.0, nivel=246, ipatas=1)], **_ganchos(col_y)))
+        if not col_y["borda_fim"]:
+            f.cota((x6, by), (x6, by + ext), (x6 - 0.6 * E, by), modo="v")
+        else:
+            f.cota((x6, -ext), (x6, 0.0), (x6 - 0.6 * E, -ext), modo="v")
+        for b_ponta, a, b in ((col_y["borda_ini"], col_y["ini"], 0.0), (col_y["borda_fim"], by, col_y["fim"])):
+            if b_ponta and b - a > 0.5:
+                f.cota((x6, a), (x6, b), (x6 - 0.6 * E, a), modo="v")
         f.texto(0, x6 + 1.0 * E, -0.2 * E, H_NOTA, "(barras contra colapso progressivo)", a=90)
         f.texto(226, x6 + 1.55 * E, 0.3 * E, H_NOTA, "ARMADURA DA FACE INFERIOR", a=90)
         return x6 + 2.2 * E
 
+    def _x0_colapso(self, x_ref):
+        """Origem da vista do colapso com borda livre: a parte da esquerda (barra ou borda) a 1,6E de x_ref."""
+        p, col_x = self.p, self.r["colapso"][0]
+        esq = -p["dist_borda_x"] if p["borda_x"] == "esquerda" else col_x["ini"] - 0.6 * self.E
+        return x_ref + 1.6 * self.E - min(esq, col_x["ini"])
+
+    def _bordas_colapso(self, X0, col_x, col_y):
+        """Bordas livres na vista do colapso (coordenadas da prancha: bx na horizontal, by na vertical)."""
+        p, E, bx, by = self.p, self.E, self.bx, self.by
+        ex = p["dist_borda_x"] if p["borda_x"] else None
+        ey = p["dist_borda_y"] if p["borda_y"] else None
+        if ex is None and ey is None:
+            return
+        xa = X0 - ex if p["borda_x"] == "esquerda" else X0 + col_x["ini"] - 0.6 * E
+        xb = X0 + bx + ex if p["borda_x"] == "direita" else X0 + col_x["fim"] + 0.6 * E
+        ya = -ey if p["borda_y"] == "baixo" else col_y["ini"] - 0.6 * E
+        yb = by + ey if p["borda_y"] == "cima" else col_y["fim"] + 0.6 * E
+        if p["borda_x"] == "esquerda":
+            self._linha_borda((xa, ya), (xa, yb), -1)
+        elif p["borda_x"] == "direita":
+            self._linha_borda((xb, ya), (xb, yb), 1)
+        if p["borda_y"] == "baixo":
+            self._linha_borda((xa, ya), (xb, ya), -1)
+        elif p["borda_y"] == "cima":
+            self._linha_borda((xa, yb), (xb, yb), 1)
+
     # ------------------------------------------------------------------ gabarito, notas, título
+    def _lados_prancha(self):
+        """Lados do pilar na prancha ("x-", "x+", "y-", "y+") -> (tem a linha do pente mestre a s0?, distância da
+        borda livre ou None)."""
+        mapa = ({"x-": "t-", "x+": "t+", "y-": "u-", "y+": "u+"} if self.vert
+                else {"x-": "u-", "x+": "u+", "y-": "t-", "y+": "t+"})
+        s0, cont = self.p["cob_s0"], self.c["contorno"]
+        return {k: (abs(cont[loc] - s0) < 1e-6, self.bd[loc]["a"] if self.bd[loc] else None)
+                for k, loc in mapa.items()}
+
+    def _afastamentos_gabarito(self):
+        """Quanto o gabarito vai além de cada face (cm reais): s0 ou a borda, o maior."""
+        s0 = self.p["cob_s0"]
+        return {k: max(s0 if tem else 0.0, a or 0.0) for k, (tem, a) in self._lados_prancha().items()}
+
     def gabarito(self, X, Y):
         """DET. PLANTA - gabarito dos pentes mestres, a 1:25 (cotas com os valores reais)."""
+        if any(a is not None for _, a in self._lados_prancha().values()):
+            return self._gabarito_bordas(X, Y)
         f, E, p = self.f, self.E, self.p
         k = E / 25.0
         Lt, L, s0 = self.bx * k, self.by * k, p["cob_s0"] * k
@@ -438,6 +605,88 @@ class Prancha:
         f.texto(220, X + 0.3 * E, Y - 1.05 * E, 0.20, "GABARITO PENTES MESTRES")
         f.texto(0, X + 0.3 * E, Y - 1.4 * E, H_ESCALA, "ESCALA 1:25")
         x1, y1 = tx + 3.2 * E, y0 - s0 - 0.6 * E
+        f.retangulo(0, X, y1, x1, Y)
+        self.caixa_gabarito = (X, y1, x1, Y)
+        return x1, y1
+
+    def _gabarito_bordas(self, X, Y):
+        """O gabarito com borda livre (E9): a linha do pente mestre (233) só nos lados que a têm, a borda (240) nos
+        outros e as cotas até a borda."""
+        f, E = self.f, self.E
+        k = E / 25.0
+        s0 = self.p["cob_s0"] * k
+        lados = self._lados_prancha()
+        off = {n: v * k for n, v in self._afastamentos_gabarito().items()}
+        Lx, Ly = self.bx * k, self.by * k
+        x0, y0 = X + 0.8 * E + off["x-"], Y - 2.7 * E - Ly - off["y+"]
+        xL, xR, yB, yT = x0 - off["x-"], x0 + Lx + off["x+"], y0 - off["y-"], y0 + Ly + off["y+"]
+        f.retangulo(203, x0, y0, x0 + Lx, y0 + Ly, s=1)
+        f.retangulo(240, x0, y0, x0 + Lx, y0 + Ly)
+        # linha do pente mestre: do lado sem ela, as vizinhas vão até a borda
+        pos = {}
+        for n, base, sinal in (("x-", x0, -1), ("x+", x0 + Lx, 1), ("y-", y0, -1), ("y+", y0 + Ly, 1)):
+            tem, a = lados[n]
+            pos[n] = base + sinal * (s0 if tem else a * k)
+        L_, R_, B_, T_ = pos["x-"], pos["x+"], pos["y-"], pos["y+"]
+        lados_pm = [("y-", (L_, B_), (R_, B_)), ("x+", (R_, B_), (R_, T_)), ("y+", (R_, T_), (L_, T_)),
+                    ("x-", (L_, T_), (L_, B_))]
+        i = next((j for j, (n, _, _) in enumerate(lados_pm) if not lados[n][0]), None)
+        if i is None:                                     # borda além de s0: as quatro linhas
+            f.retangulo(233, L_, B_, R_, T_)
+            lados_pm, i = [], -1
+        corrida = []
+        for n, a, b in lados_pm[i + 1:] + lados_pm[:i + 1]:
+            if lados[n][0]:
+                corrida = corrida or [a]
+                corrida.append(b)
+            elif corrida:
+                f.poli(233, corrida)
+                corrida = []
+        if corrida:
+            f.poli(233, corrida)
+        for n, (tem, a) in lados.items():
+            if a is None:
+                continue
+            if n[0] == "x":
+                x = x0 - a * k if n == "x-" else x0 + Lx + a * k
+                f.linha(240, (x, yB - 0.3 * E), (x, yT + 0.3 * E))
+            else:
+                y = y0 - a * k if n == "y-" else y0 + Ly + a * k
+                f.linha(240, (xL - 0.3 * E, y), (xR + 0.3 * E, y))
+        # cotas: em cima (x) e à direita (y), com o pente mestre e a borda
+        def marcos(lo, hi, neg, posit):
+            v = {lo, hi}
+            for n, base, sinal in ((neg, lo, -1), (posit, hi, 1)):
+                tem, a = lados[n]
+                if tem:
+                    v.add(base + sinal * s0)
+                if a is not None:
+                    v.add(base + sinal * a * k)
+            out = []
+            for m in sorted(v):
+                if not out or m - out[-1] > 1e-6:
+                    out.append(m)
+            return out
+        yc = yT + 0.6 * E
+        mx = marcos(x0, x0 + Lx, "x-", "x+")
+        for a, b in zip(mx, mx[1:]):
+            f.cota((a, yT), (b, yT), (a, yc), modo="h", fator=1 / k)
+        xc = xR + 0.6 * E
+        my = marcos(y0, y0 + Ly, "y-", "y+")
+        for a, b in zip(my, my[1:]):
+            f.cota((xR, a), (xR, b), (xc, a), modo="v", fator=1 / k)
+        tx = xc + 1.0 * E
+        ym = y0 + Ly * 0.5
+        if lados["x+"][0]:
+            alvo = (x0 + Lx + s0, ym)
+        else:
+            alvo = (x0 + Lx * 0.75, y0 + Ly + s0 if lados["y+"][0] else y0 - s0)
+        f.texto(253, tx, ym + 0.3 * E, H_CHAMADA, "NOTA 2")
+        self._chamada(253, [(tx + 2.0 * E, ym + 0.15 * E), (tx - 0.1 * E, ym + 0.15 * E), alvo])
+        f.texto(220, X + 0.3 * E, Y - 0.6 * E, H_VISTA, "DET. PLANTA")
+        f.texto(220, X + 0.3 * E, Y - 1.05 * E, 0.20, "GABARITO PENTES MESTRES")
+        f.texto(0, X + 0.3 * E, Y - 1.4 * E, H_ESCALA, "ESCALA 1:25")
+        x1, y1 = tx + 3.2 * E, yB - 0.6 * E
         f.retangulo(0, X, y1, x1, Y)
         self.caixa_gabarito = (X, y1, x1, Y)
         return x1, y1
@@ -478,10 +727,10 @@ class Prancha:
     def _detalhes_e_cortes(self):
         """Na ordem a partir da planta: os detalhes (pelas faces e entre eixos) da peça inteira e da peça da face e
         as seções B-B e A-A. Cada função recebe a posição B e devolve a extensão na direção do empilhamento."""
-        fe_ext = self.pos[("cobrinha", "extremidade")]
-        fe_cont = self.pos.get(("cobrinha", "continua"))
         itens = []
-        for pc, fe in ((self.cont, fe_cont), (self.ext, fe_ext)):
+        # peças inteiras primeiro, depois as da face; com borda livre, também as que terminam nela (E9)
+        for tipo in ("continua", "continua_borda", "extremidade", "extremidade_borda"):
+            pc, fe = self.modelos.get(tipo), self.pos.get(("cobrinha", tipo))
             if not pc:
                 continue
             itens.append(("faces", lambda B, pc=pc: self.detalhe_faces(B, pc)))
@@ -518,7 +767,10 @@ class Prancha:
             f.linha(204, (x_esq + 1.5 * E, u), (0.0, u), s=3)
         # à direita: colapso; em cima: título, gabarito e notas
         i0 = len(f.prims)
-        x_dir = self.colapso(self.t1 + 1.6 * E + self.p["col_ext"])
+        if any(self.bd.values()):                         # a borda e as cotas além dela podem passar de t1
+            x_dir = self.colapso(self._x0_colapso(max(self.t1, f.regioes["planta"][2])))
+        else:
+            x_dir = self.colapso(self.t1 + 1.6 * E + self.p["col_ext"])
         f.regiao("colapso", i0)
         return self._fechar(x_esq, x_dir)
 
@@ -546,7 +798,7 @@ class Prancha:
         for u in (0.0, self.L):                           # faces do pilar, dos cortes até a planta
             f.linha(204, (u, y_fim - 0.1 * E), (u, 0.0), s=3)
         i0 = len(f.prims)
-        x_dir = self.colapso(x2 + 1.6 * E + self.p["col_ext"])
+        x_dir = self.colapso(self._x0_colapso(x2) if any(self.bd.values()) else x2 + 1.6 * E + self.p["col_ext"])
         f.regiao("colapso", i0)
         x_esq = f.caixa(0)[0] - 1.6 * E
         return self._fechar(x_esq, x_dir)
@@ -554,6 +806,9 @@ class Prancha:
     def altura_gabarito(self):
         """Altura do DET. PLANTA (títulos, cotas, desenho a 1:25 e margem), como em gabarito()."""
         k = self.E / 25.0
+        if any(a is not None for _, a in self._lados_prancha().values()):
+            off = self._afastamentos_gabarito()
+            return 2.7 * self.E + self.by * k + (off["y-"] + off["y+"]) * k + 0.6 * self.E
         return 2.7 * self.E + self.by * k + 2 * self.p["cob_s0"] * k + 0.6 * self.E
 
     def _fechar(self, x_esq, x_dir):

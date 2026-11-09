@@ -14,7 +14,8 @@ dela derruba o processo (violação de acesso). Por isso a janela chama este mó
 Uso:  python -m dwg_tqs.leitor_tqs plantas "<pasta do edifício>" [--saida dados.json]
       python -m dwg_tqs.leitor_tqs planta "<pasta do edifício>" <planta> [--saida dados.json] [--sem-esforcos]
              [--projeto projeto.json [--pilares P5,P7 | --todos]]
-A saída é JSON (UTF-8). Com --projeto, grava também um projeto com os pilares internos (ou os escolhidos).
+A saída é JSON (UTF-8). Com --projeto, grava também um projeto com os pilares internos, de borda e de canto (ou os
+escolhidos).
 """
 import argparse
 import json
@@ -253,8 +254,9 @@ def main(argv=None):
     ap.add_argument("--tmp", help="pasta temporária da cópia (quem chama apaga)")
     ap.add_argument("--sem-esforcos", action="store_true")
     ap.add_argument("--projeto", help="grava um projeto com os pilares importados")
-    ap.add_argument("--pilares", help="títulos separados por vírgula (padrão: os internos retangulares)")
-    ap.add_argument("--todos", action="store_true", help="todos os retangulares, inclusive borda e canto")
+    ap.add_argument("--pilares", help="títulos separados por vírgula (padrão: os retangulares internos, de borda e de canto)")
+    ap.add_argument("--todos", action="store_true", help="todos os retangulares, inclusive os de bordas em lados opostos, os girados com borda e os com "
+                    "abertura ou capitel")
     ap.add_argument("--ajustar", action="store_true", help="s0 e espaçamentos nos limites da NBR 6118 (0,5d e 0,75d)")
     a = ap.parse_args(argv)
     tmp = a.tmp or tempfile.mkdtemp(prefix="pun_tqs_")

@@ -22,14 +22,52 @@ GAMA_F_CCP = 1.2
 TF_KN = 10.0                          # 1 tf = 10 kN, como no LPUNC e no app de cálculo
 
 
+def _pontas(p, eixo, L):
+    """Início e fim das barras que correm ao longo de `eixo`: col_ext além das faces; do lado de uma borda livre,
+    no cobrimento dela (Q13: as perpendiculares à borda terminam na borda). Devolve (ini, fim, borda_ini, borda_fim)."""
+    from .parametros import cobrimento_borda
+    ext, c = p["col_ext"], cobrimento_borda(p)
+    neg, pos = ("esquerda", "direita") if eixo == "x" else ("baixo", "cima")
+    borda, a = p.get(f"borda_{eixo}") or "", p.get(f"dist_borda_{eixo}") or 0.0
+    ini = -a + c if borda == neg else -ext
+    fim = L + a - c if borda == pos else L + ext
+    return ini, fim, borda == neg, borda == pos
+
+
+def pino(fi_mm):
+    """Diâmetro do pino de dobramento do gancho (cm), NBR 6118:2026, Tabela 9.1, CA-50: 5ø abaixo de ø20, 8ø a
+    partir dele."""
+    return (8 if fi_mm >= 20 else 5) * fi_mm / 10.0
+
+
+def gancho_90(fi_mm):
+    """Acréscimo ao comprimento de um gancho de 90° (ponta reta de 8ø, NBR 6118:2026, 9.4.2.3) como o TQS calcula
+    (ICP090; medido em 09/11/2026 de ø8 a ø20: 8, 10, 12, 16 e 21 cm): 8ø + (π/2 - 1)·R, com R o raio da dobra
+    pelo eixo, arredondado ao centímetro em cada gancho."""
+    fi = fi_mm / 10.0
+    R = pino(fi_mm) / 2 + fi / 2
+    return math.floor(8 * fi + (math.pi / 2 - 1) * R + 0.5)
+
+
+def altura_gancho(fi_mm):
+    """Altura do gancho de 90° pelas faces externas (cm): ponta de 8ø mais o raio externo da dobra."""
+    return 8 * fi_mm / 10.0 + pino(fi_mm) / 2 + fi_mm / 10.0
+
+
 def detalhar(p):
-    bx, by, ext = p["bx"], p["by"], p["col_ext"]
+    bx, by = p["bx"], p["by"]
     nx, ny = p["col_n_face_by"], p["col_n_face_bx"]       # barras que correm em x / em y
-    em_x = dict(direcao="x", quant=nx, pos=[round((i + 0.5) * by / nx, 4) for i in range(nx)],
-                ini=-ext, fim=bx + ext, comp=math.ceil(round(bx + 2 * ext, 6)))
-    em_y = dict(direcao="y", quant=ny, pos=[round((i + 0.5) * bx / ny, 4) for i in range(ny)],
-                ini=-ext, fim=by + ext, comp=math.ceil(round(by + 2 * ext, 6)))
-    return [em_x, em_y]
+    out = []
+    for direcao, quant, L, Lt in (("x", nx, bx, by), ("y", ny, by, bx)):
+        ini, fim, b_ini, b_fim = _pontas(p, direcao, L)
+        # gancho de 90° (para cima) na ponta que termina na borda livre: opção, sem gancho por padrão (Q13)
+        ganchos = (b_ini and p["col_gancho_borda"], b_fim and p["col_gancho_borda"])
+        reto = math.ceil(round(fim - ini, 6))             # o trecho reto, pelas faces externas dos ganchos
+        comp = reto + sum(ganchos) * gancho_90(p["col_bitola"])
+        out.append(dict(direcao=direcao, quant=quant, pos=[round((i + 0.5) * Lt / quant, 4) for i in range(quant)],
+                        ini=ini, fim=fim, comp=comp, reto=reto, borda_ini=b_ini, borda_fim=b_fim, ganchos=ganchos,
+                        faces=int(ini < 0) + int(fim > L)))
+    return out
 
 
 def area(fi_mm):
@@ -50,16 +88,16 @@ def lb_basico(fi_mm, fck, boa_aderencia=True):
 
 def ultima_linha(res):
     """Distância da face do pilar à última linha da armadura de punção, por direção das barras de colapso (as que
-    correm em x saem pelas faces perpendiculares a x). Cobrinha: a perna ou a linha mais afastada; conectores: o
-    último contorno de pinos."""
+    correm em x saem pelas faces perpendiculares a x). Cobrinha: a perna ou a linha mais afastada, só nos lados
+    livres (do lado de uma borda, a barra termina na borda e não há C''); conectores: o último contorno de pinos."""
     if "conectores" in res:
         u = res["conectores"]["contornos"][-1]
         return {"x": u, "y": u}
-    c, p = res["cobrinha"], res["p"]
-    L = {"x": p["bx"], "y": p["by"]}
+    c = res["cobrinha"]
     ax, tr = c["direcao"], c["transversal"]
-    longe = lambda pos, comp: max(-min(pos), max(pos) - comp)           # noqa: E731
-    return {ax: longe(c["pernas"], L[ax]), tr: longe(c["linhas"], L[tr])}
+    al = c["alcance"]
+    longe = lambda *v: max(x for x in v if x is not None)                # noqa: E731
+    return {ax: longe(al["u-"], al["u+"]), tr: longe(al["t-"], al["t+"])}
 
 
 def ancoragem(res):
@@ -89,7 +127,8 @@ def capacidade(p):
     fk = g["fz"] * TF_KN
     fsd = GAMA_F_CCP * fk
     as_nec = 1.5 * fsd / FYD
-    as_ef = 2 * (p["col_n_face_bx"] + p["col_n_face_by"]) * area(p["col_bitola"])
+    # cada barra conta uma vez por face que cruza: duas no interno; uma na perpendicular à borda faceando
+    as_ef = sum(b["quant"] * b["faces"] for b in detalhar(p)) * area(p["col_bitola"])
     return dict(n=g["n"], titulo=g["titulo"], fk=fk, fsd=fsd, as_nec=as_nec, as_ef=as_ef, ok=as_ef >= as_nec - 1e-9)
 
 
@@ -102,18 +141,21 @@ def sugerir(res, minimo_face=2, arred=5.0):
     cap = capacidade(p)
     if cap:
         a1 = area(p["col_bitola"])
+        em_x, em_y = detalhar(p)                            # faces que cada barra cruza (2; 1 junto da borda)
+        f_x, f_y = em_x["faces"], em_y["faces"]
+        As = lambda nbx, nby: (nby * f_x + nbx * f_y) * a1               # noqa: E731
         n = max(math.ceil(cap["as_nec"] / (2 * a1) - 1e-9), 2 * minimo_face)
         bx, by = p["bx"], p["by"]
         n_bx = max(minimo_face, int(n * bx / (bx + by) + 0.5))
         n_by = max(minimo_face, n - n_bx)
-        while 2 * (n_bx + n_by) * a1 < cap["as_nec"] - 1e-9:
+        while As(n_bx, n_by) < cap["as_nec"] - 1e-9:
             if n_by * bx <= n_bx * by:                      # a face proporcionalmente menos armada
                 n_by += 1
             else:
                 n_bx += 1
         mud.update(col_n_face_bx=n_bx, col_n_face_by=n_by)
         txt.append(f"{n_bx} barras em cada face de {_br(bx)} e {n_by} em cada face de {_br(by)} ø{_br(p['col_bitola'])}"
-                   f": As = {_br(2 * (n_bx + n_by) * a1, 2)} >= {_br(cap['as_nec'], 2)} cm2 "
+                   f": As = {_br(As(n_bx, n_by), 2)} >= {_br(cap['as_nec'], 2)} cm2 "
                    f"(Fk = {_br(cap['fk'] / TF_KN, 2)} tf, comb. {cap['n']})")
     else:
         txt.append("sem cargas do TQS no pilar: só o comprimento pela ancoragem")

@@ -10,6 +10,11 @@ import sys
 from . import cobrinha, colapso, conectores, verificacoes
 from .parametros import altura_util, ler_projeto, normalizar
 
+DESCRICAO_COBRINHA = {"extremidade": "cobrinha da face para fora",
+                      "extremidade_borda": "cobrinha da face até a borda livre",
+                      "continua": "cobrinha inteira, ao lado do pilar",
+                      "continua_borda": "cobrinha inteira, ao lado do pilar, até a borda livre"}
+
 
 def detalhar(par):
     """Resultado de um pilar: dict com p (parâmetros completos), d, erros, verificacoes, ferros e a geometria da
@@ -24,8 +29,7 @@ def detalhar(par):
         cob = cobrinha.detalhar(p)
         res["cobrinha"] = cob
         for g in cob["posicoes"]:
-            desc = ("cobrinha da face para fora" if g["tipo"] == "extremidade"
-                    else "cobrinha inteira, ao lado do pilar")
+            desc = DESCRICAO_COBRINHA[g["tipo"]]
             ferros.append(dict(tipo="cobrinha", subtipo=g["tipo"], bitola=p["cob_bitola"], quant=g["quant"],
                                comp=round(g["comp"]), pontos=g["pontos"], descricao=desc))
         for g in cob["mont_posicoes"]:
@@ -44,7 +48,8 @@ def detalhar(par):
     res["verificacoes"] += verificacoes.colapso(res)
     for g in col:
         ferros.append(dict(tipo="colapso", direcao=g["direcao"], bitola=p["col_bitola"], quant=g["quant"],
-                           comp=g["comp"], descricao=f"colapso progressivo, face inferior, em {g['direcao']}"))
+                           comp=g["comp"], descricao=f"colapso progressivo, face inferior, em {g['direcao']}"
+                           + (", gancho de 90° na borda livre" if any(g["ganchos"]) else "")))
     if "conectores" in res:
         # Montagem opcional depois do colapso: o N1 e o N2 do colapso ficam como no modelo.
         for g in res["conectores"]["mont_posicoes"]:

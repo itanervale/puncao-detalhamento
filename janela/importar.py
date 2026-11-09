@@ -3,8 +3,9 @@
 Diálogo "Importar do TQS": escolhe o edifício e a planta, lê a planta (em cópia, num processo à parte: uma falha da
 DLL do TQS não derruba a janela) e mostra os pilares para o usuário escolher quais trazer.
 
-- Marcados de saída: os internos retangulares sem abertura próxima nem capitel. Os de borda e de canto podem ser
-  marcados, com confirmação (o app os detalharia como internos); os de seção não retangular, não.
+- Marcados de saída: os internos, os de borda e os de canto retangulares, sem abertura próxima nem capitel; as
+  bordas livres (ou vigas) a menos de 2d vão para o pilar (E9). Os de bordas em lados opostos e os girados com borda
+  podem ser marcados, com confirmação (seriam detalhados como internos); os de seção não retangular, não.
 - Os esforços de ELU da grelha (tf e tf·m, característicos) aparecem só para conferência: na tabela, a combinação de
   maior Fz; embaixo, todas as combinações do pilar selecionado.
 """
@@ -313,23 +314,27 @@ class DlgImportar(Dialogo):
         sel = [self.linhas[j] for j in sorted(self.marcados)]
         if not sel:
             raise ValueError("nenhum pilar marcado")
-        fora = [ln["titulo"] for ln in sel if ln["posicao"] != "interno"]
+        fora = [ln["titulo"] for ln in sel if ln["posicao"] != "interno" and not ln.get("bordas")]
         if fora and not messagebox.askyesno(
-                self.title(), "Pilares de borda ou de canto marcados: " + ", ".join(fora) + ".\n\nO app só detalha "
-                "pilares internos; eles seriam detalhados como internos. Importar assim mesmo?", parent=self):
+                self.title(), "Pilares com bordas em lados opostos ou girados marcados: " + ", ".join(fora) +
+                ".\n\nO app detalha uma borda livre por direção, nos eixos da planta; eles seriam detalhados como "
+                "internos. Importar assim mesmo?", parent=self):
             return None
-        pilares = []
+        pilares, avisos = [], {ln["titulo"]: list(ln["avisos"]) for ln in sel if ln["avisos"]}
         sol = self.v_solucao.get()
         for ln in sel:
             par = dict(ln["par"])
-            if sol in ("cobrinha", "conectores"):
+            if sol == "conectores" and ln.get("bordas"):
+                avisos.setdefault(ln["titulo"], []).append("conectores em pilar de borda ou de canto ainda não "
+                                                           "implementados: cobrinha")
+            elif sol in ("cobrinha", "conectores"):
                 par["solucao"] = sol
             pilares.append(par)
         return dict(pilares=pilares, atualizar=self.v_atualizar.get(), ajustar=self.v_ajustar.get(),
                     colapso=self.v_colapso.get(),
                     origem=dict(edificio=self.dados.get("edificio"), planta=self.dados.get("planta"),
                                 data=self.dados.get("data")),
-                    avisos={ln["titulo"]: ln["avisos"] for ln in sel if ln["avisos"]})
+                    avisos=avisos)
 
     def _ok(self):
         try:

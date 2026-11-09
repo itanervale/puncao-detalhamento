@@ -146,14 +146,15 @@ class TesteJanela(unittest.TestCase):
         self.assertTrue(os.path.exists(a.arquivos["P02"]["dwg"]))
         self.assertIn("confere com o núcleo", a.txm.get("1.0", "end"))
 
-    def test_projeto_novo_com_cobrinha_em_x(self):
+    def test_projeto_novo_com_cobrinha_em_y(self):
         a = self.app
         a.modificado = False
         a.novo()
         self.assertEqual(len(a.projeto["pilares"]), 1)
         self.assertFalse(a.res["erros"])
-        self.assertEqual((a.res["p"]["bx"], a.res["p"]["by"], a.res["cobrinha"]["direcao"]), (50, 150, "x"))
-        self.assertLess(a.folha.regioes["corte"][3], a.folha.regioes["planta"][1])
+        # cobrinhas paralelas ao lado maior (padrão desde 09/11/2026): em y, os cortes ficam à esquerda da planta
+        self.assertEqual((a.res["p"]["bx"], a.res["p"]["by"], a.res["cobrinha"]["direcao"]), (50, 150, "y"))
+        self.assertLess(a.folha.regioes["corte"][2], a.folha.regioes["planta"][0])
 
     def test_erro_de_parametro_nao_derruba(self):
         a = self.app

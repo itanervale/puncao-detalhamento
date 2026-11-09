@@ -207,9 +207,13 @@ class Pintor:
         a = math.radians(ins.get("ang", 0.0))
         u = (math.cos(a), math.sin(a))
         nrm = (-u[1], u[0])
-        L = p["comp"]
+        L = p.get("reto", p["comp"])                     # com gancho, o C inclui o gancho (E9)
         x2, y2 = ins["x"] + L * u[0], ins["y"] + L * u[1]
         self.linha(n, [(ins["x"], ins["y"]), (x2, y2)], chave=chave)
+        g = 8 * p["bitola"] / 10.0 + 3.5 * p["bitola"] / 10.0      # gancho de 90° esquemático: 8ø + raio externo
+        for tem, (gx, gy) in zip(p.get("ganchos") or (), ((ins["x"], ins["y"]), (x2, y2))):
+            if tem:
+                self.linha(n, [(gx, gy), (gx + nrm[0] * g, gy + nrm[1] * g)], chave=chave)
         larg = len(txt) * h * 0.82
         mx, my = (ins["x"] + x2) / 2, (ins["y"] + y2) / 2
         self.texto(1, mx - u[0] * larg / 2 + nrm[0] * 0.1 * self.E, my - u[1] * larg / 2 + nrm[1] * 0.1 * self.E,

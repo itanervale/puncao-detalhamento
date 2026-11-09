@@ -196,7 +196,7 @@ Padrões dos modelos. Os itens marcados com † foram acrescentados e aprovados 
 | Bitola da cobrinha | ø10 | |
 | Bitola da montagem positiva (N2) | ø12,5 | |
 | Montagem além da última linha † | 30 | 60 no modelo; 30 pelo usuário em 03/11/2026; arredondada para cima a 5 cm |
-| Direção das cobrinhas † | paralela ao lado menor | com opção de mudar (P6) |
+| Direção das cobrinhas † | paralela ao lado maior (desde 09/11/2026; antes, ao menor) | com opção de mudar (P6) |
 | Altura externa | h − c_sup − c_inf | pontos do ferro pelo eixo: altura − ø (P4; Q1) |
 
 **Conectores:**
@@ -470,7 +470,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **Saídas:** pasta (vazia = `saidas\<projeto>`, guardada no projeto como `pasta_saida`), PDF e DXF, Gerar o pilar (Ctrl+G) e Gerar o lote (Ctrl+Shift+G).
   - O TQS roda numa thread, com o resultado devolvido por fila; as mensagens mostram os arquivos e a conferência dos comprimentos.
   - Também abre o PDF e a pasta.
-- **Pilar de um projeto novo:** os padrões do núcleo (50 × 150, cobrinha em x), desde que a prancha em x ficou pronta. Antes, era 150 × 50.
+- **Pilar de um projeto novo:** os padrões do núcleo (50 × 150), desde que a prancha em x ficou pronta. Antes, era 150 × 50. Com as cobrinhas paralelas ao lado maior (padrão desde 09/11/2026), elas correm em y.
   - Colapso do pilar padrão invertido em 09/11/2026, a pedido do usuário: 3 barras na face bx (50) e 8 na face by (150), como no P02 (8 ø10 C=220 em x e 3 ø10 C=320 em y). Antes, o padrão herdado do pilar de 150 × 50 punha 8 barras na face de 50. Os arquivos de exemplo não mudam: todos declaram as próprias quantidades.
 - **Lições:**
   - as variáveis do Tk só podem ser lidas na thread principal: o que a thread de gravação usa é lido antes;
@@ -623,8 +623,46 @@ Cada etapa termina com a aprovação do usuário e um commit.
   - **Q16. Ordem:** cobrinha primeiro (núcleo e prancha), depois conectores, como nas E1 a E4? Recomendação: sim.
   - **Q17. Importação:** pilares de borda e de canto passam a vir marcados, sem a confirmação de hoje? Os de dois lados opostos ("verificar") continuam pedindo conferência. Recomendação: sim.
 
+- **Respostas do usuário (09/11/2026):**
+  - **Q9:** manter as regras do pilar de centro. Atenção às cobrinhas: como a montagem é numa direção só, a borda muda as peças de um lado e não do outro, e uma das duas fica com comprimento diferente. Cada peça passa a ter o próprio comprimento e vira uma posição própria.
+  - **Q10:** sim, pilar recuado (0 <= a < 2d) entra como borda.
+  - **Q11:** sim, as cobrinhas que correm na direção da borda vão até ela, com uma perna junto da borda.
+  - **Q12:** recomendação aceita (sem linhas construtivas de pentes por padrão; opção).
+  - **Q13:** barras de colapso perpendiculares e paralelas à borda; gancho na borda como opção, sem gancho por padrão.
+  - **Q14:** não incluir o U de borda, nem nota.
+  - **Q15:** o cobrimento na borda livre é o da laje (sem parâmetro próprio; o app usa o maior entre c sup. e c inf.).
+  - **Q16:** cobrinha primeiro, depois conectores.
+  - **Q17:** sim, borda e canto vêm marcados na importação; os de dois lados opostos continuam pedindo conferência (explicado ao usuário: laje mais estreita que o pilar + 4d, ou borda de um lado e viga ou abertura do outro; a norma não trata).
+- **Modelo de dados adotado:** uma borda por eixo, `borda_x` ("", "esquerda" ou "direita") e `borda_y` ("", "baixo" ou "cima"), com `dist_borda_x` e `dist_borda_y` (cm da face à borda, 0 = faceando). Assim, lados opostos não existem no modelo. `col_gancho_borda` liga o gancho das barras de colapso na borda.
+
+**E9 na cobrinha, feita em 09/11/2026:**
+- **Núcleo** (`nucleo\cobrinha.py`):
+  - `limites_borda`: os lados em coordenadas locais (u ao longo da cobrinha, t transversal), cada um com a distância da face à borda e `lim` = a − c − ø/2, o eixo da última perna ou linha que cabe;
+  - `_lado` e `_malha`: as linhas e as pernas de um lado param em `lim`. Na direção das cobrinhas, entra uma perna junto da borda se ela ficar a mais de 3 cm (`TOL_BORDA`) da última perna regular, com uma ponta de 5 cm (`PONTA_BORDA`) até o cobrimento, para toda perna ter trecho horizontal dos dois lados;
+  - tipos de peça novos: "extremidade_borda" (diante da face voltada para a borda, só no pilar recuado) e "continua_borda" (ao lado do pilar, da ponta do lado livre, por baixo, até a borda). Cada forma é uma posição (Q9);
+  - montagem até o cobrimento da borda (`t_mont`); `alcance` (para o C'') só nos lados livres; `contorno`, a distância da face à linha do pente mestre de cada lado (s0 ou, com a borda mais perto, a da borda).
+- **Colapso** (`nucleo\colapso.py`): do lado da borda, a barra termina no cobrimento e cruza uma face só (`faces`, usada na capacidade e na sugestão). Gancho de 90° opcional na ponta da borda (`gancho_90`, `altura_gancho`; a verificação confere se ele cabe entre os cobrimentos).
+- **Gancho de 90° no TQS** (medido em 09/11/2026, `ICP090` numa ponta de um ferro reto de 100): o TQS soma 8, 10, 12, 16 e 21 cm de ø8 a ø20, por gancho. Isso é 8ø + (π/2 − 1)·R, com R o raio da dobra pelo eixo (pino de 5ø, ou 8ø a partir de ø20, NBR 6118, Tabela 9.1), arredondado ao centímetro. O `straightBarMainLength` é o trecho reto, sem o gancho: na primeira gravação, o C (com o gancho) foi passado ali e o TQS somou o gancho outra vez (263 contra 253). A folha passa `reto` ao gravador.
+- **Prancha** (`nucleo\prancha_cobrinha.py`):
+  - planta: linha da borda no 240 e "BORDA LIVRE" no 221, do lado de fora da laje; cadeias de cotas além da borda; a distância da face à borda numa fila própria (dentro da cadeia, o trecho da última linha à borda é só o cobrimento, e o TQS empurrava o texto para cima do vizinho);
+  - seções: a laje termina reta na borda (quebra só do lado livre), barras de referência até o cobrimento, "TOPO LAJE" do lado livre e a seção B-B numa linha do lado livre; gancho do colapso no corte;
+  - detalhes: um par (pelas faces e entre eixos) por forma de peça presente;
+  - gabarito: a linha do pente mestre só nos lados que a têm (aberta no lado da borda faceando), a borda no 240 e as cotas até a borda;
+  - colapso: pontas da borda, cotas no lado livre e da face à ponta da borda, linhas de borda.
+
+  Sem borda, as 15 folhas dos exemplos ficaram idênticas às de antes, primitiva por primitiva.
+- **Verificações:** uma linha "ok" com a posição e o cobrimento da borda; aviso com a borda a 2d ou mais da face (o pilar pode ser tratado como interno); o gancho.
+- **Janela:** grupo Borda livre na aba Pilar ("nenhuma", esquerda/direita, baixo/cima e as distâncias), "Gancho na borda" na aba Colapso e a posição nas propriedades.
+- **Importação:** os de borda e de canto vêm marcados, com o lado e a distância passados ao pilar (uma viga a menos de 2d conta como borda). Os de lados opostos e os girados com borda pedem confirmação e entram como internos. Com conectores, os de borda ficam com a cobrinha, com aviso. Na reimportação, quem deixou de ser de borda volta a interno.
+- **Conferido:** os seis pilares de `exemplos\lote_bordas.json` (borda faceando, a 20 cm, ao longo das linhas, canto com gancho e dois com as cobrinhas em y) gravados pelo TQS, com os comprimentos iguais aos do núcleo. 147 testes, 19 da E9 (`testes\teste_e9_bordas.py`).
+- **Respostas do usuário à conferência (09/11/2026):**
+  - **NOTA 1 sobre o título da SEÇÃO A-A** (PUN_P21 e PUN_P24, cobrinhas em x com a borda faceando a face u = 0): o título começa na face do pilar, embaixo da caixa da NOTA 1. Quando os dois se cruzam, o título sobe acima da caixa;
+  - **cobrinhas paralelas ao lado maior por padrão** (`cob_direcao` = "maior"; P6 revista). Os exemplos que reproduzem o modelo (o P2 e o P2 girado, no `P2_cobrinha.json`, no `P2x_cobrinha.json` e no lote) ficam com "menor", explícito; no lote, o P8 também, porque é o exemplo das cobrinhas em x. Só o P5 (quadrado) mudou de direção;
+  - **montagem curta:** a sugestão foi aceita. A montagem ao lado do pilar, da face até a borda, não é desenhada quando ficaria com menos de `mont_min_borda` (30 cm, o mesmo da montagem além da última linha); a verificação diz que os vértices de baixo ficam na armadura positiva da laje. P23 e P26 perderam as barras de 15 e 10 cm;
+  - **viga como borda:** confirmada (a armadura para no cobrimento da face da viga, como nos D04 DET. 1 e 10).
+
 **Depois desta rodada:**
-- pilares de borda e de canto (E9, em avaliação);
+- pilares de borda e de canto com conectores (E9: a cobrinha está feita);
 - pilares circulares;
 - aberturas;
 - conectores "posterior à armadura";
@@ -640,7 +678,7 @@ Cada etapa termina com a aprovação do usuário e um commit.
 - **P3.** Verificar a fórmula da altura útil, porque os studs e a cobrinha vão até o cobrimento. Feito na seção 6.1.
 - **P4.** O pino e a cobrinha vão de cobrimento a cobrimento (h − c_sup − c_inf); o pino é arredondado.
 - **P5.** A cobrinha continua sobre o pilar, como no modelo.
-- **P6.** Cobrinhas paralelas ao lado menor, com opção de mudar a direção.
+- **P6.** Cobrinhas paralelas ao lado menor, com opção de mudar a direção. Revista em 09/11/2026: paralelas ao lado maior por padrão.
 - **P7.** Montagem positiva nos conectores opcional e desligada: pela nota, a prioridade é usar as armaduras negativa e positiva existentes.
 - **P8.** Pinos por pente e distância ao canto viram parâmetros.
 - **P9.** Pentes inclinados automáticos, com opção de cruz.

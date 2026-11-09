@@ -124,13 +124,50 @@ class TesteAnalise(unittest.TestCase):
         self.dados = _ler("leitura_planta.json")
         self.linhas = {ln["titulo"]: ln for ln in imp.analisar(self.dados)}
 
-    def test_internos_da_planta(self):
-        internos = sorted(t for t, ln in self.linhas.items() if imp.selecao_padrao(ln))
-        self.assertEqual(internos, ["P11", "P5", "P7"])
+    def test_selecao_da_planta(self):
+        # E9 (Q17): os de borda e de canto também saem marcados, com as bordas livres no pilar
+        marcados = sorted(t for t, ln in self.linhas.items() if imp.selecao_padrao(ln))
+        self.assertEqual(marcados, sorted(t for t in self.linhas if t != "P6"))
         self.assertEqual(self.linhas["P1"]["posicao"], "canto")
         self.assertEqual(self.linhas["P2"]["posicao"], "borda")
         self.assertFalse(self.linhas["P6"]["suportado"])      # circular
         self.assertIn("circular", self.linhas["P6"]["motivo"])
+
+    def test_bordas_no_pilar(self):
+        p1, p2, p7 = (self.linhas[t]["par"] for t in ("P1", "P2", "P7"))
+        self.assertEqual({k: p1[k] for k in imp.BORDAS},
+                         dict(borda_x="esquerda", borda_y="baixo", dist_borda_x=0.0, dist_borda_y=0.0))
+        self.assertEqual((p2["borda_y"], p2.get("borda_x")), ("baixo", None))
+        self.assertFalse(any(k in p7 for k in imp.BORDAS))
+        self.assertIn("passado ao pilar como borda livre", self.linhas["P2"]["avisos"][0])
+        r = detalhar(p1)
+        self.assertEqual(r["erros"], [])
+        self.assertEqual(r["p"]["borda_x"], "esquerda")
+
+    def _com_bordas_opostas(self):
+        """P7 (1300-1340 x 650-690) entre duas bordas a 10 cm: lados opostos."""
+        dados = json.loads(json.dumps(self.dados))
+        dados["bordas"] += [[1290.0, 600.0, 1290.0, 740.0, 0.0, "borda da laje"],
+                            [1350.0, 600.0, 1350.0, 740.0, 0.0, "borda da laje"]]
+        return {ln["titulo"]: ln for ln in imp.analisar(dados)}
+
+    def test_lados_opostos_e_girado(self):
+        p7 = self._com_bordas_opostas()["P7"]
+        self.assertEqual(p7["posicao"], "verificar")
+        self.assertFalse(imp.selecao_padrao(p7))
+        self.assertFalse(any(k in p7["par"] for k in imp.BORDAS))
+        self.assertIn("lados opostos", p7["avisos"][0])
+        dados = json.loads(json.dumps(self.dados))
+        next(q for q in dados["pilares"] if q["titulo"] == "P2")["ang"] = 30.0
+        p2 = {ln["titulo"]: ln for ln in imp.analisar(dados)}["P2"]
+        self.assertFalse(imp.selecao_padrao(p2))
+        self.assertFalse(any(k in p2["par"] for k in imp.BORDAS))
+
+    def test_conectores_de_borda_viram_cobrinha(self):
+        linhas = {ln["titulo"]: ln for ln in imp.analisar(self.dados, dict(solucao="conectores"))}
+        self.assertEqual(linhas["P2"]["par"]["solucao"], "cobrinha")
+        self.assertIn("ainda não implementados", linhas["P2"]["avisos"][-1])
+        self.assertEqual(linhas["P7"]["par"]["solucao"], "conectores")
 
     def test_pilar_do_projeto(self):
         par = self.linhas["P7"]["par"]
@@ -193,6 +230,11 @@ class TesteAnalise(unittest.TestCase):
         self.assertEqual(atuais[0]["bx"], 30)                                           # sem efeito colateral
         pil, n_novos, n_atual, pulados = imp.mesclar(atuais, novos, atualizar=False)
         self.assertEqual((n_novos, n_atual, pulados, pil[0]["bx"]), (1, 0, ["P7"], 30))
+        # a reimportação passa as bordas e tira as de um pilar que deixou de ser de borda
+        pil, *_ = imp.mesclar(atuais, [self.linhas["P2"]["par"]])
+        self.assertEqual(pil[1]["borda_y"], "baixo")
+        pil, *_ = imp.mesclar([dict(titulo="P7", borda_x="direita", dist_borda_x=5.0)], [self.linhas["P7"]["par"]])
+        self.assertFalse(any(k in pil[0] for k in imp.BORDAS))
 
 
 class TestePastaDaPlanta(unittest.TestCase):
@@ -284,27 +326,36 @@ class TesteJanela(unittest.TestCase):
         dlg = self._dialogo()
         try:
             marcados = sorted(dlg.linhas[j]["titulo"] for j in dlg.marcados)
-            self.assertEqual(marcados, ["P11", "P5", "P7"])
+            self.assertEqual(marcados, sorted(ln["titulo"] for ln in dlg.linhas if ln["titulo"] != "P6"))
             j6 = next(j for j, ln in enumerate(dlg.linhas) if ln["titulo"] == "P6")
             dlg._alternar(str(j6))                                          # circular: não marca
             self.assertNotIn(j6, dlg.marcados)
-            j5 = next(j for j, ln in enumerate(dlg.linhas) if ln["titulo"] == "P5")
-            dlg._alternar(str(j5))
+            dlg.marcados = {j for j, ln in enumerate(dlg.linhas) if ln["titulo"] in ("P2", "P7", "P11")}
             dlg.v_solucao.set("conectores")
-            r = dlg.aplicar()
-            self.assertEqual(sorted(p["titulo"] for p in r["pilares"]), ["P11", "P7"])
-            self.assertTrue(all(p["solucao"] == "conectores" for p in r["pilares"]))
+            with mock.patch("janela.importar.messagebox.askyesno") as pergunta:
+                r = dlg.aplicar()
+            pergunta.assert_not_called()                                    # borda: sem confirmação (E9)
+            sol = {p["titulo"]: p.get("solucao", "cobrinha") for p in r["pilares"]}
+            self.assertEqual(sol, dict(P2="cobrinha", P7="conectores", P11="conectores"))
+            self.assertIn("ainda não implementados", r["avisos"]["P2"][-1])
             self.assertEqual(r["origem"]["planta"], "Primeiro")
         finally:
             dlg.destroy()
 
-    def test_borda_pede_confirmacao(self):
+    def test_lados_opostos_pedem_confirmacao(self):
         dlg = self._dialogo()
         try:
+            dados = json.loads(json.dumps(self.dados))
+            dados["bordas"] += [[1290.0, 600.0, 1290.0, 740.0, 0.0, "borda da laje"],
+                                [1350.0, 600.0, 1350.0, 740.0, 0.0, "borda da laje"]]
+            dlg.carregar(dados)
+            j7 = next(j for j, ln in enumerate(dlg.linhas) if ln["titulo"] == "P7")
+            self.assertNotIn(j7, dlg.marcados)                              # lados opostos: não marca
             dlg.marcados = {j for j, ln in enumerate(dlg.linhas) if ln["titulo"] in ("P2", "P7")}
             with mock.patch("janela.importar.messagebox.askyesno", return_value=False) as pergunta:
                 self.assertIsNone(dlg.aplicar())
-            self.assertIn("P2", pergunta.call_args[0][1])
+            self.assertIn("P7", pergunta.call_args[0][1])
+            self.assertNotIn("P2", pergunta.call_args[0][1])
             with mock.patch("janela.importar.messagebox.askyesno", return_value=True):
                 self.assertEqual(len(dlg.aplicar()["pilares"]), 2)
         finally:
@@ -319,9 +370,12 @@ class TesteJanela(unittest.TestCase):
             dlg.return_value.mostrar.return_value = r
             self.app.importar_tqs()
         titulos = [p["titulo"] for p in self.app.projeto["pilares"]]
-        self.assertEqual(titulos, ["P5", "P7", "P11"])                  # o pilar de exemplo saiu
+        self.assertEqual(titulos, [ln["titulo"] for ln in linhas if ln["titulo"] != "P6"])  # o de exemplo saiu
         self.assertEqual(self.app.projeto["origem_tqs"]["planta"], "Primeiro")
-        self.assertEqual(self.app.pilar["titulo"], "P5")
+        self.assertEqual(self.app.pilar["titulo"], "P1")
+        self.assertEqual((self.app.pilar["borda_x"], self.app.pilar["borda_y"]), ("esquerda", "baixo"))
+        self.assertEqual(self.app.v["borda_x"].get(), "esquerda")
+        self.assertEqual(self.app.res["erros"], [])
         self.assertTrue(self.app.tv.exists("tqs"))                      # esforços para conferência na árvore
         self.assertEqual(len(self.app.tv.get_children("tqs")), 4)
         self.app.mais_pilar()

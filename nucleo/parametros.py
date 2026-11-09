@@ -13,6 +13,19 @@ import math
 FORMATO, VERSAO = "puncao-detalhamento", 1
 SOLUCOES = ("cobrinha", "conectores")
 DIRECOES = ("menor", "maior", "x", "y")
+BORDAS_X = ("", "esquerda", "direita")
+BORDAS_Y = ("", "baixo", "cima")
+
+
+def posicao(p):
+    """"interno", "borda" ou "canto", pelas bordas livres do pilar."""
+    n = bool(p.get("borda_x")) + bool(p.get("borda_y"))
+    return ("interno", "borda", "canto")[n]
+
+
+def cobrimento_borda(p):
+    """Cobrimento na borda livre: o da laje (Q15); o maior entre o superior e o inferior."""
+    return max(p["c_sup"], p["c_inf"])
 
 PADROES = {
     # Pilar e laje
@@ -26,6 +39,12 @@ PADROES = {
     "fck": 25.0,              # concreto da laje (MPa): lb da ancoragem do colapso além de C'' (9.4.2.4)
     "solucao": "cobrinha",
     "escala": 15.0,
+    # Borda livre (E9): uma por eixo, para não haver lados opostos; cobrimento na borda = o da laje (Q15)
+    "borda_x": "",            # "", "esquerda" ou "direita": borda livre paralela a y, ao lado do pilar
+    "borda_y": "",            # "", "baixo" ou "cima": borda livre paralela a x
+    "dist_borda_x": 0.0,      # distância da face do pilar à borda (cm); 0 = faceando
+    "dist_borda_y": 0.0,
+    "col_gancho_borda": False,  # gancho nas barras de colapso que terminam na borda (Q13: opção, sem por padrão)
     # Armadura negativa existente (só para a altura útil e o aviso dos vértices da cobrinha)
     "neg_bitola_ext": 10.0,   # camada externa (mm)
     "neg_bitola_int": 10.0,   # camada interna (mm)
@@ -44,10 +63,13 @@ PADROES = {
     "cob_linhas_x": None,     # além das faces perpendiculares a x (None = cob_linhas)
     "cob_linhas_y": None,
     "cob_bitola": 10.0,
-    "cob_direcao": "menor",   # cobrinhas paralelas ao lado menor do pilar (decisão P6), ou "maior", "x", "y"
+    "cob_direcao": "maior",   # cobrinhas paralelas ao lado maior do pilar (pedido do usuário em 09/11/2026; antes,
+                              # ao menor: decisão P6), ou "menor", "x", "y"
     "mont_bitola": 12.5,      # montagem positiva, uma por fileira de pernas, na dobra de baixo
     "mont_ext": 30.0,         # além da última linha de cobrinhas (cm; 60 no modelo, 30 pelo usuário em 03/11/2026)
     "mont_arred": 5.0,        # comprimento arredondado para cima (cm)
+    "mont_min_borda": 30.0,   # montagem ao lado do pilar, da face até a borda livre: abaixo disso não é desenhada
+                              # (borda curta; os vértices ficam na armadura da laje; decisão do usuário, 09/11/2026)
     # Conectores (pentes Trejor, arranjo radial)
     "con_s0": 11.0,           # distância da face à 1ª linha de pinos (cm)
     "con_sr": 17.0,           # distância entre linhas de pinos (cm)
@@ -100,7 +122,8 @@ def normalizar(par):
     inteiros = ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas", "cob_linhas_x", "cob_linhas_y",
                 "con_pinos", "con_n_face_bx", "con_n_face_by", "con_trilhos")
     for k in PADROES:
-        if k in ("titulo", "solucao", "cob_direcao", "con_inclinados", "con_montagem"):
+        if k in ("titulo", "solucao", "cob_direcao", "con_inclinados", "con_montagem", "borda_x", "borda_y",
+                 "col_gancho_borda"):
             continue
         if p.get(k) is None and PADROES[k] is None:
             continue
@@ -121,6 +144,15 @@ def normalizar(par):
         n = _num(inc, "con_inclinados", erros, inteiro=True)
         p["con_inclinados"] = n if n is not None else "auto"
     p["con_montagem"] = bool(p["con_montagem"]) and str(p["con_montagem"]).lower() not in ("0", "false", "nao")
+    p["col_gancho_borda"] = bool(p["col_gancho_borda"]) and str(p["col_gancho_borda"]).lower() not in ("0", "false",
+                                                                                                         "nao")
+    for k, validos in (("borda_x", BORDAS_X), ("borda_y", BORDAS_Y)):
+        v = str(p[k] or "").strip().lower()
+        if v in ("nenhuma", "-"):                       # como a janela mostra o lado sem borda
+            v = ""
+        if v not in validos:
+            erros.append(f"{k}: use {', '.join(repr(b) for b in validos)}")
+        p[k] = v
     if not erros:
         erros += _validar(p)
     return p, erros
@@ -134,9 +166,11 @@ def _validar(p):
             erros.append(f"{k} deve ser maior que zero")
     if not p["fck"] or not 0 < p["fck"] <= 90:
         erros.append("fck deve ficar entre 0 e 90 MPa")
-    for k in ("c_sup", "c_inf", "mont_ext"):
+    for k in ("c_sup", "c_inf", "mont_ext", "mont_min_borda", "dist_borda_x", "dist_borda_y"):
         if p[k] is None or p[k] < 0:
             erros.append(f"{k} não pode ser negativo")
+    if (p["borda_x"] or p["borda_y"]) and p["solucao"] == "conectores":
+        erros.append("conectores em pilar de borda ou de canto: ainda não implementado (E9: a cobrinha primeiro)")
     for k in ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas_x", "cob_linhas_y"):
         if p[k] is None or p[k] < 1:
             erros.append(f"{k} deve ser 1 ou mais")

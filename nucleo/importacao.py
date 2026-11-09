@@ -24,7 +24,9 @@ from collections import Counter
 
 from .parametros import PADROES, altura_util, normalizar
 
-GEOMETRIA = ("titulo", "bx", "by", "h_laje", "c_sup", "c_inf", "repeticoes", "fck")   # o que a importação escreve
+BORDAS = ("borda_x", "borda_y", "dist_borda_x", "dist_borda_y")         # pilar de borda ou de canto (E9)
+# o que a importação escreve no pilar
+GEOMETRIA = ("titulo", "bx", "by", "h_laje", "c_sup", "c_inf", "repeticoes", "fck") + BORDAS
 TIPOS_SECAO = {0: "retangular", 1: "L", 2: "U", 3: "circular", 4: "poligonal", 5: "não padrão"}
 LADOS = ("esquerda", "baixo", "direita", "cima")
 TOL = 0.05                                                           # cm
@@ -225,6 +227,7 @@ def analisar(dados, base=None):
             out.append(linha)
             continue
         bx, by, av = dimensoes(pil)
+        girado = bool(av)
         if av:
             linha["avisos"].append(av)
         linha["dim"] = f"{bx:g} x {by:g}"
@@ -250,8 +253,21 @@ def analisar(dados, base=None):
             linha.update(posicao=classe, lados=lados)
             if classe != "interno":
                 lista = ", ".join(f"{k} a {v[0]:.0f} cm ({v[1]})" for k, v in lados.items())
-                linha["avisos"].append(f"pilar de {classe}: {lista} (menos de 2d = {2 * d:.0f} cm); o app só "
-                                       "detalha pilares internos")
+                if classe == "verificar":
+                    linha["avisos"].append(f"bordas ou vigas em lados opostos: {lista} (menos de 2d = {2 * d:.0f} "
+                                           "cm); o app detalha uma borda livre por direção: importado como interno")
+                elif girado:
+                    linha["avisos"].append(f"pilar de {classe} girado: {lista}; as bordas não foram passadas ao "
+                                           "pilar (importado como interno)")
+                else:
+                    _bordas_no_pilar(par, lados)
+                    linha["bordas"] = True
+                    linha["avisos"].append(f"pilar de {classe}: {lista}, a menos de 2d = {2 * d:.0f} cm da face; "
+                                           "passado ao pilar como borda livre")
+                    if par.get("solucao", PADROES["solucao"]) == "conectores":
+                        par["solucao"] = "cobrinha"
+                        linha["avisos"].append("conectores em pilar de borda ou de canto ainda não implementados: "
+                                               "cobrinha")
             for f in furos:
                 df = dist_poligonos(pil["polig"], f["polig"])
                 if df < 8 * d - TOL:
@@ -300,9 +316,18 @@ def ajustar_limites(par):
     return novo, mud
 
 
+def _bordas_no_pilar(par, lados):
+    """Passa ao pilar as bordas livres (ou as vigas) a menos de 2d da face: uma por direção (E9)."""
+    for lado, (dist, _origem) in lados.items():
+        eixo = "x" if lado in ("esquerda", "direita") else "y"
+        par[f"borda_{eixo}"] = lado
+        par[f"dist_borda_{eixo}"] = round(dist, 1)
+
+
 def selecao_padrao(linha):
-    """Marcados na abertura do diálogo: os internos sem aviso de abertura ou capitel."""
-    return (linha["suportado"] and linha["posicao"] == "interno"
+    """Marcados na abertura do diálogo: os internos e, com as bordas passadas ao pilar, os de borda e de canto
+    (Q17), sem aviso de abertura ou capitel."""
+    return (linha["suportado"] and (linha["posicao"] == "interno" or linha.get("bordas", False))
             and not any(a.startswith(("abertura", "capitel")) for a in linha["avisos"]))
 
 
@@ -321,6 +346,9 @@ def mesclar(pilares, novos, atualizar=True):
             n_novos += 1
         elif atualizar:
             pilares[j].update({k: q[k] for k in (*GEOMETRIA, "tqs") if k in q})
+            for k in BORDAS:                              # o pilar que deixou de ser de borda volta a interno
+                if k not in q:
+                    pilares[j].pop(k, None)
             n_atual += 1
         else:
             pulados.append(q["titulo"])

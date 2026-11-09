@@ -23,7 +23,7 @@ try:
 except ImportError:
     TEM_TQS = False
 
-P2 = dict(titulo="P2", bx=150, by=50, h_laje=27, c_sup=2.0, c_inf=2.0, solucao="cobrinha",
+P2 = dict(titulo="P2", bx=150, by=50, h_laje=27, c_sup=2.0, c_inf=2.0, solucao="cobrinha", cob_direcao="menor",
           col_n_face_bx=8, col_n_face_by=3)
 # Níveis usados nos dois desenhos de referência (PADRAO_desenho.md, seção 3): a prancha não pode usar outros.
 NIVEIS_MODELOS = {0, 1, 79, 200, 202, 203, 204, 205, 210, 220, 221, 222, 224, 225, 226, 227, 233, 240, 241, 242,

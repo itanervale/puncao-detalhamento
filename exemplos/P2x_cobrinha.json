@@ -19,7 +19,8 @@
    "cob_linhas": 4,
    "cob_bitola": 10,
    "mont_bitola": 12.5,
-   "mont_ext": 30
+   "mont_ext": 30,
+   "cob_direcao": "menor"
   }
  ]
 }

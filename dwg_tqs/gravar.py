@@ -78,8 +78,13 @@ def _ferro(dwg, f):
     r.mark, r.quantity, r.multiplier = f["mark"], f["quant"], 1
     r.diameter, r.spacing, r.cover = f["bitola"], 0.0, f.get("cobrimento", 3.0)
     r.leftHook = r.rightHook = T.ICPSGA
+    g_ini, g_fim = f.get("ganchos") or (False, False)   # gancho de 90° no início / no fim da barra (E9, Q13)
+    if g_ini:
+        r.leftHook = T.ICP090
+    if g_fim:
+        r.rightHook = T.ICP090
     if not gen:
-        r.straightBarMainLength = f["comp"]
+        r.straightBarMainLength = f.get("reto", f["comp"])    # com gancho, o TQS soma o gancho ao trecho reto
         r.straightBarZone = f.get("zona", T.ICPPOS)
     for k, v in {**(ATRIB_GEN if gen else ATRIB_RETO), **f.get("atributos", {})}.items():
         setattr(r, k, v)

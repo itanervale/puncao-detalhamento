@@ -16,7 +16,7 @@ Cada pilar vira uma prancha (`PUN_<pilar>.DWG`) no padrão dos desenhos do escri
 
 Os comprimentos dos ferros são os que o próprio TQS calcula. O app os confere com os do núcleo.
 
-> **Situação:** etapas E0 a E8 feitas (base, cobrinha, conectores, janela, relatório do lote, fechamento do repositório e importação do TQS). Por enquanto, só **pilares internos e retangulares**. O plano, com as decisões e as próximas etapas, está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md); o padrão gráfico, em [PADRAO_desenho.md](PADRAO_desenho.md).
+> **Situação:** etapas E0 a E8 feitas (base, cobrinha, conectores, janela, relatório do lote, fechamento do repositório e importação do TQS) e a E9 na cobrinha: **pilares internos, de borda e de canto**, retangulares. Os conectores ainda só detalham pilares internos. O plano, com as decisões e as próximas etapas, está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md); o padrão gráfico, em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Requisitos
 
@@ -75,6 +75,22 @@ Um projeto tem vários pilares. Na aba Lote:
 
 **Gerar o lote** (Ctrl+Shift+G) grava um DWG por pilar e o relatório do lote. **Relatório do lote** grava só o relatório, sem o TQS.
 
+### Pilar de borda e de canto
+
+Na aba Pilar, o grupo **Borda livre** diz de que lado do pilar a laje termina: **Em x** (esquerda ou direita) e **Em y** (baixo ou cima), cada um com a distância da face do pilar à borda (0 = pilar faceando a borda). Uma borda faz o pilar de borda; uma em x e outra em y, de canto. Por enquanto, só a cobrinha.
+
+As regras são as do pilar interno, cortadas pela borda:
+- nada passa da borda: as cobrinhas, a montagem e as barras de colapso param no cobrimento da laje (o maior entre c sup. e c inf.);
+- diante da face voltada para a borda, as peças só existem se couberem (pilar recuado), com uma perna a s0 e a ponta no cobrimento;
+- as cobrinhas que correm na direção da borda vão até ela, com uma perna junto da borda (5 cm antes da ponta) se ela ficar a mais de 3 cm da última perna regular;
+- ao lado do pilar, a peça inteira começa na ponta do lado livre, pelo trecho de baixo, e termina na borda. Cada forma de peça é uma posição;
+- **borda curta:** a montagem entre a face do pilar e a borda não é desenhada quando ficaria com menos de `mont_min_borda` (30 cm); os vértices de baixo dessas linhas ficam na armadura positiva da laje, e as mensagens dizem isso;
+- **colapso:** as barras paralelas à borda como no interno; as perpendiculares terminam no cobrimento da borda e cruzam uma face só. **Gancho na borda** (aba Colapso, desligado por padrão) põe um gancho de 90° com ponta de 8ø (NBR 6118, 9.4.2.3) na ponta da borda; o app confere se ele cabe entre os cobrimentos;
+- as verificações de 2d e de C'' e a ancoragem do colapso valem só nos lados livres; com a borda a 2d ou mais da face, o app avisa que o pilar pode ser tratado como interno;
+- uma viga a menos de 2d da face é tratada como borda: a armadura para no cobrimento da face da viga.
+
+Na prancha: a linha da borda com o texto "BORDA LIVRE" na planta e no colapso, as seções com a laje terminando reta na borda, a distância da face à borda numa fila de cotas própria, os detalhes de cada forma de peça e o gabarito com a linha do pente mestre só nos lados que a têm.
+
 ### Importar do TQS
 
 **Lote > Importar do TQS** (ou o menu Pilar) traz os pilares de uma planta de um edifício do TQS. Antes de abrir a importação, o app avisa: "Programa em fase de testes, recomenda-se a duplicação do edifício".
@@ -82,8 +98,8 @@ Um projeto tem vários pilares. Na aba Lote:
 1. Escolha a pasta do edifício (a que tem o `EDIFICIO.BDE`) e a planta, e clique em **Ler a planta**.
 2. A leitura é feita numa cópia temporária (a raiz do edifício e a pasta da planta), num processo à parte. O edifício não é alterado, e o TQS pode estar aberto.
 3. A tabela mostra todos os pilares da planta, com seção, posição, h da laje e os esforços. Marque os que vão para o projeto:
-   - **marcados de saída:** os internos retangulares sem abertura a menos de 8d nem capitel;
-   - **borda e canto:** podem ser marcados, com confirmação, porque o app os detalharia como internos;
+   - **marcados de saída:** os internos, os de borda e os de canto retangulares, sem abertura a menos de 8d nem capitel. Nos de borda e de canto, as bordas da laje (ou as vigas) a menos de 2d da face vão para o grupo Borda livre do pilar. Com a solução "conectores", esses ficam com a cobrinha, com aviso;
+   - **bordas ou vigas em lados opostos** e **pilares girados com borda:** podem ser marcados, com confirmação, porque o app os detalharia como internos (ele detalha uma borda por direção, nos eixos da planta);
    - **seção não retangular** (circular, L, U): não podem ser marcados.
 4. **OK** acrescenta os pilares ao projeto. Os que já estão no projeto com o mesmo nome têm atualizadas as dimensões, o h, os cobrimentos e as repetições; o detalhamento escolhido fica. Os demais parâmetros vêm do pilar atual da janela.
 5. **Sugerir o colapso progressivo** (opção ligada por padrão): a mesma sugestão do botão da aba Colapso (abaixo), depois do ajuste de s0 e dos espaçamentos.
@@ -93,7 +109,7 @@ Um projeto tem vários pilares. Na aba Lote:
 - **pilar:** nome e seção. Girado de 0° ou 90°, bx e by saem da poligonal; em outro ângulo, ficam nos eixos do pilar, com aviso;
 - **laje:** espessura, cobrimentos (os de laje do edifício, ou os de laje protendida) e fck (o concreto da planta ou, sem ele, o de vigas e lajes do edifício). Com lajes de espessuras diferentes na planta, vale a mais comum, com aviso, porque a interface do TQS não dá o contorno de cada laje;
 - **repetições:** as da planta (um pavimento tipo repetido 5 vezes dá "5X");
-- **posição:** interno quando nenhuma borda da laje (contornos) nem viga fica a menos de 2d da face do pilar, ou seja, o contorno C' não é cortado; borda com um lado, canto com dois;
+- **posição:** interno quando nenhuma borda da laje (contornos) nem viga fica a menos de 2d da face do pilar, ou seja, o contorno C' não é cortado; borda com um lado, canto com dois vizinhos, com o lado e a distância passados ao pilar. Uma viga conta como borda. Na reimportação, um pilar que deixou de ser de borda volta a interno;
 - **esforços, só para conferência:** as reações da grelha por pilar em cada combinação de ELU (título começando por "ELU"), em tf e tf·m, característicos. Ficam no pilar (árvore e propriedades) e na tabela do lote. O app não dimensiona.
 
 ### Colapso progressivo (NBR 6118:2026, 19.5.4)
@@ -118,7 +134,7 @@ python -m dwg_tqs.leitor_tqs plantas "C:\TQS\<edifício>"
 python -m dwg_tqs.leitor_tqs planta "C:\TQS\<edifício>" <planta> --saida leitura.json --projeto projeto.json
 ```
 
-O segundo grava a leitura e um projeto com os pilares internos (ou os de `--pilares P5,P7`; `--todos` inclui os de borda e canto; `--ajustar` traz s0 e os espaçamentos para os limites da norma).
+O segundo grava a leitura e um projeto com os pilares internos, de borda e de canto (ou os de `--pilares P5,P7`; `--todos` inclui os de bordas em lados opostos, os girados com borda e os com abertura ou capitel; `--ajustar` traz s0 e os espaçamentos para os limites da norma).
 
 ## Linha de comando
 
@@ -183,6 +199,8 @@ O projeto é uma lista de pilares. Cada pilar guarda só o que difere dos padrõ
 | `h_laje` | 27 | Espessura da laje |
 | `c_sup`, `c_inf` | 2,5 | Cobrimentos. O pino e a cobrinha vão de cobrimento a cobrimento |
 | `fck` | 25 | Concreto da laje (MPa), para o lb da ancoragem do colapso além de C'' |
+| `borda_x`, `borda_y` | "" | Borda livre: `esquerda` ou `direita` em x, `baixo` ou `cima` em y; vazio (ou `nenhuma`) = sem borda desse lado |
+| `dist_borda_x`, `dist_borda_y` | 0 | Distância da face do pilar à borda livre (0 = faceando) |
 | `solucao` | cobrinha | `cobrinha` ou `conectores` |
 | `escala` | 15 | Escala da prancha |
 | `neg_bitola_ext`, `neg_bitola_int` | 10, 10 | Bitolas das duas camadas da negativa existente (para a altura útil e o aviso dos vértices) |
@@ -195,6 +213,7 @@ O projeto é uma lista de pilares. Cada pilar guarda só o que difere dos padrõ
 | `col_bitola` | 10 | Bitola |
 | `col_ext` | 85 | Comprimento além da face |
 | `col_n_face_bx`, `col_n_face_by` | 3, 8 | Barras em cada face de comprimento bx e by (no pilar padrão de 50 × 150: 3 na face de 50 e 8 na de 150, como no P02) |
+| `col_gancho_borda` | false | Gancho de 90° (ponta de 8ø) nas barras que terminam na borda livre |
 
 **Cobrinha** (malha ortogonal)
 
@@ -204,10 +223,11 @@ O projeto é uma lista de pilares. Cada pilar guarda só o que difere dos padrõ
 | `cob_s0` | 11 | Distância da face à 1ª linha de pernas |
 | `cob_linhas` (`cob_linhas_x`, `cob_linhas_y`) | 4 | Linhas de pernas além de cada face, contando a de s0 |
 | `cob_bitola` | 10 | Bitola da cobrinha |
-| `cob_direcao` | menor | Cobrinhas paralelas ao lado `menor` do pilar, ao `maior`, em `x` ou em `y` |
+| `cob_direcao` | maior | Cobrinhas paralelas ao lado `maior` do pilar (padrão desde 09/11/2026), ao `menor` (como no modelo do P2), em `x` ou em `y` |
 | `mont_bitola` | 12,5 | Montagem positiva, uma por fileira de pernas, na dobra de baixo |
 | `mont_ext` | 30 | Montagem além da última linha |
 | `mont_arred` | 5 | Arredondamento da montagem (para cima) |
+| `mont_min_borda` | 30 | Pilar de borda: a montagem ao lado do pilar, da face até a borda livre, com menos que isso não é desenhada |
 
 **Conectores** (pentes Trejor)
 
@@ -235,10 +255,12 @@ As verificações (s0 ≤ 0,5d, espaçamentos ≤ 0,75d, pinos ou pernas vizinho
 | `exemplos/lote_cobrinha.json` | Cinco pilares: o P2, um quadrado com 2X, outra direção, cobrimento de 2,5 e um em x |
 | `exemplos/P02_conectores.json` | O P02 do desenho de referência dos conectores (50 × 150, 20 pentes de 3 pinos) |
 | `exemplos/lote_conectores.json` | Cinco pilares: o P02, um quadrado, 5 pinos por pente, montagem ligada e arranjo em cruz |
+| `exemplos/lote_bordas.json` | Seis pilares de borda e de canto com a cobrinha: borda faceando, a 20 cm, ao longo das linhas, canto com gancho e dois com as cobrinhas em y |
 
 ## Limitações desta versão
 
-- Só pilares internos e retangulares. Faltam os de borda e de canto, os circulares e as aberturas na laje.
+- Só pilares retangulares. Os de borda e de canto só com a cobrinha (os conectores vêm depois); faltam os circulares e as aberturas na laje.
+- Uma borda livre por direção: lados opostos (laje mais estreita que o pilar + 4d, ou borda de um lado e viga do outro) não são tratados.
 - Conectores só no arranjo "antes da armadura" (pentes com trilhos); falta o "posterior à armadura".
 - A importação do TQS ajusta s0 e os espaçamentos e sugere o colapso (opções). O número de linhas e as bitolas continuam com o projetista; as verificações mostram o que passa dos limites.
 

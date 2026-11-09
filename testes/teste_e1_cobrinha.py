@@ -17,7 +17,7 @@ sys.path.insert(0, RAIZ)
 from nucleo import cobrinha, parametros                               # noqa: E402
 from nucleo.detalhe import detalhar                                   # noqa: E402
 
-P2 = dict(titulo="P2", bx=150, by=50, h_laje=27, c_sup=2.0, c_inf=2.0, solucao="cobrinha",
+P2 = dict(titulo="P2", bx=150, by=50, h_laje=27, c_sup=2.0, c_inf=2.0, solucao="cobrinha", cob_direcao="menor",
           col_n_face_bx=8, col_n_face_by=3)
 
 
@@ -162,6 +162,12 @@ class TesteVariacoes(unittest.TestCase):
         for pc in c["pecas"]:
             if pc["tipo"] == "extremidade":
                 self.assertIn(pc["pontos"][0][0], (0, 150))
+
+    def test_padrao_paralelas_ao_lado_maior(self):
+        # pedido do usuário em 09/11/2026 (antes, ao lado menor: decisão P6)
+        sem = {k: v for k, v in P2.items() if k != "cob_direcao"}
+        self.assertEqual(detalhar(sem)["cobrinha"]["direcao"], "x")                     # 150 x 50: ao longo de x
+        self.assertEqual(detalhar(dict(sem, bx=50, by=150))["cobrinha"]["direcao"], "y")
 
     def test_montagem_padrao_de_30(self):
         p, _ = parametros.normalizar(P2)

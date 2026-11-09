@@ -59,7 +59,8 @@ class Folha:
         return self._add({"t": "Bloco", "n": n, "b": nome, "x": x, "y": y, "ang": ang, "sx": sx, "sy": sy})
 
     def ferro(self, spec):
-        """Ferro inteligente: dict com tipo ("gen" ou "reto"), mark, quant, bitola, comp (reto), pontos (gen,
+        """Ferro inteligente: dict com tipo ("gen" ou "reto"), mark, quant, bitola, comp (reto: o C; com ganchos de 90°,
+        ganchos = (início, fim) e reto = o trecho reto, sem eles), pontos (gen,
         relativos à 1ª inserção), ins = [dict(x, y, ang, nivel, ipatas, ident, idobra)], texto (opcional:
         dict(x, y, ang)) e atributos (dict de atributos do SmartRebar)."""
         spec = dict(spec, t="Ferro")

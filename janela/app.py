@@ -36,7 +36,8 @@ from nucleo import importacao as imp                                     # noqa:
 from nucleo import prancha_cobrinha, prancha_conectores                  # noqa: E402
 from nucleo import relatorio as rel_lote                                 # noqa: E402
 from nucleo.detalhe import detalhar                                      # noqa: E402
-from nucleo.parametros import FORMATO, PADROES, VERSAO, altura_util, ler_projeto, novo_projeto  # noqa: E402
+from nucleo.parametros import (FORMATO, PADROES, VERSAO, altura_util, ler_projeto, novo_projeto,  # noqa: E402
+                               posicao)
 
 from . import cad_icones as ic                                           # noqa: E402
 from . import cena                                                       # noqa: E402
@@ -52,7 +53,9 @@ PINOS = [fmt(float(p["bitola_mm"])) for p in nc.catalogo()["pinos"]]
 VISTAS = (("planta", "Planta"), ("corte", "Corte"), ("colapso", "Colapso"), ("prancha", "Prancha"),
           ("tabela", "Tabela"))
 OPCIONAIS = ("d", "cob_s_x", "cob_s_y", "cob_linhas_x", "cob_linhas_y")    # vazio = automático
-TEXTOS = ("titulo", "solucao", "cob_direcao", "con_inclinados")
+TEXTOS = ("titulo", "solucao", "cob_direcao", "con_inclinados", "borda_x", "borda_y")
+BORDAS = ("borda_x", "borda_y")
+NENHUMA = "nenhuma"                        # o lado sem borda livre, como a janela o mostra
 INTEIROS = ("repeticoes", "col_n_face_bx", "col_n_face_by", "cob_linhas", "cob_linhas_x", "cob_linhas_y",
             "con_pinos", "con_n_face_bx", "con_n_face_by", "con_trilhos")
 COLUNAS_EXCEL = ("titulo", "bx", "by", "h_laje", "repeticoes", "solucao")
@@ -66,6 +69,13 @@ NOVO_PILAR = dict(titulo="P1")
 
 def _kg(bitola, comp_cm, quant):
     return quant * comp_cm / 100.0 * bitola ** 2 * 0.00617
+
+
+def _posicao_txt(p):
+    """Interno, ou a borda livre de cada eixo com a distância da face (E9)."""
+    lados = [f"{p[f'borda_{e}']} a {fmt(float(p[f'dist_borda_{e}']))} cm" if p[f"dist_borda_{e}"] else
+             f"{p[f'borda_{e}']} (faceando)" for e in ("x", "y") if p[f"borda_{e}"]]
+    return posicao(p) + (f": borda {' e '.join(lados)}" if lados else "")
 
 
 def _br(v, casas=1):
@@ -320,6 +330,17 @@ class App(tk.Tk):
         c = g.coluna()
         self._campo(c, "fck", "fck", "MPa", lr=4, dica="Concreto da laje: dá o lb da ancoragem das barras de colapso "
                     "além do contorno C'' (NBR 6118, 9.4.2.4). A importação do TQS traz o do edifício.")
+        g = a.grupo("Borda livre")
+        c = g.coluna()
+        self._combo(c, "borda_x", "Em x", [NENHUMA, "esquerda", "direita"], largura=9, lr=5,
+                    dica="Borda livre da laje ao lado do pilar, paralela a y (pilar de borda; com a de y, de canto). "
+                         "A armadura de punção, a montagem e o colapso vão até o cobrimento da laje nela.")
+        self._combo(c, "borda_y", "Em y", [NENHUMA, "baixo", "cima"], largura=9, lr=5,
+                    dica="Borda livre paralela a x, embaixo ou em cima do pilar na prancha.")
+        c = g.coluna()
+        self._campo(c, "dist_borda_x", "Dist.", "cm", lr=4, dica="Distância da face do pilar à borda em x "
+                    "(0 = pilar faceando a borda).")
+        self._campo(c, "dist_borda_y", "Dist.", "cm", lr=4, dica="Distância da face do pilar à borda em y.")
         g = a.grupo("Altura útil")
         c = g.coluna()
         self._combo(c, "neg_bitola_ext", "Negativa ext.", BITOLAS, largura=5, lr=11,
@@ -353,14 +374,18 @@ class App(tk.Tk):
         g = a.grupo("Barras")
         c = g.coluna()
         self._combo(c, "cob_bitola", "Bitola", BITOLAS, largura=5, lr=8, dica="Bitola da cobrinha (mm), <= h/20.")
-        self._combo(c, "cob_direcao", "Direção", ["menor", "maior", "x", "y"], largura=7, lr=8,
-                    dica="Cobrinhas paralelas ao lado menor do pilar (padrão) ou ao maior, ou em x ou y.")
+        self._combo(c, "cob_direcao", "Direção", ["maior", "menor", "x", "y"], largura=7, lr=8,
+                    dica="Cobrinhas paralelas ao lado maior do pilar (padrão) ou ao menor, ou em x ou y.")
         g = a.grupo("Montagem")
         c = g.coluna()
         self._combo(c, "mont_bitola", "Bitola", BITOLAS, largura=5, lr=9, dica="Montagem positiva nas dobras de "
                     "baixo (mm). Também a dos conectores, se ligada.")
         self._campo(c, "mont_ext", "Além (cm)", lr=9, dica="Comprimento além da última linha (cm).")
         self._campo(c, "mont_arred", "Arred. (cm)", lr=9, dica="Comprimento arredondado para cima (cm).")
+        c = g.coluna()
+        self._campo(c, "mont_min_borda", "Mín. borda", lr=9, dica="Pilar de borda: a montagem ao lado do pilar, da "
+                    "face até a borda livre, com menos que isso não é desenhada (borda curta: os vértices ficam na "
+                    "armadura da laje).")
         # ---------------------------------------------------------------- Conectores
         a = rb.aba("Conectores")
         g = a.grupo("Pentes (cm)")
@@ -414,6 +439,11 @@ class App(tk.Tk):
                dica="Barras em cada face de comprimento bx (correm em y).", ao_mudar=lambda: self._mudou("col_n_face_bx"))
         c.spin("Face by", self._V("col_n_face_by"), 1, 30, largura=4, largura_rot=8,
                dica="Barras em cada face de comprimento by (correm em x).", ao_mudar=lambda: self._mudou("col_n_face_by"))
+        c = g.coluna()
+        c.check("Gancho na borda", self._V("col_gancho_borda", "bool"),
+                ao_mudar=lambda: self._mudou("col_gancho_borda"),
+                dica="Pilar de borda ou de canto: gancho de 90° (ponta de 8ø) nas barras que terminam na borda "
+                     "livre. Opcional, desligado por padrão.")
         g = a.grupo("Sugestão (NBR 6118, 19.5.4)")
         g.grande("colapso", "Sugerir no pilar", self.sugerir_colapso, "Com a bitola atual: o nº de barras por face "
                  "pelas cargas do TQS (As·fyd >= 1,5·FSd, FSd = 1,2·Fk, barras que cruzam cada face) e o comprimento "
@@ -638,7 +668,7 @@ class App(tk.Tk):
                 elif val is None:
                     var.set("")
                 elif k in TEXTOS:
-                    var.set(str(val))
+                    var.set(str(val) or (NENHUMA if k in BORDAS else ""))
                 else:
                     var.set(fmt(float(val)) if not isinstance(val, int) or k not in INTEIROS else str(val))
             self.pilar_atual.set(self._rotulo_pilar(self.i))
@@ -656,7 +686,7 @@ class App(tk.Tk):
             return var.get()
         s = var.get().strip()
         if k in TEXTOS:
-            return s
+            return "" if k in BORDAS and s == NENHUMA else s
         if s == "":
             if k in OPCIONAIS:
                 return None
@@ -914,7 +944,8 @@ class App(tk.Tk):
         r, p = self.res, self.res["p"]
         itens = [("Pilar", p["titulo"]), ("Dimensões", f"{fmt(float(p['bx']))} x {fmt(float(p['by']))} cm"),
                  ("Repetições", f"{p['repeticoes']}X"), ("Laje", f"h = {fmt(float(p['h_laje']))} cm"),
-                 ("Cobrimentos", f"{fmt(float(p['c_sup']))} / {fmt(float(p['c_inf']))} cm"), ("Solução", p["solucao"])]
+                 ("Cobrimentos", f"{fmt(float(p['c_sup']))} / {fmt(float(p['c_inf']))} cm"), ("Solução", p["solucao"]),
+                 ("Posição", _posicao_txt(p))]
         if not r["erros"]:
             itens.append(("Altura útil", f"{_br(r['d'], 2)} cm"))
             aco = sum(_kg(f["bitola"], f["comp"], f["quant"]) for f in r["ferros"])
