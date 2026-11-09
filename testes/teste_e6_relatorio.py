@@ -126,6 +126,18 @@ class TesteArquivos(unittest.TestCase):
         self.assertEqual(len(linhas), 6)
         self.assertIn(";", linhas[1][7])                                     # a armadura, entre aspas
 
+    def test_csv_sem_formulas(self):
+        """Título vindo de fora não vira fórmula no Excel (=, +, -, @ no início ganham um apóstrofo)."""
+        arqs = R.gravar(_rel([dict(P02, titulo='=HYPERLINK("http://x","P1")'), dict(P02, titulo="@P2")]),
+                        self.pasta, "inj")
+        for k in ("pilares", "ferros"):
+            with open(arqs[k], encoding="utf-8-sig", newline="") as f:
+                linhas = list(csv.reader(f, delimiter=";"))
+            self.assertEqual(linhas[1][0], '\'=HYPERLINK("http://x","P1")')
+            self.assertTrue(all(lin[0][:1] not in "=+-@" for lin in linhas[1:]))
+        self.assertEqual(R._seguro("P1"), "P1")
+        self.assertEqual(R._seguro("-0,5"), "'-0,5")
+
     def test_linha_de_comando_so_relatorio(self):
         r = subprocess.run([sys.executable, os.path.join(RAIZ, "detalhar.py"), LOTE, "--so-relatorio",
                             "--saida", self.pasta], capture_output=True, text=True, encoding="utf-8",

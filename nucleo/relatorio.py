@@ -212,11 +212,21 @@ def texto(rel):
 
 
 # ------------------------------------------------------------------------------------------- arquivos
-def _csv(arq, cab, linhas):
+def _seguro(v):
+    """Célula de texto que o Excel leria como fórmula (=, +, -, @, tabulação ou quebra de linha no início) ganha um
+    apóstrofo: os títulos e as descrições vêm do projeto ou da colagem, que podem vir de fora."""
+    if isinstance(v, str) and v[:1] in ("=", "+", "-", "@", "\t", "\r", "\n"):
+        return "'" + v
+    return v
+
+
+def _csv(arq, cab, linhas, texto=()):
+    """CSV para o Excel; as colunas de índice em `texto` passam por _seguro."""
     with open(arq, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f, delimiter=";")
         w.writerow(cab)
-        w.writerows(linhas)
+        for lin in linhas:
+            w.writerow([_seguro(v) if i in texto else v for i, v in enumerate(lin)])
 
 
 def gravar(rel, pasta, nome=None):
@@ -234,10 +244,10 @@ def gravar(rel, pasta, nome=None):
           "Aço (kg)", "Aço x rep. (kg)", "Avisos", "Erros", "Comprimentos", "Conferência TQS", "DWG"],
          [[q["pilar"], q["rep"], _b(q["bx"]), _b(q["by"]), _b(q["h"]), q["solucao"], num(q["d"]), q["armadura"],
            num(q["aco"]), num(q["aco_rep"]), q["avisos"], q["erros"], q["fonte"], q["conferencia"], q["dwg"]]
-          for q in rel["pilares"]])
+          for q in rel["pilares"]], texto=(0, 5, 7, 12, 13, 14))
     _csv(arqs["ferros"],
          ["Pilar", "Repetições", "Posição", "Quantidade", "Bitola (mm)", "C (cm)", "Comprimento total (m)",
           "Peso (kg)", "Peso x rep. (kg)", "Descrição", "Comprimentos"],
          [[f["pilar"], f["rep"], f"N{f['pos']}", f["quant"], _b(f["bitola"]), f["comp"], num(f["total"]),
-           num(f["kg"]), num(f["kg_rep"]), f["descricao"], f["fonte"]] for f in rel["ferros"]])
+           num(f["kg"]), num(f["kg_rep"]), f["descricao"], f["fonte"]] for f in rel["ferros"]], texto=(0, 9, 10))
     return arqs
