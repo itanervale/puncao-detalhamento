@@ -220,6 +220,7 @@ class Prancha:
         contorno = [T(u, z) for u, z in uz]
         f.poli(0, contorno, fechar=True)
         f.poli(240, contorno, fechar=True)
+        self._cotas_espessura(T, ua)
         # barras de flexão de referência (traço-ponto): 2ª camada da negativa e positiva sobre a montagem; na borda,
         # até o cobrimento
         ra = ua + (self.cb if ba else 0.3 * E)
@@ -283,6 +284,17 @@ class Prancha:
             for uc, zc in sup:
                 f.linha(210, T(meio, z1), T(uc, zc + r1 * 0.7))
         return (B - h - zp, B + zp) if self.vert else (B - zp, B + h + zp)
+
+    def _cotas_espessura(self, T, ua):
+        """Espessura da laje e cobrimentos na ponta u = ua da seção (embaixo com as cobrinhas em y, à esquerda em x;
+        pedido do usuário em 09/11/2026): numa fila os dois cobrimentos e, por fora, h. Sem o trecho entre os
+        cobrimentos: o texto do cobrimento não cabe no trecho, o TQS o empurra para o lado e ele caía sobre o do meio
+        ("222.5")."""
+        f, E, h = self.f, self.E, self.h
+        mz = self._modo("t")
+        for a, b in ((0.0, self.ci), (h - self.cs, h)):
+            f.cota(T(ua, a), T(ua, b), T(ua - 0.7 * E, a), modo=mz)
+        f.cota(T(ua, 0.0), T(ua, h), T(ua - 1.3 * E, 0.0), modo=mz)
 
     def _topo_livre(self, u_pref, sup, ua, ub):
         """Posição (u) do "TOPO LAJE" na seção A-A: o trecho do tamanho do texto, logo acima da face superior, que

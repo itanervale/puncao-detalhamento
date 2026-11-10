@@ -404,6 +404,17 @@ def i_verificacoes(d):
 
 
 
+def i_tres_d(d):
+    """Ver em 3D: a laje em perspectiva, atravessada pelo pilar, com uma cobrinha."""
+    d.poli([(13, 5), (19, 5), (19, 27), (13, 27)], PRETO, "#a8a8a8", 1.2)                      # pilar
+    d.poli([(2, 16), (16, 10), (30, 16), (16, 22)], PRETO, "#e6e4dd", 1.4)                     # topo da laje
+    d.poli([(2, 16), (16, 22), (16, 25), (2, 19)], PRETO, "#c9c6bd", 1.2)
+    d.poli([(16, 22), (30, 16), (30, 19), (16, 25)], PRETO, "#b5b2a8", 1.2)
+    d.ret(13, 13.4, 19, 18.6, PRETO, "#a8a8a8", 1.0)                                            # pilar na laje
+    d.linha([(4.5, 16.5), (7, 15.4), (7, 13), (9.5, 12), (9.5, 14.4), (12, 13.4)], AZUL, 1.5)
+    d.texto(25.5, 6.5, "3D", AZUL, tam=8.5)
+
+
 ICONES = {k[2:]: v for k, v in globals().items() if k.startswith("i_") and callable(v)}
 _CACHE = {}
 

@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITULO__</title>
+<!-- Modelo da visualização 3D do detalhamento de punção (nucleo/vista3d.py troca o marcador de dados pelo pilar).
+     Adaptado de _apps/ProtensãoVigas/protensao_3d.html (10/11/2026), com as mesmas propriedades. -->
+<style>
+:root {
+  color-scheme: light;
+  --plano: #f9f9f7; --sup: #fcfcfb; --sup2: #f0efec;
+  --tx1: #0b0b0b; --tx2: #52514e; --mudo: #898781;
+  --linha: #e1e0d9; --eixo: #c3c2b7; --borda: rgba(11,11,11,.12);
+  --destaque: #2a78d6; --aviso: #9a6400;
+  --sombra: 0 2px 10px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --plano: #0d0d0d; --sup: #1a1a19; --sup2: #262624;
+    --tx1: #ffffff; --tx2: #c3c2b7; --mudo: #898781;
+    --linha: #2c2c2a; --eixo: #383835; --borda: rgba(255,255,255,.12);
+    --destaque: #3987e5; --aviso: #eda100;
+    --sombra: 0 2px 12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plano: #0d0d0d; --sup: #1a1a19; --sup2: #262624;
+  --tx1: #ffffff; --tx2: #c3c2b7; --mudo: #898781;
+  --linha: #2c2c2a; --eixo: #383835; --borda: rgba(255,255,255,.12);
+  --destaque: #3987e5; --aviso: #eda100;
+  --sombra: 0 2px 12px rgba(0,0,0,.5);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--plano); color: var(--tx1);
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+#cena { position: fixed; inset: 0; }
+#cena canvas { display: block; }
+.rotulos { position: absolute; inset: 0; pointer-events: none; }
+
+header { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 12px;
+  padding: 8px 14px; background: color-mix(in srgb, var(--sup) 88%, transparent); border-bottom: 1px solid var(--borda);
+  backdrop-filter: blur(6px); z-index: 5; }
+header h1 { font-size: 15px; margin: 0; font-weight: 650; white-space: nowrap; }
+header .sub { color: var(--tx2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.btn { background: var(--sup2); border: 1px solid var(--borda); border-radius: 6px; padding: 3px 9px; cursor: pointer; white-space: nowrap; }
+.btn:hover { border-color: var(--mudo); }
+.btn.ativo { background: var(--destaque); border-color: var(--destaque); color: #fff; }
+#bt-avisos { color: var(--aviso); }
+#lista-avisos { position: fixed; top: 46px; right: 14px; width: min(560px, calc(100% - 28px)); max-height: 50vh; overflow: auto;
+  background: var(--sup); border: 1px solid var(--borda); border-radius: 8px; box-shadow: var(--sombra); padding: 8px 12px; z-index: 6; }
+#lista-avisos li { margin: 4px 0; color: var(--tx2); }
+
+#painel { position: fixed; top: 54px; left: 12px; width: 310px; max-height: calc(100% - 96px); overflow: auto;
+  background: var(--sup); border: 1px solid var(--borda); border-radius: 10px; box-shadow: var(--sombra); z-index: 4; }
+#painel.fechado .conteudo { display: none; }
+#painel .topo { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--linha);
+  font-weight: 600; cursor: pointer; user-select: none; }
+#painel.fechado .topo { border-bottom: 0; }
+details { border-bottom: 1px solid var(--linha); padding: 6px 10px; }
+details:last-child { border-bottom: 0; }
+summary { cursor: pointer; font-weight: 600; color: var(--tx1); padding: 2px 0; user-select: none; }
+.linha { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
+.linha label { flex: 1; color: var(--tx2); }
+.linha input[type=range] { flex: 1; min-width: 0; accent-color: var(--destaque); }
+.num { width: 58px; padding: 2px 4px; border: 1px solid var(--borda); border-radius: 4px; background: var(--plano); text-align: right; font-variant-numeric: tabular-nums; }
+select.num { width: auto; text-align: left; max-width: 100%; }
+.grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 5px 0; }
+.chk { display: flex; align-items: center; gap: 6px; margin: 3px 0; color: var(--tx2); cursor: pointer; }
+.chk input { accent-color: var(--destaque); margin: 0; }
+.nota { color: var(--mudo); font-size: 11.5px; margin: 4px 0; }
+.pos { display: grid; grid-template-columns: 16px 14px auto 1fr; align-items: center; gap: 6px; padding: 3px 4px; border-radius: 5px; cursor: pointer; }
+.pos:hover { background: var(--sup2); }
+.pos .nome { font-weight: 600; white-space: nowrap; }
+.pos .det { color: var(--tx2); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.pos.desl .nome, .pos.desl .det { opacity: .45; }
+.amostra { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--borda); }
+.amostra.listra { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,.75) 3px 5px) !important; }
+
+#secao2d { position: fixed; right: 12px; bottom: 12px; background: var(--sup); border: 1px solid var(--borda); border-radius: 10px;
+  box-shadow: var(--sombra); padding: 8px 10px; z-index: 4; max-width: calc(100% - 24px); }
+#secao2d h2 { font-size: 13px; margin: 0 0 2px; }
+#secao2d .nota { margin: 0 0 4px; }
+#secao2d svg { display: block; }
+#secao2d .zs { color: var(--tx2); font-size: 12px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+#dica { position: fixed; left: 12px; bottom: 10px; color: var(--mudo); font-size: 11.5px; z-index: 3; pointer-events: none; }
+#tip { position: fixed; pointer-events: none; background: var(--sup); border: 1px solid var(--borda); border-radius: 7px; box-shadow: var(--sombra);
+  padding: 6px 9px; font-size: 12px; z-index: 9; max-width: 360px; font-variant-numeric: tabular-nums; }
+#tip b { font-weight: 650; }
+#tip .m { color: var(--tx2); }
+#erro { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 20; background: var(--plano); padding: 24px; }
+#erro div { max-width: 560px; background: var(--sup); border: 1px solid var(--borda); border-radius: 10px; padding: 18px 22px; }
+[hidden] { display: none !important; }
+
+.rt { font-size: 11px; line-height: 1.2; padding: 1px 5px; border-radius: 4px; background: color-mix(in srgb, var(--sup) 82%, transparent);
+  border: 1px solid var(--borda); color: var(--tx1); white-space: nowrap; }
+.rt.grupo-rt { border-left: 3px solid var(--cor); font-weight: 600; }
+.rt.pilar { font-size: 13px; font-weight: 700; }
+.rt.corte { font-weight: 700; color: var(--destaque); }
+.rt.borda { color: var(--aviso); font-weight: 600; }
+.rt.cpp { color: var(--mudo); font-size: 10.5px; }
+</style>
+</head>
+<body>
+<div id="cena"></div>
+
+<header>
+  <h1 id="titulo"></h1>
+  <div class="sub" id="subtitulo"></div>
+  <button class="btn" id="bt-avisos" hidden></button>
+  <button class="btn" id="bt-tema" title="Tema claro ou escuro">Tema</button>
+</header>
+<div id="lista-avisos" hidden><ul id="avisos-ul" style="margin:0;padding-left:18px"></ul></div>
+
+<aside id="painel">
+  <div class="topo" id="painel-topo"><span>Controles</span><span id="painel-seta">▾</span></div>
+  <div class="conteudo">
+    <details open>
+      <summary>Escala</summary>
+      <div class="linha"><label for="kz">Vertical (z)</label>
+        <input type="range" id="kz-r" min="0" step="1"><input class="num" id="kz" inputmode="decimal"><span>×</span></div>
+      <div class="grade" style="grid-template-columns: repeat(5, 1fr)">
+        <button class="btn" data-k="0.5">0,5×</button><button class="btn" data-k="1">Real</button>
+        <button class="btn" data-k="2">2×</button><button class="btn" data-k="5">5×</button><button class="btn" data-k="10">10×</button>
+      </div>
+      <p class="nota">A planta (x e y) fica sempre em escala real. A barra anda de 0,1 em 0,1 até 2× e depois em passos maiores; no campo, qualquer valor de 0,1 a 50. Acima de 1×, a laje fica mais alta e as pernas e os pinos se separam das barras de flexão; as bitolas acompanham a escala.</p>
+    </details>
+    <details open>
+      <summary>Vista</summary>
+      <div class="grade">
+        <button class="btn" data-vista="3d">3D</button>
+        <button class="btn" data-vista="planta">Planta</button>
+        <button class="btn" data-vista="inferior">Inferior</button>
+        <button class="btn" data-vista="frontal">Frontal</button>
+        <button class="btn" data-vista="lateral">Lateral</button>
+        <button class="btn" id="bt-enq" title="Tecla F">Enquadrar</button>
+      </div>
+      <div class="grade" id="vistas-cortes"></div>
+      <label class="chk"><input type="checkbox" id="persp"> Perspectiva (desligada: projeção ortogonal)</label>
+      <p class="nota">Frontal: no sentido +y (x para a direita). Lateral: no sentido −x (y para a direita). Os botões dos cortes do desenho ligam a seção móvel no plano do corte.</p>
+    </details>
+    <details open>
+      <summary>Mostrar</summary>
+      <div class="linha"><label class="chk" style="flex:1"><input type="checkbox" data-m="concreto"> Laje</label>
+        <input type="range" id="opac" min="0.03" max="0.6" step="0.01" title="Opacidade da laje" style="max-width:110px"></div>
+      <label class="chk"><input type="checkbox" data-m="pilar"> Pilar</label>
+      <label class="chk" id="chk-contornos"><input type="checkbox" data-m="contornos"> Contornos das linhas de pinos</label>
+      <label class="chk"><input type="checkbox" data-m="cpp"> <span id="txt-cpp">Contorno C''</span></label>
+      <label class="chk"><input type="checkbox" data-m="cortes"> Cortes do desenho</label>
+      <label class="chk" id="chk-bordas"><input type="checkbox" data-m="bordas"> Bordas livres</label>
+      <label class="chk"><input type="checkbox" data-m="rotulos"> Rótulos</label>
+    </details>
+    <details open>
+      <summary>Seção móvel</summary>
+      <label class="chk"><input type="checkbox" id="sec-on"> Mostrar a seção</label>
+      <div class="linha"><select id="sec-eixo" class="num">
+        <option value="y">plano em y (vista no sentido +y)</option>
+        <option value="x">plano em x (vista no sentido −x)</option></select></div>
+      <label class="chk"><input type="checkbox" id="sec-corte"> Cortar o modelo na seção e mostrar só</label>
+      <div class="linha" style="padding-left:20px"><select id="sec-lado" class="num">
+        <option value="1">o que fica além dela (coordenada maior)</option>
+        <option value="-1">o que fica aquém dela (coordenada menor)</option></select></div>
+      <div class="linha"><span id="sec-nome">y =</span><input type="range" id="sec-r" step="0.5"><input class="num" id="sec-v" inputmode="decimal"><span>cm</span></div>
+      <p class="nota">Duplo clique numa cobrinha leva a seção ao plano dela (o desenho do corte); num pente paralelo a x ou a y, ao plano do pente; em outra barra, ao ponto clicado.</p>
+    </details>
+    <details open>
+      <summary>Posições</summary>
+      <div id="lista-pos"></div>
+      <div class="grade" style="grid-template-columns: 1fr 1fr">
+        <button class="btn" id="bt-todos">Todas</button><button class="btn" id="bt-nenhum">Nenhuma</button>
+      </div>
+      <p class="nota" id="nota-cores"></p>
+    </details>
+  </div>
+</aside>
+
+<div id="secao2d" hidden>
+  <h2 id="sec-tit"></h2>
+  <p class="nota" id="sec-nota"></p>
+  <svg id="sec-svg"></svg>
+  <div class="zs" id="sec-zs"></div>
+</div>
+<div id="dica">Girar: botão esquerdo · Deslocar: botão direito · Aproximar: roda · Teclas 1 a 5: vistas · 6 em diante: cortes · F: enquadrar</div>
+<div id="tip" hidden></div>
+<div id="erro" hidden><div id="erro-txt"></div></div>
+
+<!--__THREE_LOCAL__-->
+<script>window.DADOS = /*__DADOS__*/null;</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+const D = window.DADOS;
+const $ = s => document.querySelector(s);
+const erro = html => { $('#erro-txt').innerHTML = html; $('#erro').hidden = false; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+window.addEventListener('error', e => erro('<b>Erro na página</b><p class="nota">' + esc(e.message) + '</p>'));
+
+// three.js: a cópia de vendor/ embutida pelo vista3d.py (abre sem internet; importada por blob, porque página
+// aberta como arquivo não importa outros arquivos) ou, sem ela, o cdn.jsdelivr.net
+async function carregarThree() {
+  const src = id => { const e = document.getElementById(id); return e ? e.textContent : null; };
+  if (src('three-src')) {
+    const url = t => URL.createObjectURL(new Blob([t], { type: 'text/javascript' }));
+    const u3 = url(src('three-src'));
+    const ajusta = t => t.replace(/from\s*(['"])three\1/g, `from '${u3}'`);
+    return Promise.all([import(u3), import(url(ajusta(src('three-orbit')))), import(url(ajusta(src('three-css2d'))))]);
+  }
+  return Promise.all([import('three'), import('three/addons/controls/OrbitControls.js'),
+                      import('three/addons/renderers/CSS2DRenderer.js')]);
+}
+let THREE, OrbitControls, CSS2DRenderer, CSS2DObject;
+try {
+  const r = await carregarThree();
+  THREE = r[0]; ({ OrbitControls } = r[1]); ({ CSS2DRenderer, CSS2DObject } = r[2]);
+} catch (e) {
+  erro('<b>Não consegui carregar o three.js</b><p>Esta página não traz a biblioteca embutida e a baixa de cdn.jsdelivr.net, o que ' +
+       'precisa de internet. Gere a página de novo pelo aplicativo (com a pasta vendor/three-0.169.0) ou confira a conexão.</p>' +
+       '<p class="nota">' + esc(String(e)) + '</p>');
+  throw e;
+}
+if (!D) { erro('<b>Página sem dados.</b><p>Gere a visualização pelo botão "Ver em 3D" do aplicativo ou por visualizar_3d.py.</p>'); throw new Error('sem dados'); }
+
+// ------------------------------------------------------------------ formatos (vírgula decimal, como nos desenhos)
+const fz = v => { let s = (Math.round(v * 10) / 10).toFixed(1); if (s.endsWith('.0')) s = s.slice(0, -2); return (s === '-0' ? '0' : s).replace('.', ','); };
+const num = s => { const v = parseFloat(String(s).replace(',', '.')); return isFinite(v) ? v : null; };
+const fk = v => String(Math.round(v * 100) / 100).replace('.', ',');     // fator de escala: até duas casas
+
+const { bx, by, h } = D;
+const [X0, X1, Y0, Y1] = D.laje;
+const CX = (X0 + X1) / 2, CY = (Y0 + Y1) / 2;
+const limites = e => e === 'x' ? [X0, X1] : [Y0, Y1];
+
+// ------------------------------------------------------------------ estado (lembrado por pilar neste computador)
+const corte0 = D.cortes[0] || { eixo: 'y', v: by / 2 };
+const PADRAO = { kz: 1, opac: 0.14, persp: true, sec: false, corte: false, lado: 1, eixo: corte0.eixo, secv: corte0.v,
+  mostrar: { concreto: true, pilar: true, contornos: true, cpp: false, cortes: true, bordas: true, rotulos: true } };
+const CHAVE = 'puncao3d:' + (D.projeto || '') + ':' + D.titulo + ':' + D.solucao;
+let est = structuredClone(PADRAO);
+try {
+  const s = JSON.parse(localStorage.getItem(CHAVE) || '{}');
+  est = { ...est, ...s, mostrar: { ...PADRAO.mostrar, ...(s.mostrar || {}) } };
+} catch (e) { /* sem armazenamento: valores padrão */ }
+if (!['x', 'y'].includes(est.eixo)) est.eixo = PADRAO.eixo;
+{ const [a, b] = limites(est.eixo); if (!(est.secv >= a && est.secv <= b)) est.secv = Math.min(b, Math.max(a, PADRAO.secv)); }
+const salvar = () => { try { localStorage.setItem(CHAVE, JSON.stringify(est)); } catch (e) { /* ignora */ } };
+const grupoOn = D.grupos.map(() => true);
+
+// ------------------------------------------------------------------ cores: paleta categórica validada (ordem fixa), clara e escura
+const SERIE = {
+  claro: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'],
+  escuro: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'],
+};
+const temaEscuro = () => {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+};
+// da 9ª posição em diante a cor se repete na ordem, mais escura no tema claro e mais clara no escuro (amostra listrada)
+function corGrupo(i) {
+  const escuro = temaEscuro();
+  const c = new THREE.Color(SERIE[escuro ? 'escuro' : 'claro'][i % 8]);
+  if (Math.floor(i / 8) % 2 === 1) c.lerp(new THREE.Color(escuro ? '#ffffff' : '#000000'), escuro ? 0.45 : 0.35);
+  return c;
+}
+const css = nome => getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+const hex = c => '#' + c.getHexString();
+
+// ------------------------------------------------------------------ cena
+const host = $('#cena');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.appendChild(renderer.domElement);
+const planoCorte = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+const rotR = new CSS2DRenderer();
+rotR.domElement.className = 'rotulos';
+host.appendChild(rotR.domElement);
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8880, 1.9));
+const sol = new THREE.DirectionalLight(0xffffff, 1.7);
+sol.position.set(-0.35, 1, 0.6);
+scene.add(sol);
+const sol2 = new THREE.DirectionalLight(0xffffff, 0.6);
+sol2.position.set(0.5, -0.3, -0.8);
+scene.add(sol2);
+
+// mundo: coordenadas do pilar (x, y em planta; z da face inferior da laje), em cm reais; a escala vertical é a do grupo.
+// No three.js o eixo vertical é o y: (x, y, z) da planta vai para (x, z, -y)
+const mundo = new THREE.Group();
+scene.add(mundo);
+const V = (x, y, z) => new THREE.Vector3(x, z, -y);
+const G = {};
+for (const k of ['concreto', 'pilar', 'barras', 'contornos', 'cpp', 'cortes', 'bordas', 'secao']) {
+  G[k] = new THREE.Group(); mundo.add(G[k]);
+}
+
+const M = {
+  concreto: new THREE.MeshLambertMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide }),
+  aresta: new THREE.LineBasicMaterial({ transparent: true, opacity: 0.7 }),
+  pilar: new THREE.MeshLambertMaterial({ transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide }),
+  contorno: new THREE.LineDashedMaterial({ dashSize: 3, gapSize: 2.5 }),
+  cpp: new THREE.LineDashedMaterial({ dashSize: 8, gapSize: 4 }),
+  corte: new THREE.LineBasicMaterial({}),
+  borda: new THREE.LineBasicMaterial({}),
+  secPlano: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }),
+  secLinha: new THREE.LineBasicMaterial({}),
+};
+const MG = D.grupos.map(() => new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.2, side: THREE.DoubleSide }));
+const COR = [];
+
+function aplicarTema() {
+  const escuro = temaEscuro();
+  scene.background = new THREE.Color(css('--plano'));
+  M.concreto.color.set(escuro ? '#a9a69c' : '#8d8a80');
+  M.aresta.color.set(escuro ? '#77756e' : '#8d8a80');
+  M.pilar.color.set(escuro ? '#8a877e' : '#6f6c64');
+  M.contorno.color.set(css('--mudo'));
+  M.cpp.color.set(css('--tx2'));
+  M.corte.color.set(css('--destaque'));
+  M.borda.color.set(css('--aviso'));
+  M.secPlano.color.set(css('--destaque'));
+  M.secLinha.color.set(css('--destaque'));
+  D.grupos.forEach((g, i) => { COR[i] = corGrupo(i); MG[i].color.copy(COR[i]); });
+  M.concreto.opacity = est.opac;
+  for (const r of rotulos) if (r.g !== undefined) r.el.style.setProperty('--cor', hex(COR[r.g]));
+  desenharLista();
+  desenharSecao();
+}
+
+// ------------------------------------------------------------------ geometria
+function caixa(x0, x1, y0, y1, z0, z1, mat, grupo, arestas = true) {
+  const g = new THREE.BoxGeometry(x1 - x0, z1 - z0, y1 - y0);
+  const m = new THREE.Mesh(g, mat);
+  m.position.copy(V((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
+  grupo.add(m);
+  if (arestas) {
+    const e = new THREE.LineSegments(new THREE.EdgesGeometry(g), M.aresta);
+    e.position.copy(m.position);
+    grupo.add(e);
+  }
+  return m;
+}
+
+// tubo reto por trechos, com as juntas em meia-esquadria (cada anel fica no plano bissetor das duas direções, e os
+// anéis dos dois trechos coincidem) e tampas nas pontas: as dobras das cobrinhas ficam em canto vivo, sem raio
+function tubo(pts0, r, nr = 8) {
+  const pts = pts0.filter((p, i) => i === 0 || p.distanceToSquared(pts0[i - 1]) > 1e-8);
+  const n = pts.length, pos = [], nor = [], idx = [];
+  if (n < 2) return new THREE.BufferGeometry();
+  const dirs = [];
+  for (let i = 0; i < n - 1; i++) dirs.push(new THREE.Vector3().subVectors(pts[i + 1], pts[i]).normalize());
+  const anel = (P, d, m, N, B) => {
+    const base = pos.length / 3, dm = d.dot(m);
+    for (let j = 0; j < nr; j++) {
+      const a = j / nr * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
+      const nx = N.x * c + B.x * s, ny = N.y * c + B.y * s, nz = N.z * c + B.z * s;
+      const k = -r * (nx * m.x + ny * m.y + nz * m.z) / dm;
+      pos.push(P.x + r * nx + d.x * k, P.y + r * ny + d.y * k, P.z + r * nz + d.z * k);
+      nor.push(nx, ny, nz);
+    }
+    return base;
+  };
+  const bissetor = (a, b) => { const m = new THREE.Vector3().addVectors(a, b); return m.lengthSq() > 0.02 ? m.normalize() : b; };
+  const ref = new THREE.Vector3();
+  const quadros = [];
+  for (let i = 0; i < n - 1; i++) {
+    const d = dirs[i];
+    ref.set(0, 1, 0); if (Math.abs(d.y) > 0.9) ref.set(1, 0, 0);
+    const N = ref.clone().addScaledVector(d, -ref.dot(d)).normalize(), B = new THREE.Vector3().crossVectors(d, N);
+    quadros.push([N, B]);
+    const m0 = i > 0 ? bissetor(dirs[i - 1], d) : d, m1 = i < n - 2 ? bissetor(d, dirs[i + 1]) : d;
+    const a0 = anel(pts[i], d, m0, N, B), a1 = anel(pts[i + 1], d, m1, N, B);
+    for (let j = 0; j < nr; j++) {
+      const j2 = (j + 1) % nr;
+      idx.push(a0 + j, a0 + j2, a1 + j, a0 + j2, a1 + j2, a1 + j);
+    }
+  }
+  for (const [P, d, [N, B], s] of [[pts[0], dirs[0], quadros[0], -1], [pts[n - 1], dirs[n - 2], quadros[n - 2], 1]]) {
+    const c0 = pos.length / 3;
+    pos.push(P.x, P.y, P.z); nor.push(d.x * s, d.y * s, d.z * s);
+    for (let j = 0; j < nr; j++) {
+      const a = j / nr * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
+      pos.push(P.x + r * (N.x * c + B.x * sn), P.y + r * (N.y * c + B.y * sn), P.z + r * (N.z * c + B.z * sn));
+      nor.push(d.x * s, d.y * s, d.z * s);
+    }
+    for (let j = 0; j < nr; j++) idx.push(c0, c0 + 1 + j, c0 + 1 + (j + 1) % nr);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setIndex(idx);
+  return g;
+}
+
+function linha(pts, mat, grupo) {
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(q => V(q[0], q[1], q[2]))), mat);
+  if (mat.isLineDashedMaterial) l.computeLineDistances();
+  grupo.add(l);
+  return l;
+}
+
+const rotulos = [];   // {obj, el, tipo, g?}
+function rotulo(texto, x, y, z, tipo, extra = {}) {
+  const el = document.createElement('div');
+  el.className = 'rt ' + (extra.cls || '');
+  el.textContent = texto;
+  const o = new CSS2DObject(el);
+  o.position.copy(V(x, y, z));
+  if (extra.centro) o.center.set(...extra.centro);
+  mundo.add(o);
+  const r = { obj: o, el, tipo, ...extra };
+  rotulos.push(r);
+  return r;
+}
+
+// laje e pilar
+caixa(X0, X1, Y0, Y1, 0, h, M.concreto, G.concreto);
+const HP = D.pilar_ext;
+caixa(0, bx, 0, by, -HP, h + HP, M.pilar, G.pilar);
+rotulo(D.titulo + (D.repeticoes > 1 ? ` (${D.repeticoes}X)` : ''), bx / 2, by / 2, h + HP, 'pilar', { cls: 'pilar', centro: [0.5, 1.1] });
+
+// bordas livres: as arestas da face da laje na borda, em destaque, e o rótulo
+const NOME_BORDA = { esquerda: 'esquerda', direita: 'direita', baixo: 'de baixo', cima: 'de cima' };
+for (const b of D.bordas) {
+  const [p, q] = { esquerda: [[X0, Y0], [X0, Y1]], direita: [[X1, Y0], [X1, Y1]], baixo: [[X0, Y0], [X1, Y0]], cima: [[X0, Y1], [X1, Y1]] }[b.lado];
+  for (const z of [0, h]) linha([[...p, z], [...q, z]], M.borda, G.bordas);
+  const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+  rotulo(`BORDA LIVRE (${b.a > 0 ? 'a ' + fz(b.a) + ' cm da face' : 'faceando o pilar'})`, mx, my, h, 'bordas', { cls: 'borda', centro: [0.5, 1.2] });
+}
+
+// ferros, pinos, cabeças e trilhos
+const itens = [];
+const NR = { cabeca: 18, pino: 10, barra: 10, trilho: 8 };
+D.elems.forEach(e => {
+  const pts = e.p.map(q => V(q[0], q[1], q[2]));
+  const m = new THREE.Mesh(tubo(pts, e.r, NR[e.k] || 8), MG[e.g]);
+  const it = { e, m };
+  m.userData.item = it;
+  G.barras.add(m);
+  itens.push(it);
+});
+// rótulo de cada posição: no 1º elemento dela, no meio
+const rotuloG = new Set();
+for (const it of itens) {
+  if (rotuloG.has(it.e.g)) continue;
+  rotuloG.add(it.e.g);
+  const p = it.e.p, q = p[Math.floor((p.length - 1) / 2)], q2 = p[Math.ceil((p.length - 1) / 2)];
+  rotulo(D.grupos[it.e.g].id, (q[0] + q2[0]) / 2, (q[1] + q2[1]) / 2, Math.max(q[2], q2[2]) + 1, 'grupos',
+         { g: it.e.g, cls: 'grupo-rt', centro: [0.5, 1.15] });
+}
+
+// contornos das linhas de pinos (conectores) e o C'' da verificação do colapso
+for (const pd of D.contornos) linha(pd, M.contorno, G.contornos);
+for (const pd of D.cpp.linhas) linha(pd, M.cpp, G.cpp);
+if (D.cpp.linhas.length) {
+  const q = D.cpp.linhas[0][Math.floor(D.cpp.linhas[0].length / 2)];
+  rotulo(`C'' (2d além da última linha: ${fz(D.cpp.ax)} em x, ${fz(D.cpp.ay)} em y)`, q[0], q[1], 0, 'cpp', { cls: 'cpp', centro: [0.5, -0.2] });
+}
+if (!D.contornos.length) $('#chk-contornos').hidden = true;
+if (!D.bordas.length) $('#chk-bordas').hidden = true;
+$('#txt-cpp').textContent = `Contorno C'' da ancoragem do colapso (${fz(D.cpp.ax)} / ${fz(D.cpp.ay)} cm das faces)`;
+
+// cortes do desenho: o contorno do plano na laje
+function retPlano(eixo, v, z0, z1) {
+  return eixo === 'x' ? [[v, Y0, z0], [v, Y1, z0], [v, Y1, z1], [v, Y0, z1], [v, Y0, z0]]
+                      : [[X0, v, z0], [X1, v, z0], [X1, v, z1], [X0, v, z1], [X0, v, z0]];
+}
+for (const c of D.cortes) {
+  linha(retPlano(c.eixo, c.v, 0, h), M.corte, G.cortes);
+  const [x, y] = c.eixo === 'x' ? [c.v, Y1] : [X1, c.v];
+  rotulo(`${c.letra}-${c.letra}`, x, y, h, 'cortes', { cls: 'corte', centro: [0.5, 1.2] });
+}
+
+// seção móvel: o plano (refeito ao trocar de eixo) e as tampas das barras cortadas
+let plano = null, planoLinha = null;
+function refazerPlano() {
+  if (plano) { G.secao.remove(plano, planoLinha); plano.geometry.dispose(); planoLinha.geometry.dispose(); }
+  const z0 = -HP * 0.5, z1 = h + HP * 0.5;
+  const pts = retPlano(est.eixo, 0, z0, z1).map(q => V(q[0], q[1], q[2]));
+  const g = new THREE.BufferGeometry().setFromPoints([pts[0], pts[1], pts[2], pts[0], pts[2], pts[3]]);
+  g.computeVertexNormals();
+  plano = new THREE.Mesh(g, M.secPlano);
+  planoLinha = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), M.secLinha);
+  G.secao.add(plano, planoLinha);
+}
+const tampaGeo = { x: new THREE.CircleGeometry(1, 20).rotateY(Math.PI / 2), y: new THREE.CircleGeometry(1, 20) };
+const tampas = {};
+for (const k of ['x', 'y']) {
+  tampas[k] = new THREE.InstancedMesh(tampaGeo[k], new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), Math.max(1, D.elems.length * 4));
+  tampas[k].count = 0;
+  tampas[k].frustumCulled = false;
+  mundo.add(tampas[k]);
+}
+const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _p = new THREE.Vector3();
+function aplicarCorte() {
+  renderer.clippingPlanes = est.corte && est.sec ? [planoCorte] : [];
+  // fica o que tem lado * (coordenada - seção) >= -0,05 (a folga deixa a seção aparecer)
+  if (est.eixo === 'x') { planoCorte.normal.set(est.lado, 0, 0); planoCorte.constant = -est.lado * (mundo.position.x + est.secv) + 0.05; }
+  else { planoCorte.normal.set(0, 0, -est.lado); planoCorte.constant = est.lado * (mundo.position.z - est.secv) + 0.05; }
+  for (const k of ['x', 'y']) tampas[k].count = 0;
+  if (!(est.corte && est.sec)) return;
+  const t = tampas[est.eixo];
+  let n = 0;
+  for (const c of cortes2d().elipses) {
+    if (n >= t.instanceMatrix.count) break;
+    _p.copy(est.eixo === 'x' ? V(est.secv, c.s, c.z) : V(c.s, est.secv, c.z));
+    _s.set(c.r, c.r, c.r);
+    t.setMatrixAt(n, _m4.compose(_p, _q, _s));
+    t.setColorAt(n, COR[c.g]);
+    n++;
+  }
+  t.count = n;
+  t.instanceMatrix.needsUpdate = true;
+  if (t.instanceColor) t.instanceColor.needsUpdate = true;
+}
+
+// ------------------------------------------------------------------ visibilidade
+function atualizarVisibilidade() {
+  const m = est.mostrar;
+  for (const k of ['concreto', 'pilar', 'contornos', 'cpp', 'cortes', 'bordas']) G[k].visible = !!m[k];
+  for (const it of itens) it.m.visible = grupoOn[it.e.g];
+  G.secao.visible = est.sec;
+  for (const r of rotulos) {
+    let v = m.rotulos;
+    if (r.tipo === 'grupos') v = v && grupoOn[r.g];
+    else if (r.tipo !== 'pilar') v = v && !!m[r.tipo];
+    r.quer = v;
+  }
+  $('#secao2d').hidden = !est.sec;
+}
+
+// rótulos que se sobrepõem na tela ficam escondidos (prioridade: pilar, cortes e bordas, posições, C'')
+const PRIOR = { pilar: 0, cortes: 1, bordas: 1, grupos: 2, cpp: 3 };
+const rotulosOrd = [...rotulos].sort((p, q) => PRIOR[p.tipo] - PRIOR[q.tipo]);
+const _v = new THREE.Vector3();
+function cortado(x, y) {
+  if (!(est.corte && est.sec)) return false;
+  return est.lado * ((est.eixo === 'x' ? x : y) - est.secv) < -0.5;
+}
+function arrumarRotulos() {
+  const w = host.clientWidth, hh = host.clientHeight, ocupados = [];
+  for (const r of rotulosOrd) {
+    const p = r.obj.position;
+    if (!r.quer || cortado(p.x, -p.z)) { r.obj.visible = false; continue; }
+    _v.setFromMatrixPosition(r.obj.matrixWorld).project(cam);
+    if (_v.z < -1 || _v.z > 1) { r.obj.visible = false; continue; }
+    if (!r.w && r.el.offsetWidth) { r.w = r.el.offsetWidth; r.hh = r.el.offsetHeight; }
+    const lw = r.w || r.el.textContent.length * 6.6 + 12, lh = r.hh || 17;
+    const x0 = (_v.x + 1) / 2 * w - r.obj.center.x * lw, y0 = (1 - _v.y) / 2 * hh - r.obj.center.y * lh;
+    const q = [x0 - 2, y0 - 1, x0 + lw + 2, y0 + lh + 1];
+    const bate = ocupados.some(o => q[0] < o[2] && q[2] > o[0] && q[1] < o[3] && q[3] > o[1]);
+    r.obj.visible = !bate;
+    if (!bate) ocupados.push(q);
+  }
+}
+
+// destaque de uma posição (passar o mouse no ferro ou na lista)
+let destacado = null;
+function destacar(g) {
+  if (g === destacado) return;
+  destacado = g;
+  MG.forEach((mat, i) => { const apagado = g !== null && i !== g; mat.transparent = apagado; mat.opacity = apagado ? 0.12 : 1; mat.needsUpdate = true; });
+  document.querySelectorAll('.pos').forEach(el => el.style.background = +el.dataset.g === g ? 'var(--sup2)' : '');
+}
+
+// ------------------------------------------------------------------ câmeras e vistas
+const persp = new THREE.PerspectiveCamera(32, 1, 1, 1e6);
+const orto = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1e6);
+let cam = est.persp ? persp : orto;
+let controls = null;
+let vistaAtual = '3d';
+const VISTAS = {
+  '3d': { d: [-0.55, 0.62, 0.95], up: [0, 1, 0] },
+  planta: { d: [0, 1, 0.0005], up: [0, 0, -1] },        // y da planta para cima, como na prancha
+  inferior: { d: [0, -1, 0.0005], up: [0, 0, 1] },      // de baixo: x para a direita, y para baixo
+  frontal: { d: [0, 0, 1], up: [0, 1, 0] },             // no sentido +y: x para a direita
+  lateral: { d: [1, 0, 0], up: [0, 1, 0] },             // no sentido -x: y para a direita
+};
+for (const c of D.cortes) VISTAS['c' + c.letra] = c.eixo === 'x' ? VISTAS.lateral : VISTAS.frontal;
+function novosControles(alvo) {
+  if (controls) controls.dispose();
+  controls = new OrbitControls(cam, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.12;
+  controls.screenSpacePanning = true;
+  controls.zoomToCursor = true;
+  controls.minDistance = 2;
+  if (alvo) controls.target.copy(alvo);
+}
+function caixaVisivel() {
+  const bx3 = new THREE.Box3();
+  mundo.updateMatrixWorld(true);
+  for (const k of ['concreto', 'pilar', 'barras'])
+    if (G[k].visible && G[k].children.length) bx3.expandByObject(G[k]);
+  if (bx3.isEmpty()) bx3.expandByObject(G.concreto);
+  if (est.corte && est.sec) {
+    const p = est.eixo === 'x' ? est.secv + mundo.position.x : -est.secv + mundo.position.z;
+    if (est.eixo === 'x') {
+      if (est.lado > 0) bx3.min.x = Math.min(bx3.max.x - 1, Math.max(bx3.min.x, p));
+      else bx3.max.x = Math.max(bx3.min.x + 1, Math.min(bx3.max.x, p));
+    } else {                                              // y da planta cresce para -z do mundo
+      if (est.lado > 0) bx3.max.z = Math.max(bx3.min.z + 1, Math.min(bx3.max.z, p));
+      else bx3.min.z = Math.min(bx3.max.z - 1, Math.max(bx3.min.z, p));
+    }
+  }
+  return bx3;
+}
+function enquadrar(vista = vistaAtual) {
+  vistaAtual = vista;
+  const V0 = VISTAS[vista];
+  const bx3 = caixaVisivel(), alvo = bx3.getCenter(new THREE.Vector3());
+  const d = new THREE.Vector3(...V0.d).normalize(), up = new THREE.Vector3(...V0.up);
+  cam.up.copy(up);
+  cam.position.copy(alvo).addScaledVector(d, 1);
+  cam.lookAt(alvo);
+  cam.updateMatrixWorld(true);
+  const dir = new THREE.Vector3(), dx = new THREE.Vector3(), dy = new THREE.Vector3();
+  cam.matrixWorld.extractBasis(dx, dy, dir);
+  const asp = host.clientWidth / Math.max(1, host.clientHeight);
+  const cantos = [];
+  for (const x of [bx3.min.x, bx3.max.x]) for (const y of [bx3.min.y, bx3.max.y]) for (const z of [bx3.min.z, bx3.max.z])
+    cantos.push(new THREE.Vector3(x, y, z).sub(alvo));
+  const tamanho = bx3.getSize(new THREE.Vector3()).length();
+  const ocup = window.innerWidth > 700 ? 0.74 : 1;      // o painel ocupa a esquerda
+  const topo = $('header').offsetHeight / Math.max(1, host.clientHeight);   // e o cabeçalho, o alto
+  if (cam.isPerspectiveCamera) {
+    const tv = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)), th = tv * asp * ocup;
+    let dist = 0;
+    for (const c of cantos) {
+      const px = Math.abs(c.dot(dx)), py = Math.abs(c.dot(dy)), pz = c.dot(dir);
+      dist = Math.max(dist, pz + px / th, pz + py / (tv * (1 - topo)));
+    }
+    dist *= 1.08;
+    cam.position.copy(alvo).addScaledVector(dir, dist);
+  } else {
+    let hw = 0, hh = 0;
+    for (const c of cantos) { hw = Math.max(hw, Math.abs(c.dot(dx))); hh = Math.max(hh, Math.abs(c.dot(dy))); }
+    hw /= ocup;
+    orto.userData.hh = Math.max(hh / (1 - topo), hw / asp) * 1.1;
+    orto.zoom = 1;
+    cam.position.copy(alvo).addScaledVector(dir, tamanho * 2 + 1000);
+    redimensionar();
+  }
+  const altura = cam.isPerspectiveCamera ? 2 * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * cam.position.distanceTo(alvo)
+                                         : 2 * orto.userData.hh;
+  if (window.innerWidth > 700) {                        // desloca o centro para a direita do painel
+    const desl = -altura * asp * (1 - ocup) / 2 * 0.9;
+    alvo.addScaledVector(dx, desl);
+    cam.position.addScaledVector(dx, desl);
+  }
+  alvo.addScaledVector(dy, altura * topo / 2);          // e para baixo do cabeçalho
+  cam.position.addScaledVector(dy, altura * topo / 2);
+  cam.lookAt(alvo);
+  novosControles(alvo);
+  controls.update();
+  document.querySelectorAll('[data-vista]').forEach(el => el.classList.toggle('ativo', el.dataset.vista === vista));
+}
+function trocarProjecao(perspectiva) {
+  est.persp = perspectiva; salvar();
+  cam = perspectiva ? persp : orto;
+  enquadrar(vistaAtual);
+}
+function redimensionar() {
+  const w = host.clientWidth, hh = host.clientHeight;
+  renderer.setSize(w, hh);
+  rotR.setSize(w, hh);
+  persp.aspect = w / Math.max(1, hh);
+  persp.updateProjectionMatrix();
+  const H = orto.userData.hh || 100, asp = w / Math.max(1, hh);
+  orto.left = -H * asp; orto.right = H * asp; orto.top = H; orto.bottom = -H;
+  orto.updateProjectionMatrix();
+}
+addEventListener('resize', () => { redimensionar(); desenharSecao(); });
+
+function aplicarEscala() {
+  mundo.scale.set(1, est.kz, 1);
+  mundo.position.set(-CX, -h / 2 * est.kz, CY);
+  mundo.updateMatrixWorld(true);
+  aplicarCorte();
+}
+
+// ------------------------------------------------------------------ seção móvel: o que o plano corta (3D e desenho 2D)
+// Para cada trecho dos ferros: atravessando o plano, a seção da barra (círculo ou elipse, na cor da posição); deitado
+// no plano (a menos do raio), uma faixa com a largura da corda. Coordenadas da seção: s (a outra coordenada da
+// planta) e z.
+function cortes2d() {
+  const ia = est.eixo === 'x' ? 0 : 1, is = 1 - ia, v = est.secv;
+  const faixas = [], elipses = [], juntas = [];
+  for (const it of itens) {
+    const e = it.e;
+    if (!grupoOn[e.g]) continue;
+    const P = e.p;
+    let antes = null;
+    for (let i = 0; i < P.length - 1; i++) {
+      const a = P[i], b = P[i + 1], da = a[ia] - v, db = b[ia] - v;
+      const l2 = Math.hypot(b[is] - a[is], b[2] - a[2]), dn = Math.abs(db - da);
+      const dentro = Math.abs(da) <= e.r + 1e-6 && Math.abs(db) <= e.r + 1e-6;
+      if (dentro && l2 > dn && l2 > 1e-6) {
+        const dm = (da + db) / 2, w = Math.sqrt(Math.max(0, e.r * e.r - dm * dm));
+        if (w < 0.01) { antes = null; continue; }
+        const ux = (b[is] - a[is]) / l2, uz = (b[2] - a[2]) / l2, nx = -uz * w, nz = ux * w;
+        faixas.push({ e, g: e.g, pts: [[a[is] + nx, a[2] + nz], [b[is] + nx, b[2] + nz], [b[is] - nx, b[2] - nz], [a[is] - nx, a[2] - nz]] });
+        if (antes) juntas.push({ e, g: e.g, s: a[is], z: a[2], r: w });
+        antes = true;
+        continue;
+      }
+      antes = null;
+      if ((da < 0) !== (db < 0) && dn > 1e-9) {
+        const t = da / (da - db), q = [0, 1, 2].map(k => a[k] + (b[k] - a[k]) * t);
+        const L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+        const u = [0, 1, 2].map(k => (b[k] - a[k]) / L), cs = Math.abs(u[ia]);
+        const pn = Math.hypot(u[is], u[2]);
+        const ang = pn > 1e-6 ? Math.atan2(u[2], u[is]) : 0;
+        elipses.push({ e, g: e.g, s: q[is], z: q[2], r: e.r, a: Math.min(e.r / Math.max(cs, 1e-3), 6 * e.r), b: e.r, ang });
+      }
+    }
+  }
+  return { faixas, elipses, juntas };
+}
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, pai) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (pai) pai.appendChild(e);
+  return e;
+}
+const vis2d = { k: 1, sc: null, zc: null };
+let geo2d = null;
+function textoSecao() {
+  return est.eixo === 'x' ? 'Vista no sentido −x (y para a direita), escala real.' : 'Vista no sentido +y (x para a direita), escala real.';
+}
+function desenharSecao() {
+  const v = est.secv;
+  plano.position.copy(est.eixo === 'x' ? V(v, 0, 0) : V(0, v, 0));
+  planoLinha.position.copy(plano.position);
+  aplicarCorte();
+  $('#sec-r').value = v;
+  $('#sec-nome').textContent = est.eixo + ' =';
+  if (document.activeElement !== $('#sec-v')) $('#sec-v').value = fz(v);
+  if (!est.sec) return;
+  const nomeCorte = D.cortes.find(c => c.eixo === est.eixo && Math.abs(c.v - v) < 0.26);
+  $('#sec-tit').textContent = `Seção em ${est.eixo} = ${fz(v)} cm` + (nomeCorte ? ` (corte ${nomeCorte.letra}-${nomeCorte.letra} do desenho)` : '') +
+    (vis2d.k > 1.001 ? `  (aproximada ${fk(vis2d.k)}×)` : '');
+  $('#sec-nota').textContent = textoSecao() + ' Roda: aproximar · arrastar: deslocar · duplo clique: enquadrar';
+  const svg = $('#sec-svg');
+  svg.replaceChildren();
+  const { faixas, elipses, juntas } = cortes2d();
+  const [S0, S1] = est.eixo === 'x' ? [Y0, Y1] : [X0, X1];            // a laje ao longo da seção
+  const [P0, P1] = est.eixo === 'x' ? [0, by] : [0, bx];              // o pilar ao longo da seção
+  const [N0, N1] = est.eixo === 'x' ? [0, bx] : [0, by];              // o pilar na direção do plano
+  const pilarCortado = v >= N0 - 1e-6 && v <= N1 + 1e-6;
+  const ext2 = Math.min(HP, 0.8 * h);
+  // enquadramento: o que a seção corta (barras e pilar), com folga; sem nada, a laje inteira
+  let bs0 = Infinity, bs1 = -Infinity;
+  for (const f of faixas) for (const q of f.pts) { bs0 = Math.min(bs0, q[0]); bs1 = Math.max(bs1, q[0]); }
+  for (const c of elipses) { bs0 = Math.min(bs0, c.s - c.a); bs1 = Math.max(bs1, c.s + c.a); }
+  if (pilarCortado) { bs0 = Math.min(bs0, P0); bs1 = Math.max(bs1, P1); }
+  if (!isFinite(bs0)) { bs0 = S0; bs1 = S1; }
+  bs0 = Math.max(S0, bs0 - 12); bs1 = Math.min(S1, bs1 + 12);
+  const zmin = pilarCortado ? -ext2 : -4, zmax = h + (pilarCortado ? ext2 : 4);
+  const larg = Math.min(760, Math.max(320, window.innerWidth * 0.5)), alt = Math.max(200, Math.min(380, window.innerHeight * 0.42)), pad = 12;
+  const s = Math.min((larg - 2 * pad) / Math.max(1, bs1 - bs0), (alt - 2 * pad) / (zmax - zmin));
+  const W = Math.max((bs1 - bs0) * s + 2 * pad, 320), Hs = (zmax - zmin) * s + 2 * pad;
+  svg.setAttribute('width', W); svg.setAttribute('height', Hs); svg.setAttribute('viewBox', `0 0 ${W} ${Hs}`);
+  $('#secao2d').style.width = (W + 22) + 'px';
+  const k = vis2d.k, sc = vis2d.sc ?? (bs0 + bs1) / 2, zc = vis2d.zc ?? (zmin + zmax) / 2, sk = s * k, Yc = Hs / 2;
+  geo2d = { s, W, Yc, sc, zc };
+  const X = u => W / 2 + (u - sc) * sk, Y = z => Yc + (zc - z) * sk;
+  // laje (com o cobrimento tracejado) e pilar
+  el('rect', { x: X(S0), y: Y(h), width: (S1 - S0) * sk, height: h * sk, fill: css('--sup2'), stroke: css('--tx2'), 'stroke-width': 1 }, svg);
+  for (const z of [D.c_inf, h - D.c_sup])
+    el('line', { x1: X(S0), y1: Y(z), x2: X(S1), y2: Y(z), stroke: css('--mudo'), 'stroke-width': 0.6, 'stroke-dasharray': '4 3' }, svg);
+  const pil = { x: X(P0), y: Y(h + ext2), width: (P1 - P0) * sk, height: (h + 2 * ext2) * sk, stroke: css('--tx2'), 'stroke-width': 1 };
+  if (pilarCortado) el('rect', { ...pil, fill: css('--eixo'), 'fill-opacity': 0.55 }, svg).dataset.info = `Pilar ${D.titulo} (${fz(bx)} x ${fz(by)}), cortado`;
+  else el('rect', { ...pil, fill: 'none', 'stroke-dasharray': '5 3' }, svg).dataset.info = `Pilar ${D.titulo} (além da seção)`;
+  const info = (e, sv, zv) => `${e.t}\nna seção: ${est.eixo === 'x' ? 'y' : 'x'} = ${fz(sv)} · z = ${fz(zv)} cm`;
+  for (const f of faixas) {
+    const c = hex(COR[f.g]);
+    el('polygon', { points: f.pts.map(q => `${X(q[0])},${Y(q[1])}`).join(' '), fill: c, stroke: c, 'stroke-width': 0.4 }, svg)
+      .dataset.info = info(f.e, (f.pts[0][0] + f.pts[2][0]) / 2, (f.pts[0][1] + f.pts[2][1]) / 2);
+  }
+  for (const j of juntas) el('circle', { cx: X(j.s), cy: Y(j.z), r: j.r * sk, fill: hex(COR[j.g]) }, svg);
+  for (const c of elipses) {
+    const rx = Math.max(c.a * sk, 1.5), ry = Math.max(c.b * sk, 1.5);
+    el('ellipse', { cx: X(c.s), cy: Y(c.z), rx, ry, fill: hex(COR[c.g]), stroke: css('--sup'), 'stroke-width': Math.min(0.6, ry / 4),
+                    transform: `rotate(${-c.ang * 180 / Math.PI} ${X(c.s)} ${Y(c.z)})` }, svg).dataset.info = info(c.e, c.s, c.z);
+  }
+  const partes = [`laje h = ${fz(h)} cm, cobrimentos ${fz(D.c_sup)} (sup.) e ${fz(D.c_inf)} (inf.), d = ${fz(D.d)} cm`];
+  const nf = new Set([...faixas, ...elipses].map(q => D.grupos[q.g].id));
+  partes.push(nf.size ? 'cortados ou no plano: ' + [...nf].join(', ') : 'nenhum ferro nesta seção');
+  if (!pilarCortado) partes.push('pilar além da seção (tracejado)');
+  $('#sec-zs').textContent = partes.join(' · ') + '.';
+}
+$('#sec-svg').addEventListener('pointermove', e => {
+  const i = e.target.dataset && e.target.dataset.info;
+  if (i) mostrarTip(e.clientX, e.clientY, htmlInfo(i)); else esconderTip();
+});
+$('#sec-svg').addEventListener('pointerleave', esconderTip);
+const svgSec = $('#sec-svg');
+svgSec.addEventListener('wheel', e => {
+  if (!geo2d) return;
+  e.preventDefault();
+  const rc = svgSec.getBoundingClientRect(), mx = e.clientX - rc.left, my = e.clientY - rc.top;
+  const g = geo2d, sk0 = g.s * vis2d.k;
+  const u = g.sc + (mx - g.W / 2) / sk0, z = g.zc - (my - g.Yc) / sk0;
+  const k = Math.min(80, Math.max(1, vis2d.k * Math.exp(-e.deltaY * 0.0015)));
+  if (k <= 1.0001) { vis2d.k = 1; vis2d.sc = vis2d.zc = null; }
+  else { const sk = g.s * k; vis2d.k = k; vis2d.sc = u - (mx - g.W / 2) / sk; vis2d.zc = z + (my - g.Yc) / sk; }
+  svgSec.style.cursor = vis2d.k > 1 ? 'grab' : '';
+  desenharSecao();
+}, { passive: false });
+let arraste = null;
+svgSec.addEventListener('pointerdown', e => {
+  if (e.button === 0 && vis2d.k > 1) { arraste = [e.clientX, e.clientY]; svgSec.setPointerCapture(e.pointerId); }
+});
+svgSec.addEventListener('pointermove', e => {
+  if (!arraste || !geo2d) return;
+  const sk = geo2d.s * vis2d.k;
+  vis2d.sc = geo2d.sc - (e.clientX - arraste[0]) / sk;
+  vis2d.zc = geo2d.zc + (e.clientY - arraste[1]) / sk;
+  arraste = [e.clientX, e.clientY];
+  esconderTip();
+  desenharSecao();
+});
+svgSec.addEventListener('pointerup', () => { arraste = null; });
+svgSec.addEventListener('dblclick', () => { vis2d.k = 1; vis2d.sc = vis2d.zc = null; svgSec.style.cursor = ''; desenharSecao(); });
+const zerar2d = () => { vis2d.k = 1; vis2d.sc = vis2d.zc = null; svgSec.style.cursor = ''; };
+
+// ------------------------------------------------------------------ dica sob o mouse
+const tip = $('#tip');
+function htmlInfo(t) {
+  const [a, ...resto] = String(t).split('\n');
+  return `<b>${esc(a)}</b>` + resto.map(l => `<br><span class="m">${esc(l)}</span>`).join('');
+}
+function mostrarTip(x, y, html) {
+  tip.innerHTML = html; tip.hidden = false;
+  const w = tip.offsetWidth, hh = tip.offsetHeight;
+  tip.style.left = Math.min(x + 14, innerWidth - w - 8) + 'px';
+  tip.style.top = (y + 16 + hh > innerHeight ? y - hh - 10 : y + 16) + 'px';
+}
+function esconderTip() { tip.hidden = true; }
+
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+function pegar(ev) {
+  const rc = renderer.domElement.getBoundingClientRect();
+  ptr.set((ev.clientX - rc.left) / rc.width * 2 - 1, -(ev.clientY - rc.top) / rc.height * 2 + 1);
+  ray.setFromCamera(ptr, cam);
+  const alvos = itens.filter(it => it.m.visible).map(it => it.m);
+  for (const hit of ray.intersectObjects(alvos, false)) {
+    const p = mundo.worldToLocal(hit.point.clone());   // (x, z, -y)
+    const x = p.x, y = -p.z, z = p.y;
+    if (cortado(x, y)) continue;
+    return { it: hit.object.userData.item, x, y, z };
+  }
+  return null;
+}
+let pend = null;
+renderer.domElement.addEventListener('pointermove', ev => {
+  if (ev.buttons) { esconderTip(); return; }
+  pend = ev;
+});
+renderer.domElement.addEventListener('pointerleave', () => { pend = null; esconderTip(); if (!listaHover) destacar(null); });
+renderer.domElement.addEventListener('dblclick', ev => {
+  const p = pegar(ev);
+  if (!p) return;
+  const pl = p.it.e.pl;
+  if (pl) { est.eixo = pl[0]; est.secv = pl[1]; }
+  else est.secv = Math.round((est.eixo === 'x' ? p.x : p.y) * 2) / 2;
+  est.sec = true;
+  ligarSecao();
+});
+function processarHover() {
+  if (!pend) return;
+  const ev = pend; pend = null;
+  const p = pegar(ev);
+  if (p) {
+    mostrarTip(ev.clientX, ev.clientY, htmlInfo(p.it.e.t) + `<br>x = ${fz(p.x)} · y = ${fz(p.y)} · z = ${fz(p.z)} cm`);
+    destacar(p.it.e.g); renderer.domElement.style.cursor = 'crosshair';
+  } else { esconderTip(); if (!listaHover) destacar(null); renderer.domElement.style.cursor = ''; }
+}
+
+// ------------------------------------------------------------------ painel
+const POS_TXT = { interno: 'pilar interno', borda: 'pilar de borda', canto: 'pilar de canto' };
+$('#titulo').textContent = `${D.titulo} · punção 3D`;
+$('#subtitulo').textContent = [D.projeto, `${POS_TXT[D.posicao] || D.posicao} ${fz(bx)} x ${fz(by)}`,
+  `laje h = ${fz(h)}, cobrimentos ${fz(D.c_sup)}/${fz(D.c_inf)}, d = ${fz(D.d)} cm`, D.resumo_solucao,
+  `${D.repeticoes}X`, `gerado em ${D.gerado}`].filter(Boolean).join('  ·  ');
+if (D.avisos.length) {
+  const bt = $('#bt-avisos');
+  bt.hidden = false;
+  bt.textContent = `⚠ ${D.avisos.length} aviso${D.avisos.length > 1 ? 's' : ''}`;
+  $('#avisos-ul').innerHTML = D.avisos.map(a => `<li>${esc(a)}</li>`).join('');
+  bt.onclick = () => { $('#lista-avisos').hidden = !$('#lista-avisos').hidden; };
+}
+$('#bt-tema').onclick = () => {
+  document.documentElement.dataset.theme = temaEscuro() ? 'light' : 'dark';
+  aplicarTema();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', aplicarTema);
+$('#painel-topo').onclick = () => {
+  $('#painel').classList.toggle('fechado');
+  $('#painel-seta').textContent = $('#painel').classList.contains('fechado') ? '▸' : '▾';
+};
+
+// escala vertical: a barra anda pelos passos abaixo (0,1 em 0,1 até 2x); no campo vale qualquer valor de 0,1 a 50
+const PASSOS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2,
+                2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 40, 50];
+const passo = v => PASSOS.reduce((m, p, i) => Math.abs(Math.log(p / v)) < Math.abs(Math.log(PASSOS[m] / v)) ? i : m, 0);
+function definirEscala(v, de) {
+  est.kz = Math.min(50, Math.max(0.1, v));
+  $('#kz-r').value = passo(est.kz);
+  if (de !== 'campo') $('#kz').value = fk(est.kz);
+  aplicarEscala(); salvar();
+}
+$('#kz-r').max = PASSOS.length - 1;
+$('#kz-r').addEventListener('input', e => definirEscala(PASSOS[+e.target.value]));
+$('#kz').addEventListener('input', e => { const v = num(e.target.value); if (v) definirEscala(v, 'campo'); });
+$('#kz').addEventListener('change', e => { e.target.value = fk(est.kz); });
+document.querySelectorAll('[data-k]').forEach(bt => bt.onclick = () => definirEscala(+bt.dataset.k));
+
+// vistas (os cortes do desenho ligam a seção no plano deles)
+const caixaCortes = $('#vistas-cortes');
+D.cortes.forEach(c => {
+  const bt = document.createElement('button');
+  bt.className = 'btn'; bt.dataset.vista = 'c' + c.letra; bt.textContent = `Corte ${c.letra}-${c.letra}`;
+  bt.title = `Seção do desenho em ${c.eixo} = ${fz(c.v)} cm`;
+  caixaCortes.appendChild(bt);
+});
+if (!D.cortes.length) caixaCortes.hidden = true;
+document.querySelectorAll('[data-vista]').forEach(bt => bt.onclick = () => {
+  const v = bt.dataset.vista;
+  const p = v === '3d';
+  if (p !== est.persp) { est.persp = p; $('#persp').checked = p; cam = p ? persp : orto; salvar(); }
+  const c = D.cortes.find(q => 'c' + q.letra === v);
+  if (c) { est.eixo = c.eixo; est.secv = c.v; est.sec = true; ligarSecao(false); }
+  enquadrar(v);
+});
+$('#bt-enq').onclick = () => enquadrar();
+$('#persp').checked = est.persp;
+$('#persp').onchange = e => trocarProjecao(e.target.checked);
+const TECLAS = ['3d', 'planta', 'inferior', 'frontal', 'lateral', ...D.cortes.map(c => 'c' + c.letra)];
+addEventListener('keydown', e => {
+  if (['INPUT', 'SELECT'].includes(e.target.tagName)) return;
+  const i = +e.key;
+  if (i >= 1 && i <= TECLAS.length) document.querySelector(`[data-vista="${TECLAS[i - 1]}"]`).click();
+  else if (e.key === 'f' || e.key === 'F') enquadrar();
+});
+
+// mostrar
+document.querySelectorAll('[data-m]').forEach(cb => {
+  cb.checked = !!est.mostrar[cb.dataset.m];
+  cb.onchange = () => { est.mostrar[cb.dataset.m] = cb.checked; salvar(); atualizarVisibilidade(); };
+});
+$('#opac').value = est.opac;
+$('#opac').oninput = e => { est.opac = +e.target.value; M.concreto.opacity = est.opac; salvar(); };
+
+// seção móvel
+function faixaSecao() {
+  const [a, b] = limites(est.eixo);
+  $('#sec-r').min = a; $('#sec-r').max = b;
+  est.secv = Math.min(b, Math.max(a, est.secv));
+}
+function ligarSecao(enq = false) {
+  $('#sec-on').checked = est.sec;
+  $('#sec-eixo').value = est.eixo;
+  faixaSecao();
+  refazerPlano();
+  zerar2d();
+  salvar(); atualizarVisibilidade(); desenharSecao();
+  if (enq) enquadrar();
+}
+$('#sec-on').checked = est.sec;
+$('#sec-on').onchange = e => { est.sec = e.target.checked; ligarSecao(); };
+$('#sec-eixo').value = est.eixo;
+$('#sec-eixo').onchange = e => {
+  est.eixo = e.target.value;
+  const c = D.cortes.find(q => q.eixo === est.eixo);
+  const [a, b] = limites(est.eixo);
+  est.secv = c ? c.v : (a + b) / 2;
+  ligarSecao();
+};
+$('#sec-corte').checked = est.corte;
+$('#sec-corte').onchange = e => { est.corte = e.target.checked; salvar(); desenharSecao(); };
+$('#sec-lado').value = String(est.lado);
+$('#sec-lado').onchange = e => { est.lado = +e.target.value; salvar(); desenharSecao(); };
+$('#sec-r').oninput = e => { est.secv = +e.target.value; zerar2d(); salvar(); desenharSecao(); };
+$('#sec-v').addEventListener('input', e => {
+  const v = num(e.target.value), [a, b] = limites(est.eixo);
+  if (v !== null && v >= a && v <= b) { est.secv = v; zerar2d(); salvar(); desenharSecao(); }
+});
+$('#sec-v').addEventListener('change', e => { e.target.value = fz(est.secv); });
+
+// posições
+let listaHover = false;
+function desenharLista() {
+  const lst = $('#lista-pos');
+  lst.replaceChildren();
+  D.grupos.forEach((g, i) => {
+    const row = document.createElement('div');
+    row.className = 'pos' + (grupoOn[i] ? '' : ' desl');
+    row.dataset.g = i;
+    const listra = Math.floor(i / 8) % 2 === 1 ? ' listra' : '';
+    row.innerHTML = `<input type="checkbox" ${grupoOn[i] ? 'checked' : ''} tabindex="-1">` +
+      `<span class="amostra${listra}" style="background-color:${hex(COR[i])}"></span>` +
+      `<span class="nome">${esc(g.id)}</span><span class="det">${esc(g.det)}</span>`;
+    row.onclick = () => { grupoOn[i] = !grupoOn[i]; desenharLista(); atualizarVisibilidade(); desenharSecao(); };
+    row.onpointerenter = () => { listaHover = true; destacar(i); };
+    row.onpointerleave = () => { listaHover = false; destacar(null); };
+    lst.appendChild(row);
+  });
+  $('#nota-cores').textContent = (D.grupos.length > 8 ? 'Da 9ª posição em diante as cores se repetem em outro tom (amostra listrada). ' : '') +
+    'Passe o mouse numa posição para destacá-la; clique para ligar ou desligar.';
+}
+$('#bt-todos').onclick = () => { grupoOn.fill(true); desenharLista(); atualizarVisibilidade(); desenharSecao(); };
+$('#bt-nenhum').onclick = () => { grupoOn.fill(false); desenharLista(); atualizarVisibilidade(); desenharSecao(); };
+
+// ------------------------------------------------------------------ início
+refazerPlano();
+faixaSecao();
+redimensionar();
+aplicarTema();
+definirEscala(est.kz);
+atualizarVisibilidade();
+enquadrar('3d');
+desenharSecao();
+
+function quadro() {
+  requestAnimationFrame(quadro);
+  processarHover();
+  controls.update();
+  if (cam.isPerspectiveCamera) {
+    const d = cam.position.distanceTo(controls.target);
+    cam.near = Math.max(0.05, d / 2000); cam.far = d * 40 + 5000;
+    cam.updateProjectionMatrix();
+  }
+  renderer.render(scene, cam);
+  arrumarRotulos();
+  rotR.render(scene, cam);
+}
+quadro();
+// para testes automáticos: posição na tela de um ponto (x, y, z) do pilar e o que a seção corta
+window.__visual = {
+  tela: (x, y, z) => { const v = mundo.localToWorld(V(x, y, z)).project(cam);
+    return [(v.x + 1) / 2 * host.clientWidth, (1 - v.y) / 2 * host.clientHeight]; },
+  secao: () => { const c = cortes2d(); return { faixas: c.faixas.length, elipses: c.elipses.length }; },
+  estado: () => structuredClone(est),
+};
+window.__pronto = true;
+</script>
+</body>
+</html>

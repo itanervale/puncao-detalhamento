@@ -16,6 +16,8 @@ Cada pilar vira uma prancha (`PUN_<pilar>.DWG`) no padrão dos desenhos do escri
 
 Os comprimentos dos ferros são os que o próprio TQS calcula. O app os confere com os do núcleo.
 
+Cada pilar também tem uma **visualização 3D** (`PUN_<pilar>-3D.html`), que abre no navegador sem o TQS e sem internet.
+
 > **Situação:** etapas E0 a E8 feitas (base, cobrinha, conectores, janela, relatório do lote, fechamento do repositório e importação do TQS) e a E9 (cobrinha e conectores): **pilares internos, de borda e de canto**, retangulares. O plano, com as decisões e as próximas etapas, está em [PLANO_Detalhamento_Puncao.md](PLANO_Detalhamento_Puncao.md); o padrão gráfico, em [PADRAO_desenho.md](PADRAO_desenho.md).
 
 ## Requisitos
@@ -163,6 +165,27 @@ Opções:
 
 Sem o TQS (ou sem o matplotlib no `--png`), o comando para antes de gravar, com uma mensagem dizendo o que falta.
 
+### Visualização 3D
+
+```bash
+python visualizar_3d.py exemplos/P2_cobrinha.json --abrir
+```
+
+Grava uma página por pilar (`PUN_<pilar>-3D.html`, na mesma pasta dos DWG) e, com `--abrir`, abre cada uma numa janela própria (o Edge ou o Chrome em modo aplicativo, ou o navegador padrão). Não precisa do TQS nem de internet: o three.js (licença MIT) vai embutido na página, a partir de `vendor\three-0.169.0`. Aceita também `--saida` e `--pilar`. Na janela, Exibir > 3D > **Ver em 3D** (Ctrl+3) faz o mesmo para o pilar atual, e **3D do lote** grava as páginas de todos os pilares.
+
+A página tem as mesmas funções da visualização do app de vigas protendidas:
+- a laje translúcida (até a borda livre, quando há) e o pilar, com a opacidade ajustável;
+- cada ferro com a bitola real e as dobras em canto vivo, na cor da posição (N1, N2...): cobrinhas, montagem e colapso progressivo; nos conectores, cada pente com os pinos, as cabeças e os trilhos;
+- os contornos das linhas de pinos, o contorno C'' da ancoragem do colapso (2d além da última linha) e os cortes do desenho (A-A, B-B);
+- escala vertical de 0,1× a 50× (a planta fica em escala real);
+- vistas prontas: 3D, planta, inferior, frontal, lateral e os cortes do desenho, em perspectiva ou ortogonal;
+- a lista das posições, para ligar, desligar e destacar;
+- os dados do ferro ou do pino sob o mouse;
+- uma seção móvel em x ou em y, com o desenho 2D em escala real (roda: aproximar; arrastar: deslocar). O modelo pode ser cortado nela, e o duplo clique numa cobrinha leva a seção ao plano dela;
+- tema claro ou escuro, avisos das verificações e o estado lembrado por pilar no computador.
+
+As alturas são as dos cortes da prancha: cobrinha de cobrimento a cobrimento, montagem sobre as dobras de baixo, colapso na face inferior, pinos a partir do cobrimento inferior.
+
 Para só ver os ferros e as verificações, sem o TQS:
 
 ```bash
@@ -180,6 +203,9 @@ Em `saidas\<projeto>\` (a pasta `saidas\` não vai para o repositório):
 | `PUN_<pilar>.DXF` | DXF com as cores da plotagem |
 | `RELATORIO_<projeto>.txt` | Pilares, ferros, aço por bitola com as repetições (NBR 7480), pentes somados, avisos e erros |
 | `RELATORIO_<projeto>_pilares.csv` e `_ferros.csv` | O mesmo, para o Excel (ponto e vírgula, vírgula decimal) |
+| `PUN_<pilar>-3D.html` | Visualização 3D do pilar (`visualizar_3d.py` ou Exibir > 3D na janela), com o three.js embutido |
+
+Além do leiaute dos modelos, as seções da cobrinha (na ponta de baixo, ou à esquerda com as cobrinhas em x) e o corte A-A dos conectores (à direita) têm as cotas da espessura da laje e dos cobrimentos: numa fila os cobrimentos inferior e superior e, por fora, a espessura.
 
 Antes de regravar um DWG, o app copia o anterior para `anteriores\<nome>_<data>_<hora>.DWG`, para não perder edições feitas no TQS. Se o DWG estiver aberto no TQS e não puder ser regravado, grava `<nome>_HHMMSS.DWG` e avisa.
 
@@ -284,7 +310,7 @@ As verificações (s0 ≤ 0,5d, espaçamentos ≤ 0,75d, pinos ou pernas vizinho
 python -m unittest discover -s testes -t . -p "teste_*.py" -v
 ```
 
-Os testes do núcleo, da janela, do relatório e da importação não precisam do TQS. A importação usa uma leitura real gravada em `testes\dados\`. Os testes que gravam DWG são pulados sem o TQS, e a réplica dos modelos é pulada sem a pasta `DesenhosReferencia\`, que fica fora do repositório. O teste do leitor numa cópia de um edifício real usa a pasta da variável `PUN_EDIFICIO_TESTE` e é pulado sem ela ou sem o TQS.
+Os testes do núcleo, da janela, do relatório, da importação e da visualização 3D não precisam do TQS. A página 3D é conferida no navegador à parte (precisa de WebGL). A importação usa uma leitura real gravada em `testes\dados\`. Os testes que gravam DWG são pulados sem o TQS, e a réplica dos modelos é pulada sem a pasta `DesenhosReferencia\`, que fica fora do repositório. O teste do leitor numa cópia de um edifício real usa a pasta da variável `PUN_EDIFICIO_TESTE` e é pulado sem ela ou sem o TQS.
 
 ## Ferramentas de conferência (desenvolvimento)
 
@@ -340,7 +366,8 @@ Regrava `nucleo\niveis.json` a partir da tabela de plotagem do TQS instalado.
 
 | Pasta | Conteúdo |
 |---|---|
-| `nucleo\` | Python puro (sem TQS): parâmetros, cobrinha, conectores, colapso, verificações, relatório, folha e pranchas em primitivas; níveis e catálogo da Trejor |
+| `nucleo\` | Python puro (sem TQS): parâmetros, cobrinha, conectores, colapso, verificações, relatório, folha e pranchas em primitivas, visualização 3D (`vista3d.py` e o modelo `vista3d.html`); níveis e catálogo da Trejor |
+| `vendor\three-0.169.0\` | three.js (licença MIT), embutido nas páginas 3D |
 | `dwg_tqs\` | Gravação pelo TQS (DWG-TQS com ferros inteligentes, PDF e DXF) e leitura de uma planta do TQS para a importação (`leitor_tqs.py`) |
 | `janela\` | Janela (Tk) no estilo do TQS |
 | `ferramentas\` | Leitura e comparação de DWG-TQS, imagens de conferência, captura da janela, extração das penas |

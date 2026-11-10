@@ -484,6 +484,14 @@ class Prancha:
         x_tit = min(xa, x_topo)
         f.texto(226, x_tit, y_tit, H_VISTA, "CORTE A-A")
         f.texto(0, x_tit, y_tit - 6 * k, H_ESCALA, f"ESCALA 1:{E:g}")
+        # espessura da laje e cobrimentos (pedido do usuário em 09/11/2026), na ponta direita (à esquerda, passariam
+        # da moldura do modelo): numa fila os dois cobrimentos e, por fora, h (sem o trecho do meio, como na cobrinha)
+        x_ref = xb
+        x1c = xb + (h / 2.8 if b_dir is None else 0.0) + 0.5 * E
+        x2c = x1c + 0.6 * E
+        for a_, b_ in ((Yb, Yb + p["c_inf"]), (Yt - p["c_sup"], Yt)):
+            f.cota((x_ref, a_), (x_ref, b_), (x1c, a_), modo="v")
+        f.cota((x_ref, Yb), (x_ref, Yt), (x2c, Yb), modo="v")
         z0 = Yb + p["c_inf"]
         xs = self._pinos(nome_pino, z0)
         # barras de flexão de referência: negativa e positiva junto de cada pino (nota 1), colapso N1 e N2
@@ -566,7 +574,7 @@ class Prancha:
         for x in xs:
             f.linha(205, (x, Yt + 13 * k), (x, Yd - 20 * k), s=4)
         self.y_min_corte = Yd - 36 * k                    # -225,5 no modelo (borda da folha)
-        self.x_max_corte = max(xb + h / 2.8, x_topo + larg_topo)
+        self.x_max_corte = max(xb + h / 2.8, x_topo + larg_topo, x2c + 0.3 * E)
         # região da vista (sem as linhas das faces que descem da planta): do título ao pente
         self.reg_corte = (min(xa - h / 2.8, x_tit), self.y_min_corte, self.x_max_corte, y_tit + H_VISTA * E)
         return Yd

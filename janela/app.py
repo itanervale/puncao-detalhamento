@@ -35,6 +35,7 @@ from nucleo import conectores as nc                                      # noqa:
 from nucleo import importacao as imp                                     # noqa: E402
 from nucleo import prancha_cobrinha, prancha_conectores                  # noqa: E402
 from nucleo import relatorio as rel_lote                                 # noqa: E402
+from nucleo import vista3d                                               # noqa: E402
 from nucleo.detalhe import detalhar                                      # noqa: E402
 from nucleo.parametros import (FORMATO, PADROES, VERSAO, altura_util, ler_projeto, novo_projeto,  # noqa: E402
                                posicao)
@@ -208,7 +209,8 @@ class App(tk.Tk):
                                ("salvar", "Salvar (Ctrl+S)", self.salvar), (None, None, None),
                                ("mais_pilar", "+ Pilar", self.mais_pilar), ("duplicar", "Duplicar pilar", self.duplicar),
                                (None, None, None), ("enquadrar", "Enquadrar (Home)", self.enquadrar),
-                               ("cores", "Cores de plotagem / de tela", self._alternar_cores), (None, None, None),
+                               ("cores", "Cores de plotagem / de tela", self._alternar_cores),
+                               ("tres_d", "Ver em 3D (Ctrl+3)", self.ver_3d), (None, None, None),
                                ("gerar", "Gerar DWG / PDF / DXF do pilar (Ctrl+G)", self.gerar),
                                ("gerar_lote", "Gerar o lote (Ctrl+Shift+G)", self.gerar_lote)):
             if ico is None:
@@ -227,6 +229,7 @@ class App(tk.Tk):
         for tecla, f in (("<Control-n>", self.novo), ("<Control-o>", self.abrir), ("<Control-s>", self.salvar),
                          ("<Control-S>", self.salvar_como), ("<Control-g>", self.gerar),
                          ("<Control-G>", self.gerar_lote), ("<F5>", self.atualizar), ("<Home>", self.enquadrar),
+                         ("<Control-Key-3>", self.ver_3d),
                          ("<Prior>", lambda: self.ir(self.i - 1)), ("<Next>", lambda: self.ir(self.i + 1))):
             self.bind_all(tecla, lambda e, f=f: self._tecla(e, f))
 
@@ -274,11 +277,14 @@ class App(tk.Tk):
         e.add_checkbutton(label="Cores de plotagem (fundo branco)", variable=self.plot, command=self._redesenhar)
         e.add_checkbutton(label="Atualizar automaticamente", variable=self.auto)
         e.add_command(label="Atualizar agora", accelerator="F5", command=self.atualizar)
+        e.add_separator()
+        e.add_command(label="Ver em 3D", accelerator="Ctrl+3", command=self.ver_3d)
         mb.add_cascade(label="Exibir", menu=e)
         s = tk.Menu(mb, tearoff=0)
         s.add_command(label="Gerar DWG / PDF / DXF do pilar", accelerator="Ctrl+G", command=self.gerar)
         s.add_command(label="Gerar o lote", accelerator="Ctrl+Shift+G", command=self.gerar_lote)
         s.add_command(label="Relatório do lote (TXT e CSV)", command=self.relatorio_lote)
+        s.add_command(label="Páginas 3D do lote (HTML)", command=self.ver_3d_lote)
         s.add_separator()
         s.add_command(label="Abrir o PDF do pilar", command=lambda: self.abrir_saida("pdf"))
         s.add_command(label="Abrir o relatório do lote", command=lambda: self.abrir_saida("relatorio"))
@@ -512,6 +518,12 @@ class App(tk.Tk):
         c = g.coluna()
         c.check("Atualizar automaticamente", self.auto)
         c.pequeno("regerar", "Atualizar agora (F5)", self.atualizar)
+        g = a.grupo("3D")
+        g.grande("tres_d", "Ver em 3D", self.ver_3d, "Grava a página 3D do pilar atual (PUN_<pilar>-3D.html, na pasta de "
+                 "saída) e a abre numa janela própria: laje, pilar e cada ferro com a bitola real, vistas, escala "
+                 "vertical, seção móvel e dados sob o mouse (Ctrl+3). Não precisa do TQS nem de internet.")
+        g.grande("lote", "3D do lote", self.ver_3d_lote, "Grava a página 3D de todos os pilares do projeto na pasta "
+                 "de saída, sem abrir.")
         # ---------------------------------------------------------------- Saídas
         a = rb.aba("Saídas")
         g = a.grupo("Pasta e arquivos")
@@ -1464,6 +1476,43 @@ class App(tk.Tk):
             os.startfile(arqs["txt"])
         return arqs
 
+    # ================================================================== visualização 3D (HTML, sem o TQS)
+    def ver_3d(self):
+        """Página 3D do pilar atual na pasta de saída, aberta numa janela própria (Edge ou Chrome em modo
+        aplicativo). Devolve o caminho ou None."""
+        res = detalhar(copy.deepcopy(self.pilar))
+        if res["erros"]:
+            messagebox.showerror(APP, "Corrija os erros do pilar antes de ver em 3D:\n\n" + "\n".join(res["erros"]),
+                                 parent=self)
+            return None
+        try:
+            caminho = vista3d.gravar(res, self._pasta_saida(), projeto=self._nome_projeto())
+        except OSError as e:
+            self.msg(f"Página 3D não gravada: {e}", "erro")
+            self.status("Página 3D não gravada (veja as mensagens).", "erro")
+            return None
+        self.msg(f"3D: {caminho}", "ok")
+        self.status(f"Página 3D de {res['p']['titulo']} gravada e aberta.", "ok")
+        vista3d.abrir(caminho)
+        return caminho
+
+    def ver_3d_lote(self):
+        """Páginas 3D de todos os pilares, sem abrir. Devolve os caminhos."""
+        pasta, feitos, erros = self._pasta_saida(), [], []
+        for par in self.projeto["pilares"]:
+            res = detalhar(copy.deepcopy(par))
+            if res["erros"]:
+                erros.append(res["p"]["titulo"])
+                continue
+            try:
+                feitos.append(vista3d.gravar(res, pasta, projeto=self._nome_projeto()))
+            except OSError as e:
+                self.msg(f"{res['p']['titulo']}: página 3D não gravada: {e}", "erro")
+        self.msg(f"Páginas 3D: {len(feitos)} gravada(s) em {pasta}" +
+                 (f"; com erro, não gravados: {', '.join(erros)}" if erros else ""), "aviso" if erros else "ok")
+        self.status(f"{len(feitos)} página(s) 3D gravada(s) em {pasta}.", "aviso" if erros else "ok")
+        return feitos
+
     def abrir_saida(self, tipo):
         if tipo == "pasta":
             pasta = self._pasta_saida()
@@ -1487,7 +1536,8 @@ class App(tk.Tk):
     # ================================================================== ajuda e erros
     def ajuda(self):
         messagebox.showinfo(APP, "Atalhos\n\nCtrl+N / Ctrl+O / Ctrl+S: novo, abrir, salvar\nCtrl+G: gerar o pilar "
-                                 "(DWG, PDF, DXF)\nCtrl+Shift+G: gerar o lote\nF5: atualizar a prévia\nHome: enquadrar\n"
+                                 "(DWG, PDF, DXF)\nCtrl+Shift+G: gerar o lote\nCtrl+3: ver em 3D\nF5: atualizar a "
+                                 "prévia\nHome: enquadrar\n"
                                  "PgUp / PgDn: pilar anterior / seguinte\n\nNa área de desenho: roda = zoom, botão do "
                                  "meio ou direito = deslocar, duplo clique no meio = enquadrar, clique = selecionar "
                                  "(um ferro aparece nas propriedades), botão direito parado = menu.", parent=self)

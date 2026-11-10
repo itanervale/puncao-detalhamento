@@ -49,7 +49,8 @@ class TesteFolhaP02(unittest.TestCase):
         self.assertEqual(nomes, ["C:/TQSW/SUPORTE/BLOCOS/GERAIS/$CORTEA", "PUN 3P 17 cm", "Pino 22 cm em corte"])
         self.assertEqual(sum(b["b"] == "PUN 3P 17 cm" for b in blocos), 20)
         self.assertEqual(sum(b["b"] == "Pino 22 cm em corte" for b in blocos), 12)   # 6 no corte e 6 no pente
-        self.assertEqual(len(self._tipo("Cota")), 44)                                # as 44 cotas do modelo
+        # as 44 cotas do modelo e as 3 da espessura e dos cobrimentos no corte (pedido do usuário em 09/11/2026)
+        self.assertEqual(len(self._tipo("Cota")), 47)
 
     def test_pentes_nas_posicoes_do_modelo(self):
         ins = {(round(b["x"], 3), round(b["y"], 3), round(b["ang"] % 360, 3))
